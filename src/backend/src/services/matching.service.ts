@@ -1,7 +1,6 @@
 import prisma from '../db/prisma';
 import { RuleBasedMatcher, Matcher, BuyerIntent, PropertyData } from '../matchers/rule-based-matcher';
 import { WorkflowEventService } from './workflow-event.service';
-import { EventType } from '@prisma/client';
 
 export class MatchingService {
   private matcher: Matcher;
@@ -123,7 +122,7 @@ export class MatchingService {
 
     // Log match generation event
     await WorkflowEventService.logEvent({
-      eventType: EventType.MATCH_GENERATED,
+      eventType: 'MATCH_GENERATED',
       description: `Generated ${storedMatches.length} matches for buyer ${buyerId}`,
       metadata: {
         buyerId,

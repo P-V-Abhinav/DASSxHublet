@@ -85,11 +85,17 @@ async function main() {
   
   for (let i = 0; i < ALL_LOCALITIES.length; i++) {
     const locality = ALL_LOCALITIES[i];
-    const bhk = [1, 2, 2, 3, 3, 4][Math.floor(Math.random() * 6)];
-    const minBudget = bhk === 1 ? 3000000 : bhk === 2 ? 6000000 : bhk === 3 ? 10000000 : 18000000;
-    const maxBudget = minBudget + Math.floor(minBudget * 0.5);
+    const property = properties[i]; // Match buyer to corresponding property
     
-    // Select nearby localities (same city)
+    // Use property's BHK for buyer preference to ensure matching
+    const bhk = property.bhk;
+    
+    // Set budget range that includes the property price
+    const propertyPrice = property.price;
+    const minBudget = Math.floor(propertyPrice * 0.8); // 80% of property price
+    const maxBudget = Math.floor(propertyPrice * 1.3); // 130% of property price
+    
+    // Select nearby localities (same city) - ALWAYS include the property's locality
     let cityLocalities: string[];
     if (MUMBAI_LOCALITIES.includes(locality)) {
       cityLocalities = MUMBAI_LOCALITIES;
@@ -99,13 +105,19 @@ async function main() {
       cityLocalities = DELHI_LOCALITIES;
     }
     
-    const preferredLocalities = cityLocalities
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 2 + Math.floor(Math.random() * 2));
+    // Always include the property locality first, then add 1-2 more
+    const preferredLocalities = [locality];
+    const otherLocalities = cityLocalities.filter(l => l !== locality);
+    preferredLocalities.push(...otherLocalities.sort(() => 0.5 - Math.random()).slice(0, 1 + Math.floor(Math.random() * 2)));
     
-    const preferredAmenities = AMENITIES
+    // Parse property amenities and use some of them for buyer preferences
+    const propertyAmenities = JSON.parse(property.amenities);
+    const preferredAmenities = propertyAmenities.slice(0, Math.max(2, propertyAmenities.length - 1));
+    // Add 1-2 random amenities
+    const extraAmenities = AMENITIES.filter(a => !preferredAmenities.includes(a))
       .sort(() => 0.5 - Math.random())
-      .slice(0, 2 + Math.floor(Math.random() * 3));
+      .slice(0, 1 + Math.floor(Math.random() * 2));
+    preferredAmenities.push(...extraAmenities);
 
     const buyer = await prisma.buyer.create({
       data: {

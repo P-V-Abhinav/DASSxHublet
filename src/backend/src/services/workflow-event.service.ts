@@ -1,5 +1,4 @@
 import prisma from '../db/prisma';
-import { EventType } from '@prisma/client';
 
 export class WorkflowEventService {
   /**
@@ -7,7 +6,7 @@ export class WorkflowEventService {
    */
   static async logEvent(data: {
     leadId?: string;
-    eventType: EventType;
+    eventType: string;
     fromState?: string;
     toState?: string;
     description?: string;
@@ -20,7 +19,7 @@ export class WorkflowEventService {
         fromState: data.fromState,
         toState: data.toState,
         description: data.description,
-        metadata: data.metadata || {},
+        metadata: data.metadata ? JSON.stringify(data.metadata) : null,
       },
     });
   }
@@ -39,7 +38,7 @@ export class WorkflowEventService {
    * Get all events with filters
    */
   static async getEvents(filters?: {
-    eventType?: EventType;
+    eventType?: string;
     leadId?: string;
     limit?: number;
   }) {
