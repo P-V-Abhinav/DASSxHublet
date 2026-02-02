@@ -1,0 +1,399 @@
+import { useState } from 'react';
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:3000/api';
+
+interface AuthPageProps {
+  userType: 'buyer' | 'seller';
+  onAuthSuccess: (userId: string, userName: string) => void;
+  onBack: () => void;
+}
+
+export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    // Buyer specific
+    localities: '',
+    minBudget: '',
+    maxBudget: '',
+    bhk: '2',
+    amenities: '',
+    // Seller specific
+    sellerType: 'individual',
+    rating: '4',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      if (isLogin) {
+        // Login - find user by email
+        const endpoint = userType === 'buyer' ? '/buyers' : '/sellers';
+        const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+        const user = response.data.find((u: any) => u.email === formData.email);
+        
+        if (user) {
+          onAuthSuccess(user.id, user.name);
+        } else {
+          setError('User not found. Please sign up first.');
+        }
+      } else {
+        // Signup - create new user
+        if (userType === 'buyer') {
+          const localitiesArray = formData.localities
+            .split(',')
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0);
+          
+          const amenitiesArray = formData.amenities
+            .split(',')
+            .map((a) => a.trim())
+            .filter((a) => a.length > 0);
+
+          const response = await axios.post(`${API_BASE_URL}/buyers`, {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            localities: localitiesArray,
+            minBudget: parseInt(formData.minBudget) || 0,
+            maxBudget: parseInt(formData.maxBudget) || 0,
+            bhk: parseInt(formData.bhk) || 2,
+            amenities: amenitiesArray,
+          });
+          onAuthSuccess(response.data.id, response.data.name);
+        } else {
+          const response = await axios.post(`${API_BASE_URL}/sellers`, {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            sellerType: formData.sellerType,
+            rating: parseFloat(formData.rating) || 4.0,
+          });
+          onAuthSuccess(response.data.id, response.data.name);
+        }
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Authentication failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      position: 'relative',
+    }}>
+      {/* Back Button */}
+      <button
+        onClick={onBack}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          padding: '10px 20px',
+          background: 'white',
+          border: '2px solid #667eea',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          color: '#667eea',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '5px'
+        }}
+      >
+        ← Back to Home
+      </button>
+
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+        maxWidth: '500px',
+        width: '100%',
+        padding: '40px',
+      }}>
+        <h1 style={{ textAlign: 'center', marginBottom: '10px', color: '#333' }}>
+          {userType === 'buyer' ? '🏠 Buyer' : '🏢 Seller'} {isLogin ? 'Login' : 'Signup'}
+        </h1>
+        <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
+          {isLogin ? 'Welcome back!' : 'Create your account'}
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+91 XXXXXXXXXX"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #ddd',
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              {userType === 'buyer' && (
+                <>
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                      Preferred Localities *
+                    </label>
+                    <input
+                      type="text"
+                      name="localities"
+                      value={formData.localities}
+                      onChange={handleChange}
+                      placeholder="e.g., Bandra, Andheri"
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                        Min Budget (₹)
+                      </label>
+                      <input
+                        type="number"
+                        name="minBudget"
+                        value={formData.minBudget}
+                        onChange={handleChange}
+                        placeholder="5000000"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '1px solid #ddd',
+                          borderRadius: '6px',
+                          fontSize: '14px'
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                        Max Budget (₹)
+                      </label>
+                      <input
+                        type="number"
+                        name="maxBudget"
+                        value={formData.maxBudget}
+                        onChange={handleChange}
+                        placeholder="10000000"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '1px solid #ddd',
+                          borderRadius: '6px',
+                          fontSize: '14px'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                      BHK Preference
+                    </label>
+                    <select
+                      name="bhk"
+                      value={formData.bhk}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px'
+                      }}
+                    >
+                      <option value="1">1 BHK</option>
+                      <option value="2">2 BHK</option>
+                      <option value="3">3 BHK</option>
+                      <option value="4">4 BHK</option>
+                    </select>
+                  </div>
+
+                  <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                      Amenities (comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      name="amenities"
+                      value={formData.amenities}
+                      onChange={handleChange}
+                      placeholder="parking, gym, pool"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '6px',
+                        fontSize: '14px'
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+
+              {userType === 'seller' && (
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                    Seller Type
+                  </label>
+                  <select
+                    name="sellerType"
+                    value={formData.sellerType}
+                    onChange={handleChange}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #ddd',
+                      borderRadius: '6px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="individual">Individual</option>
+                    <option value="agent">Agent</option>
+                    <option value="builder">Builder</option>
+                  </select>
+                </div>
+              )}
+            </>
+          )}
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Email *
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '14px'
+              }}
+            />
+          </div>
+
+          {error && (
+            <div style={{
+              padding: '10px',
+              background: '#f8d7da',
+              color: '#721c24',
+              borderRadius: '6px',
+              marginBottom: '15px',
+              fontSize: '14px'
+            }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '14px',
+              background: loading ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              marginBottom: '15px'
+            }}
+          >
+            {loading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
+          </button>
+
+          <div style={{ textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError('');
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#667eea',
+                cursor: 'pointer',
+                fontSize: '14px',
+                textDecoration: 'underline'
+              }}
+            >
+              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
