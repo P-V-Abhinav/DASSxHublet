@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
 
 const prisma = new PrismaClient();
 
@@ -14,136 +15,151 @@ const SELLER_TYPES = ['individual', 'agent', 'builder'];
 
 async function main() {
   console.log('🌱 Starting database seed...\n');
-
+  
   // Clear existing data
   console.log('Clearing existing data...');
-  await prisma.match.deleteMany();
-  await prisma.lead.deleteMany();
-  await prisma.workflowEvent.deleteMany();
-  await prisma.property.deleteMany();
-  await prisma.buyer.deleteMany();
-  await prisma.seller.deleteMany();
+  try {
+    // Delete in order to avoid foreign key constraints violations if any
+    await prisma.workflowEvent.deleteMany();
+    await prisma.lead.deleteMany();
+    await prisma.match.deleteMany();
+    await prisma.property.deleteMany();
+    await prisma.buyer.deleteMany();
+    await prisma.seller.deleteMany();
+    console.log('Cleared existing data.');
+  } catch (error) {
+    console.log('Error clearing data (might be empty db):', error);
+  }
 
-  // Create Sellers (6 for each city = 18 total)
+  // --- 1. Create Sellers ---
+  // We'll create ~3 sellers per locality
   console.log('Creating sellers...');
   const sellers: any[] = [];
   
   for (const locality of ALL_LOCALITIES) {
-    const seller = await prisma.seller.create({
-      data: {
-        name: `${locality} Realty ${sellers.length + 1}`,
-        email: `seller${sellers.length + 1}@${locality.toLowerCase().replace(/\s+/g, '')}.com`,
-        phone: `+91 ${9000000000 + sellers.length}`,
-        sellerType: SELLER_TYPES[Math.floor(Math.random() * SELLER_TYPES.length)],
-        rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
-        completedDeals: Math.floor(Math.random() * 50) + 10,
-        trustScore: parseFloat((70 + Math.random() * 30).toFixed(1)),
-      },
-    });
-    sellers.push(seller);
+    // Create 2-3 sellers for this locality
+    const numSellers = 2 + Math.floor(Math.random() * 2);
+    for(let s=0; s<numSellers; s++) {
+        const seller = await prisma.seller.create({
+        data: {
+            name: `${locality} Realty ${sellers.length + 1}`,
+            email: `seller${sellers.length + 1}@${locality.toLowerCase().replace(/\s+/g, '')}.com`,
+            phone: `+91 ${9000000000 + sellers.length}`,
+            sellerType: SELLER_TYPES[Math.floor(Math.random() * SELLER_TYPES.length)],
+            rating: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
+            completedDeals: Math.floor(Math.random() * 50) + 10,
+            trustScore: parseFloat((70 + Math.random() * 30).toFixed(1)),
+        },
+        });
+        sellers.push(seller);
+    }
   }
   console.log(`✓ Created ${sellers.length} sellers\n`);
 
-  // Create Properties (6 for each city = 18 total)
+  // --- 2. Create Properties ---
+  // Create ~5 properties per locality
   console.log('Creating properties...');
-  const properties = [];
+  const properties: any[] = [];
   
-  for (let i = 0; i < ALL_LOCALITIES.length; i++) {
-    const locality = ALL_LOCALITIES[i];
-    const seller = sellers[i];
-    const bhk = [1, 2, 2, 3, 3, 4][Math.floor(Math.random() * 6)];
-    const basePrice = bhk === 1 ? 4000000 : bhk === 2 ? 7000000 : bhk === 3 ? 12000000 : 20000000;
-    const price = basePrice + Math.floor(Math.random() * basePrice * 0.5);
-    const area = bhk * 500 + Math.floor(Math.random() * 300);
+  for (const locality of ALL_LOCALITIES) {
+    // Find sellers who operate in this locality (by name matching potentially, or just random from list for now)
+    // To make it simple, pick random sellers from our big list.
     
-    // Select 3-5 random amenities
-    const selectedAmenities = AMENITIES
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 3 + Math.floor(Math.random() * 3));
+    const numProps = 4 + Math.floor(Math.random() * 3); // 4-6 properties per locality
+    
+    for (let p=0; p < numProps; p++) {
+        const seller = sellers[Math.floor(Math.random() * sellers.length)];
+        const bhk = [1, 2, 2, 3, 3, 4][Math.floor(Math.random() * 6)];
+        const basePrice = bhk === 1 ? 4000000 : bhk === 2 ? 7000000 : bhk === 3 ? 12000000 : 20000000;
+        const price = basePrice + Math.floor(Math.random() * basePrice * 0.5);
+        const area = bhk * 500 + Math.floor(Math.random() * 300);
+        
+        // Select 3-5 random amenities
+        const selectedAmenities = AMENITIES
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3 + Math.floor(Math.random() * 3));
 
-    const property = await prisma.property.create({
-      data: {
-        sellerId: seller.id,
-        title: `Luxurious ${bhk} BHK ${PROPERTY_TYPES[Math.floor(Math.random() * PROPERTY_TYPES.length)]} in ${locality}`,
-        description: `Beautiful ${bhk} BHK property with modern amenities in prime ${locality} location. Perfect for families!`,
-        locality,
-        address: `${Math.floor(Math.random() * 999) + 1}, ${locality} Main Road`,
-        area,
-        bhk,
-        price,
-        amenities: JSON.stringify(selectedAmenities), // Convert to JSON string for SQLite
-        propertyType: PROPERTY_TYPES[Math.floor(Math.random() * PROPERTY_TYPES.length)],
-      },
-    });
-    properties.push(property);
+        const property = await prisma.property.create({
+        data: {
+            sellerId: seller.id,
+            title: `Luxurious ${bhk} BHK ${PROPERTY_TYPES[Math.floor(Math.random() * PROPERTY_TYPES.length)]} in ${locality}`,
+            description: `Beautiful ${bhk} BHK property with modern amenities in prime ${locality} location. Perfect for families!`,
+            locality,
+            address: `${Math.floor(Math.random() * 999) + 1}, ${locality} Main Road`,
+            area,
+            bhk,
+            price,
+            amenities: JSON.stringify(selectedAmenities), 
+            propertyType: PROPERTY_TYPES[Math.floor(Math.random() * PROPERTY_TYPES.length)],
+        },
+        });
+        properties.push(property);
+    }
   }
   console.log(`✓ Created ${properties.length} properties\n`);
 
-  // Create Buyers (6 for each city = 18 total)
+  // --- 3. Create Buyers ---
+  // Create ~5-8 buyers per locality
   console.log('Creating buyers...');
-  const buyers = [];
+  const buyers: any[] = [];
   
-  for (let i = 0; i < ALL_LOCALITIES.length; i++) {
-    const locality = ALL_LOCALITIES[i];
-    const property = properties[i]; // Match buyer to corresponding property
-    
-    // Use property's BHK for buyer preference to ensure matching
-    const bhk = property.bhk;
-    
-    // Set budget range that includes the property price
-    const propertyPrice = property.price;
-    const minBudget = Math.floor(propertyPrice * 0.8); // 80% of property price
-    const maxBudget = Math.floor(propertyPrice * 1.3); // 130% of property price
-    
-    // Select nearby localities (same city) - ALWAYS include the property's locality
-    let cityLocalities: string[];
-    if (MUMBAI_LOCALITIES.includes(locality)) {
-      cityLocalities = MUMBAI_LOCALITIES;
-    } else if (HYDERABAD_LOCALITIES.includes(locality)) {
-      cityLocalities = HYDERABAD_LOCALITIES;
-    } else {
-      cityLocalities = DELHI_LOCALITIES;
-    }
-    
-    // Always include the property locality first, then add 1-2 more
-    const preferredLocalities = [locality];
-    const otherLocalities = cityLocalities.filter(l => l !== locality);
-    preferredLocalities.push(...otherLocalities.sort(() => 0.5 - Math.random()).slice(0, 1 + Math.floor(Math.random() * 2)));
-    
-    // Parse property amenities and use some of them for buyer preferences
-    const propertyAmenities = JSON.parse(property.amenities);
-    const preferredAmenities = propertyAmenities.slice(0, Math.max(2, propertyAmenities.length - 1));
-    // Add 1-2 random amenities
-    const extraAmenities = AMENITIES.filter(a => !preferredAmenities.includes(a))
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 1 + Math.floor(Math.random() * 2));
-    preferredAmenities.push(...extraAmenities);
+  for (const locality of ALL_LOCALITIES) {
+    const numBuyers = 5 + Math.floor(Math.random() * 4); // 5-8 buyers per locality
 
-    const buyer = await prisma.buyer.create({
-      data: {
-        name: `Buyer ${i + 1} from ${locality}`,
-        email: `buyer${i + 1}@${locality.toLowerCase().replace(/\s+/g, '')}.com`,
-        phone: `+91 ${8000000000 + i}`,
-        localities: JSON.stringify(preferredLocalities), // Convert to JSON string for SQLite
-        budgetMin: minBudget,
-        budgetMax: maxBudget,
-        bhk,
-        amenities: JSON.stringify(preferredAmenities), // Convert to JSON string for SQLite
-      },
-    });
-    buyers.push(buyer);
+    for(let b=0; b<numBuyers; b++) {
+        // Use random property stats as base for preference
+        const bhk = [1, 2, 3, 4][Math.floor(Math.random() * 4)];
+        const basePrice = bhk === 1 ? 4000000 : bhk === 2 ? 7000000 : bhk === 3 ? 12000000 : 20000000;
+        
+        const minBudget = Math.floor(basePrice * 0.8);
+        const maxBudget = Math.floor(basePrice * 1.4);
+        
+        // Select nearby localities
+        let cityLocalities: string[];
+        if (MUMBAI_LOCALITIES.includes(locality)) {
+        cityLocalities = MUMBAI_LOCALITIES;
+        } else if (HYDERABAD_LOCALITIES.includes(locality)) {
+        cityLocalities = HYDERABAD_LOCALITIES;
+        } else {
+        cityLocalities = DELHI_LOCALITIES;
+        }
+        
+        const preferredLocalities = [locality];
+        const otherLocalities = cityLocalities.filter(l => l !== locality);
+        preferredLocalities.push(...otherLocalities.sort(() => 0.5 - Math.random()).slice(0, 1 + Math.floor(Math.random() * 2)));
+        
+        const preferredAmenities = AMENITIES
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 2 + Math.floor(Math.random() * 3));
+
+        const buyer = await prisma.buyer.create({
+        data: {
+            name: `Buyer ${buyers.length + 1} (${locality})`,
+            email: `buyer${buyers.length + 1}@${locality.toLowerCase().replace(/\s+/g, '')}.com`,
+            phone: `+91 ${8000000000 + buyers.length}`,
+            localities: JSON.stringify(preferredLocalities),
+            budgetMin: minBudget,
+            budgetMax: maxBudget,
+            bhk,
+            amenities: JSON.stringify(preferredAmenities),
+        },
+        });
+        buyers.push(buyer);
+    }
   }
   console.log(`✓ Created ${buyers.length} buyers\n`);
 
-  // Create some leads (sample data)
+  // --- 4. Create Leads ---
   console.log('Creating sample leads...');
   const leads = [];
   
-  for (let i = 0; i < 10; i++) {
+  // Create 50 random leads
+  for (let i = 0; i < 50; i++) {
     const buyer = buyers[Math.floor(Math.random() * buyers.length)];
     const property = properties[Math.floor(Math.random() * properties.length)];
     const states = ['NEW', 'ENRICHED', 'QUALIFIED', 'NOTIFIED', 'CONTACTED', 'CLOSED'];
     
+    // Only create if not exists (though uuid makes collision unlikely, logical collision is possible)
     const lead = await prisma.lead.create({
       data: {
         buyerId: buyer.id,
@@ -161,10 +177,6 @@ async function main() {
   console.log(`  - ${properties.length} properties`);
   console.log(`  - ${buyers.length} buyers`);
   console.log(`  - ${leads.length} leads`);
-  console.log('\nCities covered:');
-  console.log(`  - Mumbai: ${MUMBAI_LOCALITIES.join(', ')}`);
-  console.log(`  - Hyderabad: ${HYDERABAD_LOCALITIES.join(', ')}`);
-  console.log(`  - Delhi: ${DELHI_LOCALITIES.join(', ')}`);
 }
 
 main()

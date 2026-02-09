@@ -83,7 +83,7 @@ export class MatchingService {
 
         if (existing) {
           // Update existing match
-          return await prisma.match.update({
+          const updated = await prisma.match.update({
             where: { id: existing.id },
             data: {
               matchScore: match.matchResult.totalScore,
@@ -98,10 +98,20 @@ export class MatchingService {
               },
             },
           });
+          
+          return {
+             ...updated,
+             property: {
+               ...updated.property,
+               amenities: JSON.parse(updated.property.amenities),
+               metadata: updated.property.metadata ? JSON.parse(updated.property.metadata) : null,
+             },
+             metadata: updated.metadata ? JSON.parse(updated.metadata) : null,
+          };
         }
 
         // Create new match
-        return await prisma.match.create({
+        const created = await prisma.match.create({
           data: {
             buyerId,
             propertyId: match.property.id,
@@ -117,6 +127,16 @@ export class MatchingService {
             },
           },
         });
+        
+        return {
+           ...created,
+           property: {
+             ...created.property,
+             amenities: JSON.parse(created.property.amenities),
+             metadata: created.property.metadata ? JSON.parse(created.property.metadata) : null,
+           },
+           metadata: created.metadata ? JSON.parse(created.metadata) : null,
+        };
       })
     );
 
@@ -161,13 +181,13 @@ export class MatchingService {
     const matches = buyers
       .map(buyer => {
         const buyerIntent: BuyerIntent = {
-          localities: buyer.localities,
+          localities: JSON.parse(buyer.localities),
           areaMin: buyer.areaMin || undefined,
           areaMax: buyer.areaMax || undefined,
           bhk: buyer.bhk || undefined,
           budgetMin: buyer.budgetMin || undefined,
           budgetMax: buyer.budgetMax || undefined,
-          amenities: buyer.amenities,
+          amenities: JSON.parse(buyer.amenities),
         };
 
         const propertyData: PropertyData = {
@@ -175,7 +195,7 @@ export class MatchingService {
           area: property.area,
           bhk: property.bhk,
           price: property.price,
-          amenities: property.amenities,
+          amenities: JSON.parse(property.amenities),
         };
 
         const matchResult = this.matcher.score(buyerIntent, propertyData);
@@ -231,7 +251,7 @@ export class MatchingService {
    * Get all matches for a buyer
    */
   async getMatchesForBuyer(buyerId: string) {
-    return await prisma.match.findMany({
+    const matches = await prisma.match.findMany({
       where: { buyerId },
       include: {
         property: {
@@ -240,6 +260,19 @@ export class MatchingService {
       },
       orderBy: { matchScore: 'desc' },
     });
+    
+    // Parse JSON properties for SQLite compatibility
+    return matches.map(match => ({
+      ...match,
+      property: {
+        ...match.property,
+        amenities: JSON.parse(match.property.amenities),
+        // No metadata parsing needed for frontend unless used? 
+        // Let's parse just in case if it's not null
+        metadata: match.property.metadata ? JSON.parse(match.property.metadata) : null,
+      },
+      metadata: match.metadata ? JSON.parse(match.metadata) : null,
+    }));
   }
 
   /**

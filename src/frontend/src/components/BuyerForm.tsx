@@ -19,6 +19,7 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
     localities: '',
     amenities: '',
     additionalNotes: '',
+    rawQuery: '',
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -31,27 +32,39 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
     setError('');
 
     try {
-      // Update buyer preferences
+      // Prepare payload - only send fields that have values to avoiding overwriting with empty defaults
+      const payload: any = {};
+      
+      if (formData.name) payload.name = formData.name;
+      if (formData.email) payload.email = formData.email;
+      if (formData.phone) payload.phone = formData.phone;
+      if (formData.rawQuery) payload.rawPreferences = formData.rawQuery;
+      
       const localitiesArray = formData.localities
         .split(',')
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
       
+      // Only send localities if the user explicitly typed them. 
+      // Otherwise let backend parsed intent take over.
+      if (localitiesArray.length > 0) {
+        payload.localities = localitiesArray;
+      }
+
       const amenitiesArray = formData.amenities
         .split(',')
         .map((a) => a.trim())
         .filter((a) => a.length > 0);
+        
+      if (amenitiesArray.length > 0) {
+        payload.amenities = amenitiesArray;
+      }
 
-      await axios.put(`${API_BASE_URL}/buyers/${buyerId}`, {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        minBudget: parseInt(formData.minBudget) || 0,
-        maxBudget: parseInt(formData.maxBudget) || 0,
-        bhk: parseInt(formData.bhk) || 2,
-        localities: localitiesArray,
-        amenities: amenitiesArray,
-      });
+      if (formData.minBudget) payload.minBudget = parseInt(formData.minBudget);
+      if (formData.maxBudget) payload.maxBudget = parseInt(formData.maxBudget);
+      if (formData.bhk && formData.bhk !== 'Any') payload.bhk = parseInt(formData.bhk);
+
+      await axios.put(`${API_BASE_URL}/buyers/${buyerId}`, payload);
 
       setMessage('Preferences updated successfully! Finding matches...');
       if (onPreferencesUpdated) {
@@ -84,219 +97,37 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
     }}>
       <h2 style={{ marginBottom: '10px', color: '#333' }}>📝 Update Your Preferences</h2>
       <p style={{ marginBottom: '25px', color: '#666', fontSize: '14px' }}>
-        Fill in your details and preferences to find matching properties
+        AI Agent will understand your needs and update your profile automatically.
       </p>
       
       <form onSubmit={handleSubmit}>
-        {/* Basic Info */}
-        <div style={{ marginBottom: '25px' }}>
-          <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#555', borderBottom: '2px solid #4CAF50', paddingBottom: '8px' }}>
-            Basic Information
+        {/* AI Intent Parsing Section */}
+        <div style={{ 
+          marginBottom: '30px', 
+          padding: '20px', 
+          background: '#f0f7ff', 
+          borderRadius: '8px',
+          border: '1px solid #cce5ff'
+        }}>
+          <h3 style={{ fontSize: '16px', marginBottom: '10px', color: '#0056b3' }}>
+            ✨ AI / Natural Language Search
           </h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-                Full Name *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="John Doe"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '6px',
-                  fontSize: '14px',
-                  transition: 'border 0.3s'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-                Email *
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                placeholder="john@example.com"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '6px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+91 98765 43210"
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid #e0e0e0',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Property Preferences */}
-        <div style={{ marginBottom: '25px' }}>
-          <h3 style={{ fontSize: '16px', marginBottom: '15px', color: '#555', borderBottom: '2px solid #4CAF50', paddingBottom: '8px' }}>
-            Property Preferences
-          </h3>
-          
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-              Preferred Localities (comma-separated) *
-            </label>
-            <input
-              type="text"
-              name="localities"
-              value={formData.localities}
-              onChange={handleChange}
-              placeholder="e.g., Bandra, Andheri, Powai"
-              required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid #e0e0e0',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
-            />
-            <small style={{ color: '#666', fontSize: '12px' }}>
-              💡 Available: Mumbai (Bandra, Andheri, Powai, Juhu, Worli, Malad), Hyderabad (Hitech City, Gachibowli, Banjara Hills, Jubilee Hills, Madhapur, Kondapur), Delhi (Connaught Place, Saket, Dwarka, Rohini, Vasant Kunj, Hauz Khas)
-            </small>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-                Min Budget (₹)
-              </label>
-              <input
-                type="number"
-                name="minBudget"
-                value={formData.minBudget}
-                onChange={handleChange}
-                placeholder="5000000"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '6px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-                Max Budget (₹)
-              </label>
-              <input
-                type="number"
-                name="maxBudget"
-                value={formData.maxBudget}
-                onChange={handleChange}
-                placeholder="10000000"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '6px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-                BHK
-              </label>
-              <select
-                name="bhk"
-                value={formData.bhk}
-                onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '6px',
-                  fontSize: '14px'
-                }}
-              >
-                <option value="">Any</option>
-                <option value="1">1 BHK</option>
-                <option value="2">2 BHK</option>
-                <option value="3">3 BHK</option>
-                <option value="4">4 BHK</option>
-                <option value="5">5+ BHK</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-              Preferred Amenities (comma-separated)
-            </label>
-            <input
-              type="text"
-              name="amenities"
-              value={formData.amenities}
-              onChange={handleChange}
-              placeholder="e.g., parking, gym, pool, security"
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid #e0e0e0',
-                borderRadius: '6px',
-                fontSize: '14px'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Additional Notes */}
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
-            💬 Additional Requirements / Notes
-          </label>
+          <p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+            Type your requirements naturally, e.g., "Looking for a 2 bhk in Indiranagar under 60 lakhs with parking"
+          </p>
           <textarea
-            name="additionalNotes"
-            value={formData.additionalNotes}
+            name="rawQuery"
+            value={formData.rawQuery}
             onChange={handleChange}
-            placeholder="Tell us more about what you're looking for... (e.g., pet-friendly, near metro station, quiet neighborhood, good schools nearby, shopping malls, hospitals)"
-            rows={4}
+            placeholder="Describe your dream home here..."
             style={{
               width: '100%',
               padding: '12px',
-              border: '2px solid #e0e0e0',
+              border: '2px solid #b8daff',
               borderRadius: '6px',
+              minHeight: '80px',
               fontSize: '14px',
-              fontFamily: 'inherit',
-              resize: 'vertical'
+              fontFamily: 'inherit'
             }}
           />
         </div>

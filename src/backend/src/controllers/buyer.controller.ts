@@ -95,7 +95,31 @@ export class BuyerController {
   static async updateBuyer(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const buyer = await BuyerService.updateBuyer(id, req.body);
+      const { rawPreferences, ...otherFields } = req.body;
+      
+      let updateData = { ...req.body };
+      
+      // If raw preferences are updated, re-parse them
+      if (rawPreferences) {
+        const parsedIntent = intentParser.parse(rawPreferences);
+        
+        // Merge parsed data, but allow explicit overrides from the request
+        updateData = {
+          localities: parsedIntent.localities.length > 0 ? parsedIntent.localities : undefined,
+          areaMin: parsedIntent.areaMin,
+          areaMax: parsedIntent.areaMax,
+          bhk: parsedIntent.bhk,
+          budgetMin: parsedIntent.budgetMin,
+          budgetMax: parsedIntent.budgetMax,
+          amenities: parsedIntent.amenities.length > 0 ? parsedIntent.amenities : undefined,
+          ...updateData, // Explicit fields in req.body take precedence if they are not undefined
+        };
+        
+        // Clean up undefineds to avoid overwriting existing data with nulls if we don't want to
+        // But here we want to update.
+      }
+
+      const buyer = await BuyerService.updateBuyer(id, updateData);
       res.json(buyer);
     } catch (error: any) {
       res.status(400).json({ error: error.message });

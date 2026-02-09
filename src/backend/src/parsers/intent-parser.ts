@@ -112,10 +112,21 @@ export class KeywordIntentParser implements IntentParser {
       return parseFloat(rangeMatch[1]) * 100000;
     }
 
+    // Look for Crore ranges
+    const rangeMatchCr = text.match(/budget.*?(\d+\.?\d*)\s*(?:cr|crore|crores)\s*(?:to|[-])\s*(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
+    if (rangeMatchCr) {
+      return parseFloat(rangeMatchCr[1]) * 10000000;
+    }
+
     // Look for patterns like "minimum 50 lakhs"
-    const minMatch = text.match(/(?:minimum|min|at least)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
+    const minMatch = text.match(/(?:minimum|min|at least|above)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
     if (minMatch) {
       return parseFloat(minMatch[1]) * 100000;
+    }
+    
+    const minMatchCr = text.match(/(?:minimum|min|at least|above)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
+    if (minMatchCr) {
+      return parseFloat(minMatchCr[1]) * 10000000;
     }
 
     return undefined;
@@ -128,10 +139,33 @@ export class KeywordIntentParser implements IntentParser {
       return parseFloat(rangeMatch[2]) * 100000;
     }
 
-    // Look for patterns like "maximum 70 lakhs" or "under 80 lakhs"
-    const maxMatch = text.match(/(?:maximum|max|up to|under|below)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
+    // Look for Crore ranges
+    const rangeMatchCr = text.match(/budget.*?(\d+\.?\d*)\s*(?:cr|crore|crores)\s*(?:to|[-])\s*(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
+    if (rangeMatchCr) {
+      return parseFloat(rangeMatchCr[2]) * 10000000;
+    }
+
+    // Look for patterns like "maximum 70 lakhs" or "under 80 lakhs" OR "around 1 crore" (treat around as a cap or target)
+    // Adding "around" and "budget" (implied max)
+    const maxMatch = text.match(/(?:maximum|max|up to|under|below|around)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
     if (maxMatch) {
       return parseFloat(maxMatch[1]) * 100000;
+    }
+
+    const maxMatchCr = text.match(/(?:maximum|max|up to|under|below|around)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
+    if (maxMatchCr) {
+      return parseFloat(maxMatchCr[1]) * 10000000;
+    }
+    
+    // Fallback: if just "budget 1 crore" is said, treat as max
+    const simpleBudgetCr = text.match(/budget\s*(?:is\s*)?(?:around\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
+    if (simpleBudgetCr) {
+       return parseFloat(simpleBudgetCr[1]) * 10000000;
+    }
+    
+    const simpleBudgetLakh = text.match(/budget\s*(?:is\s*)?(?:around\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
+    if (simpleBudgetLakh) {
+       return parseFloat(simpleBudgetLakh[1]) * 100000;
     }
 
     return undefined;

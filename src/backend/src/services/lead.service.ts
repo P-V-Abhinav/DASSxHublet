@@ -1,8 +1,15 @@
 import prisma from '../db/prisma';
-import { LeadState as PrismaLeadState } from '@prisma/client';
 import { LeadState, LeadStateMachine } from '../workflows/state-machine';
 import { WorkflowEventService } from './workflow-event.service';
-import { EventType } from '@prisma/client';
+
+// Defined locally as they are missing from Prisma Client in this setup
+export enum EventType {
+  LEAD_CREATED = 'LEAD_CREATED',
+  STATE_TRANSITION = 'STATE_TRANSITION',
+  MATCH_GENERATED = 'MATCH_GENERATED',
+  ERROR = 'ERROR',
+  INVALID_TRANSITION = 'INVALID_TRANSITION'
+}
 
 export class LeadService {
   /**
@@ -18,7 +25,7 @@ export class LeadService {
       data: {
         buyerId: data.buyerId,
         propertyId: data.propertyId,
-        state: PrismaLeadState.NEW,
+        state: LeadState.NEW,
         matchScore: data.matchScore,
         metadata: data.metadata || {},
       },
@@ -76,7 +83,7 @@ export class LeadService {
     // Perform transition
     const updatedLead = await prisma.lead.update({
       where: { id: leadId },
-      data: { state: toState as PrismaLeadState },
+      data: { state: toState },
       include: {
         buyer: true,
         property: {
@@ -133,7 +140,7 @@ export class LeadService {
       where: {
         buyerId: filters?.buyerId,
         propertyId: filters?.propertyId,
-        state: filters?.state as PrismaLeadState,
+        state: filters?.state,
         ...(filters?.minMatchScore && {
           matchScore: { gte: filters.minMatchScore },
         }),

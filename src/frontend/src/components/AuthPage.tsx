@@ -17,6 +17,7 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
     phone: '',
     password: '',
     // Buyer specific
+    rawQuery: '', // New field
     localities: '',
     minBudget: '',
     maxBudget: '',
@@ -59,16 +60,20 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
             .map((a) => a.trim())
             .filter((a) => a.length > 0);
 
-          const response = await axios.post(`${API_BASE_URL}/buyers`, {
+          const payload: any = {
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            localities: localitiesArray,
-            minBudget: parseInt(formData.minBudget) || 0,
-            maxBudget: parseInt(formData.maxBudget) || 0,
-            bhk: parseInt(formData.bhk) || 2,
-            amenities: amenitiesArray,
-          });
+            rawPreferences: formData.rawQuery,
+          };
+          
+          if (localitiesArray.length > 0) payload.localities = localitiesArray;
+          if (formData.minBudget) payload.minBudget = parseInt(formData.minBudget);
+          if (formData.maxBudget) payload.maxBudget = parseInt(formData.maxBudget);
+          if (formData.bhk) payload.bhk = parseInt(formData.bhk);
+          if (amenitiesArray.length > 0) payload.amenities = amenitiesArray;
+
+          const response = await axios.post(`${API_BASE_URL}/buyers`, payload);
           onAuthSuccess(response.data.id, response.data.name);
         } else {
           const response = await axios.post(`${API_BASE_URL}/sellers`, {
@@ -88,7 +93,7 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -188,110 +193,33 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
 
               {userType === 'buyer' && (
                 <>
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                      Preferred Localities *
+                  {/* Natural Language Input */}
+                  <div style={{ marginBottom: '20px', background: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#4a5568' }}>
+                      ✨ What are you looking for? (AI Powered)
                     </label>
-                    <input
-                      type="text"
-                      name="localities"
-                      value={formData.localities}
+                    <textarea
+                      name="rawQuery"
+                      value={formData.rawQuery}
                       onChange={handleChange}
-                      placeholder="e.g., Bandra, Andheri"
-                      required
+                      placeholder="e.g. 2bhk in Indiranagar under 60 lakhs with parking"
                       style={{
                         width: '100%',
                         padding: '12px',
-                        border: '1px solid #ddd',
+                        border: '1px solid #cbd5e0',
                         borderRadius: '6px',
-                        fontSize: '14px'
+                        minHeight: '80px',
+                        fontSize: '14px',
+                        marginBottom: '4px',
+                        fontFamily: 'inherit'
                       }}
                     />
+                    <small style={{display:'block', color:'#718096', fontSize:'12px'}}>
+                      Describe in your own words - our AI will understand!
+                    </small>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                        Min Budget (₹)
-                      </label>
-                      <input
-                        type="number"
-                        name="minBudget"
-                        value={formData.minBudget}
-                        onChange={handleChange}
-                        placeholder="5000000"
-                        style={{
-                          width: '100%',
-                          padding: '12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '6px',
-                          fontSize: '14px'
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                        Max Budget (₹)
-                      </label>
-                      <input
-                        type="number"
-                        name="maxBudget"
-                        value={formData.maxBudget}
-                        onChange={handleChange}
-                        placeholder="10000000"
-                        style={{
-                          width: '100%',
-                          padding: '12px',
-                          border: '1px solid #ddd',
-                          borderRadius: '6px',
-                          fontSize: '14px'
-                        }}
-                      />
-                    </div>
-                  </div>
 
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                      BHK Preference
-                    </label>
-                    <select
-                      name="bhk"
-                      value={formData.bhk}
-                      onChange={handleChange}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        fontSize: '14px'
-                      }}
-                    >
-                      <option value="1">1 BHK</option>
-                      <option value="2">2 BHK</option>
-                      <option value="3">3 BHK</option>
-                      <option value="4">4 BHK</option>
-                    </select>
-                  </div>
-
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                      Amenities (comma-separated)
-                    </label>
-                    <input
-                      type="text"
-                      name="amenities"
-                      value={formData.amenities}
-                      onChange={handleChange}
-                      placeholder="parking, gym, pool"
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        fontSize: '14px'
-                      }}
-                    />
-                  </div>
                 </>
               )}
 
