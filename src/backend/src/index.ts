@@ -21,7 +21,22 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Hublet API is running' });
+    res.json({ status: 'ok', message: 'Hublet API is running' });
+});
+
+// Scheduler
+import { setupScheduler, runManualScrape } from './cron/scheduler';
+setupScheduler();
+
+// Admin scraping trigger
+app.post('/api/admin/trigger-scrape', async (req, res) => {
+    const { city } = req.body;
+    try {
+        const results = await runManualScrape(city);
+        res.json({ success: true, results });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // API Routes
@@ -34,19 +49,19 @@ app.use('/api/workflow-events', workflowEventRoutes);
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+    res.status(404).json({ error: 'Route not found' });
 });
 
 // Error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Hublet API server running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
+    console.log(`🚀 Hublet API server running on port ${PORT}`);
+    console.log(`📍 Health check: http://localhost:${PORT}/health`);
 });
 
 export default app;
