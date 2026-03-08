@@ -12,6 +12,8 @@ interface Buyer {
     bhk?: number;
     budgetMin?: number;
     budgetMax?: number;
+    areaMin?: number;
+    areaMax?: number;
     amenities: string[];
     createdAt: string;
 }
@@ -62,8 +64,8 @@ interface Lead {
     matchScore?: number;
     createdAt: string;
     updatedAt: string;
-    buyer: { name: string; email: string };
-    property: { title: string; locality: string };
+    buyer: { name: string; email: string; phone?: string };
+    property: { title: string; locality: string; price?: number; bhk?: number; area?: number; seller?: { name: string; email?: string; sellerType?: string } };
 }
 
 interface Match {
@@ -197,25 +199,35 @@ export const AdminDashboard = () => {
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Localities</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>BHK</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Budget</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Area</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Amenities</th>
-                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Created At</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Joined</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {buyers.map((buyer, idx) => (
                                         <tr key={buyer.id} style={{ background: idx % 2 === 0 ? '#f9f9f9' : 'white' }}>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{buyer.name}</td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{buyer.email}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold' }}>{buyer.name}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '13px' }}>{buyer.email}</td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>{buyer.phone || 'N/A'}</td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{buyer.localities.join(', ')}</td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{buyer.bhk || 'N/A'}</td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                                {buyer.budgetMin && buyer.budgetMax
-                                                    ? `₹${buyer.budgetMin / 100000}L - ₹${buyer.budgetMax / 100000}L`
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', maxWidth: '200px' }}>
+                                                {Array.isArray(buyer.localities) ? buyer.localities.join(', ') : (buyer.localities || 'N/A')}
+                                            </td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{buyer.bhk ? `${buyer.bhk} BHK` : 'N/A'}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', color: '#2E7D32', fontWeight: 'bold' }}>
+                                                {buyer.budgetMin || buyer.budgetMax
+                                                    ? `${formatPrice(buyer.budgetMin || 0)} – ${formatPrice(buyer.budgetMax || 0)}`
                                                     : 'N/A'}
                                             </td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{buyer.amenities.join(', ')}</td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{formatDate(buyer.createdAt)}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                                {buyer.areaMin || buyer.areaMax
+                                                    ? `${buyer.areaMin || '?'} – ${buyer.areaMax || '?'} sqft`
+                                                    : 'N/A'}
+                                            </td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '12px' }}>
+                                                {Array.isArray(buyer.amenities) && buyer.amenities.length > 0 ? buyer.amenities.join(', ') : 'None'}
+                                            </td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '12px' }}>{formatDate(buyer.createdAt)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -377,37 +389,56 @@ export const AdminDashboard = () => {
                                 <thead style={{ background: '#4CAF50', color: 'white' }}>
                                     <tr>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Buyer</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Seller</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Property</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Price</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>State</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Match Score</th>
-                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Created At</th>
-                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Updated At</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Created</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Updated</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {leads.map((lead, idx) => (
+                                    {leads.map((lead: any, idx: number) => (
                                         <tr key={lead.id} style={{ background: idx % 2 === 0 ? '#f9f9f9' : 'white' }}>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                                {lead.buyer.name}<br />
+                                                <strong>{lead.buyer.name}</strong><br />
                                                 <small style={{ color: '#666' }}>{lead.buyer.email}</small>
+                                                {lead.buyer.phone && <div style={{ fontSize: '11px', color: '#888' }}>📞 {lead.buyer.phone}</div>}
+                                            </td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                                <strong>{lead.property?.seller?.name || 'Unknown'}</strong><br />
+                                                <small style={{ color: '#666' }}>{lead.property?.seller?.email || ''}</small>
+                                                {lead.property?.seller?.sellerType && (
+                                                    <div><small style={{ color: '#999', textTransform: 'capitalize' }}>{lead.property.seller.sellerType}</small></div>
+                                                )}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {lead.property.title}<br />
                                                 <small style={{ color: '#666' }}>{lead.property.locality}</small>
+                                                {lead.property.bhk && <span style={{ fontSize: '11px', color: '#888' }}> · {lead.property.bhk} BHK</span>}
+                                                {lead.property.area && <span style={{ fontSize: '11px', color: '#888' }}> · {lead.property.area} sqft</span>}
+                                            </td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold', color: '#2E7D32' }}>
+                                                {lead.property.price ? formatPrice(lead.property.price) : '—'}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <span style={{
-                                                    background: lead.state === 'CLOSED' ? '#4CAF50' : lead.state === 'NEW' ? '#2196F3' : '#ff9800',
-                                                    color: 'white',
-                                                    padding: '4px 8px',
-                                                    borderRadius: '4px',
+                                                    background: lead.state === 'CLOSED' ? '#4CAF50' : lead.state === 'NEW' ? '#2196F3' : lead.state === 'CONTACTED' ? '#ff9800' : '#9C27B0',
+                                                    color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '12px',
                                                 }}>
                                                     {lead.state}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{lead.matchScore?.toFixed(1) || 'N/A'}</td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{formatDate(lead.createdAt)}</td>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>{formatDate(lead.updatedAt)}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                                {lead.matchScore ? (
+                                                    <strong style={{ color: lead.matchScore >= 70 ? '#4CAF50' : lead.matchScore >= 40 ? '#ff9800' : '#f44336' }}>
+                                                        {lead.matchScore.toFixed(1)}%
+                                                    </strong>
+                                                ) : 'N/A'}
+                                            </td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '12px' }}>{formatDate(lead.createdAt)}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '12px' }}>{formatDate(lead.updatedAt)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -546,6 +577,6 @@ export const AdminDashboard = () => {
                     <p style={{ fontSize: '32px', margin: 0, color: '#607D8B' }}>{logs.length}</p>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
