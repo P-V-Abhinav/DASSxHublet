@@ -3,6 +3,9 @@ from bs4 import BeautifulSoup
 import time
 import random
 import json
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from schema import validate_listings
 
 def get_magicbricks_listings(city, limit=10):
     """
@@ -203,7 +206,7 @@ def get_magicbricks_listings(city, limit=10):
         # print(f"Error scraping MagicBricks: {str(e)}")
         pass
         
-    return properties
+    return validate_listings(properties)
 
 def parse_price(price_text):
     """

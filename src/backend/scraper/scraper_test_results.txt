@@ -1,0 +1,185 @@
+====================================================================================================
+  SCRAPER COMPARISON REPORT
+  Generated: 2026-03-09 01:06:09
+  City: mumbai  |  Limit: 2
+====================================================================================================
+
+┌─────────────────────────┬──────────┬───────────┬────────────────────────────────┐
+│ Scraper                 │ Listings │ Time (s)  │ Status                         │
+├─────────────────────────┼──────────┼───────────┼────────────────────────────────┤
+│ magicbricks-direct      │        2 │      1.8s │ ✓ OK                           │
+│ magicbricks-apify       │        0 │      1.6s │ {"error": "403 Client Error: F... │
+│ 99acres-direct          │        0 │      0.3s │ OK (0 results)                 │
+│ 99acres-apify           │        2 │     29.2s │ ✓ OK                           │
+│ 99acres-zenrows         │        1 │      7.7s │ ✓ OK                           │
+└─────────────────────────┴──────────┴───────────┴────────────────────────────────┘
+
+
+====================================================================================================
+  FIELD COVERAGE MATRIX
+  ✓ = has data  |  ✗ = missing/empty/default  |  - = scraper failed
+====================================================================================================
+
+  Field            │ MB-Dir  │ MB-Api  │ 99a-Dir │ 99a-Api │ 99a-Zen
+  ────────────────────────┼─────────┼─────────┼─────────┼──────────
+  title            │    ✓    │    -    │    -    │    ✓    │    ✓   
+  price            │    ✓    │    -    │    -    │    ✓    │    ✗   
+  area             │    ✓    │    -    │    -    │    ✓    │    ✗   
+  locality         │    ✓    │    -    │    -    │    ✓    │    ✓   
+  city             │    ✓    │    -    │    -    │    ✓    │    ✓   
+  description      │    ✓    │    -    │    -    │    ✓    │    ✓   
+  sourceUrl        │    ✓    │    -    │    -    │    ✓    │    ✓   
+  externalId       │    ✓    │    -    │    -    │    ✓    │    ✗   
+  source           │    ✓    │    -    │    -    │    ✓    │    ✓   
+  bhk              │    ✗    │    -    │    -    │    ✓    │    ✗   
+  amenities        │    ✓    │    -    │    -    │    ✓    │    ✗   
+  propertyType     │    ✓    │    -    │    -    │    ✓    │    ✓   
+  sellerName       │    ✗    │    -    │    -    │    ✓    │    ✗   
+  sellerType       │    ✓    │    -    │    -    │    ✓    │    ✗   
+  ownerName        │    ✗    │    -    │    -    │    ✗    │    ✗   
+  companyName      │    ✗    │    -    │    -    │    ✓    │    ✗   
+  imageUrl         │    ✗    │    -    │    -    │    ✓    │    ✗   
+  landmark         │    ✗    │    -    │    -    │    ✗    │    ✗   
+  postedDate       │    ✗    │    -    │    -    │    ✓    │    ✗   
+
+
+====================================================================================================
+  SCRAPER: magicbricks-direct
+  Duration: 1.8s  |  Results: 2
+====================================================================================================
+
+  ── Listing 1 ────────────────────────────────────────────────
+
+    title            : Office Space for Sale in Sunteck Pinnacle, Goregaon West Mumbai
+    price            : ₹1.14 Cr
+    area             : 383
+    locality         : Sunteck Pinnacle, Goregaon West Mumbai
+    city             : mumbai
+    description      : Commercial Office Space for Sale in Goregaon West, Mumbai. Covered area is 383Sq...
+    sourceUrl        : https://www.magicbricks.com/sunteck-pinnacle-goregaon-west-mumbai-pdpid-4d423534...
+    externalId       : https://www.magicbricks.com/sunteck-pinnacle-goregaon-west-mumbai-pdpid-4d423534...
+    source           : MagicBricks
+    bhk              : (empty)  ◄ N/A
+    amenities        : Air Conditioning
+    propertyType     : commercial
+    sellerName       : Unknown  ◄ N/A
+    sellerType       : Agent
+    ownerName        : (empty)  ◄ N/A
+    companyName      : (empty)  ◄ N/A
+    imageUrl         : (empty)  ◄ N/A
+    landmark         : (empty)  ◄ N/A
+    postedDate       : (empty)  ◄ N/A
+
+  ── Listing 2 ────────────────────────────────────────────────
+
+    title            : Office Space for Sale in Imprint Jangid Elysium, Borivali East Mumbai
+    price            : ₹2.18 Cr
+    area             : 646
+    locality         : Imprint Jangid Elysium, Borivali East Mumbai
+    city             : mumbai
+    description      : Commercial Office Space for Sale in Borivali East, Mumbai. Covered area is 646.0...
+    sourceUrl        : https://www.magicbricks.com/imprint-jangid-elysium-borivali-east-mumbai-pdpid-4d...
+    externalId       : https://www.magicbricks.com/imprint-jangid-elysium-borivali-east-mumbai-pdpid-4d...
+    source           : MagicBricks
+    bhk              : (empty)  ◄ N/A
+    amenities        : Air Conditioning
+    propertyType     : commercial
+    sellerName       : Unknown  ◄ N/A
+    sellerType       : Agent
+    ownerName        : (empty)  ◄ N/A
+    companyName      : (empty)  ◄ N/A
+    imageUrl         : (empty)  ◄ N/A
+    landmark         : (empty)  ◄ N/A
+    postedDate       : (empty)  ◄ N/A
+
+====================================================================================================
+  SCRAPER: magicbricks-apify
+  Duration: 1.6s  |  Results: 0
+====================================================================================================
+  ❌ ERROR: {"error": "403 Client Error: Forbidden for url: https://api.apify.com/v2/acts/ecomscrape~magicbricks-property-search-scraper/runs"}
+
+====================================================================================================
+  SCRAPER: 99acres-direct
+  Duration: 0.3s  |  Results: 0
+====================================================================================================
+  ⚠ No listings returned (page may have changed or blocked request).
+
+====================================================================================================
+  SCRAPER: 99acres-apify
+  Duration: 29.2s  |  Results: 2
+====================================================================================================
+
+  ── Listing 1 ────────────────────────────────────────────────
+
+    title            : 4 BHK Flat in Koregaon Park Annexe, Pune
+    price            : ₹2.59 Cr
+    area             : 1707
+    locality         : Koregaon Park Annexe, Pune
+    city             : Pune East
+    description      : Enjoy a blissful living experience in Shubh Tristar. This residential project en...
+    sourceUrl        : https://www.99acres.com//4-bhk-bedroom-apartment-flat-for-sale-in-shubh-tristar-...
+    externalId       : 88431808
+    source           : 99acres-Apify
+    bhk              : 4
+    amenities        : 1, 4, 12, 25, 26
+    propertyType     : Residential Apartment
+    sellerName       : Shubh Housing
+    sellerType       : Builder
+    ownerName        : (empty)  ◄ N/A
+    companyName      : Shubh Housing
+    imageUrl         : https://imagecdn.99acres.com/media1/35291/6/705826807T-1769747174750.jpg
+    landmark         : (empty)  ◄ N/A
+    postedDate       : 30th Jan, 2026
+
+  ── Listing 2 ────────────────────────────────────────────────
+
+    title            : Residential land / Plot in Mulshi, Pune
+    price            : ₹62.50 Lac
+    area             : 2500
+    locality         : Mulshi, Pune
+    city             : Pune West
+    description      : Pmrda sanctioned rera approved na plots in mulshi 55 acre development with beaut...
+    sourceUrl        : https://www.99acres.com//residential-land-plot-for-sale-in-synergy-satvam-hills-...
+    externalId       : 85842028
+    source           : 99acres-Apify
+    bhk              : (empty)  ◄ N/A
+    amenities        : 5, 23, 24, 26
+    propertyType     : Residential Land
+    sellerName       : Leena Loungani
+    sellerType       : Agent
+    ownerName        : (empty)  ◄ N/A
+    companyName      : Qubic Properties
+    imageUrl         : https://imagecdn.99acres.com/media1/32958/9/659169605T-1766883405046.jpg
+    landmark         : (empty)  ◄ N/A
+    postedDate       : 13th Feb, 2026
+
+====================================================================================================
+  SCRAPER: 99acres-zenrows
+  Duration: 7.7s  |  Results: 1
+====================================================================================================
+
+  ── Listing 1 ────────────────────────────────────────────────
+
+    title            : Residential land / Plot in Kesnand, Pune
+    price            : ₹0 (N/A)  ◄ N/A
+    area             : (empty)  ◄ N/A
+    locality         : mumbai
+    city             : mumbai
+    description      : Property in mumbai
+    sourceUrl        : https://www.99acres.com/residential-land-plot-for-sale-in-kuber-shrushti-residen...
+    externalId       : (empty)  ◄ N/A
+    source           : 99acres-ZenRows
+    bhk              : (empty)  ◄ N/A
+    amenities        : (none)  ◄ N/A
+    propertyType     : residential
+    sellerName       : Unknown  ◄ N/A
+    sellerType       : Unknown  ◄ N/A
+    ownerName        : (empty)  ◄ N/A
+    companyName      : (empty)  ◄ N/A
+    imageUrl         : (empty)  ◄ N/A
+    landmark         : (empty)  ◄ N/A
+    postedDate       : (empty)  ◄ N/A
+
+====================================================================================================
+  End of report. File: /home/rachitmehta/workspace/coursework/sem4/DASS/project-monorepo-team-46/src/backend/scraper/scraper_test_results.txt
+====================================================================================================

@@ -7,6 +7,10 @@ import { LeadService } from './lead.service';
 
 const prisma = new PrismaClient();
 
+/**
+ * Strict JSON schema — all scrapers output this shape.
+ * Missing fields are filled with null/0/[] by the Python schema validator.
+ */
 interface ScrapedProperty {
     title: string;
     price: number;
@@ -20,8 +24,13 @@ interface ScrapedProperty {
     bhk: number;
     amenities: string[];
     propertyType: string;
-    sellerName?: string;
-    sellerType?: string;
+    sellerName: string;
+    sellerType: string;
+    ownerName: string;
+    companyName: string;
+    imageUrl: string;
+    landmark: string;
+    postedDate: string;
 }
 
 export class ScrapingService {
@@ -31,8 +40,6 @@ export class ScrapingService {
 
     // Helper to get or create a seller based on scraped data
     private static async getOrCreateSeller(name: string = 'System Scraper', type: string = 'system') {
-        // Create a unique email for this seller
-        // Allow re-use if the name matches (simple heuristic)
         const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
         const email = `${safeName}@hublet.scraped`;
 
@@ -45,9 +52,9 @@ export class ScrapingService {
                 data: {
                     name: name,
                     email: email,
-                    phone: '0000000000', // Placeholder
+                    phone: '0000000000',
                     sellerType: type.toLowerCase(),
-                    rating: 4.0, // Default rating for scraped sellers
+                    rating: 4.0,
                     completedDeals: 0
                 }
             });
@@ -69,11 +76,8 @@ export class ScrapingService {
             const name = this.getRandomName();
             const email = `buyer.${Date.now()}.${Math.floor(Math.random() * 1000)}@example.com`;
 
-            // Create budget range around property price
             const budgetMin = Math.floor(property.price * 0.8);
             const budgetMax = Math.floor(property.price * 1.2);
-
-            // Create area range around property area
             const areaMin = Math.floor(property.area * 0.8);
             const areaMax = Math.floor(property.area * 1.2);
 
@@ -88,7 +92,7 @@ export class ScrapingService {
                     budgetMin: budgetMin,
                     budgetMax: budgetMax,
                     bhk: property.bhk,
-                    amenities: property.amenities, // Interested in same amenities
+                    amenities: property.amenities,
                     metadata: JSON.stringify({
                         source: 'synthetic-scraper',
                         generatedForPropertyId: property.id,
@@ -103,15 +107,68 @@ export class ScrapingService {
         }
     }
 
-    static async scrapeCity(city: string, limit: number = 10): Promise<{ added: number, errors: string[] }> {
-        return new Promise(async (resolve, reject) => {
-            console.log(`[ScrapingService] Starting scrape for ${city} (limit: ${limit})`);
-
+    /**
+     * List all available scrapers by calling the Python registry.
+     */
+    static async listScrapers(): Promise<any[]> {
+        return new Promise((resolve, reject) => {
             const pythonProcess = spawn(ScrapingService.PYTHON_EXEC_PATH, [
                 this.PYTHON_SCRIPT_PATH,
-                '--city', city,
-                '--limit', limit.toString()
+                '--list-scrapers'
             ]);
+
+            let dataString = '';
+            let errorString = '';
+
+            pythonProcess.stdout.on('data', (data) => { dataString += data.toString(); });
+            pythonProcess.stderr.on('data', (data) => { errorString += data.toString(); });
+
+            pythonProcess.on('close', (code) => {
+                if (code !== 0) {
+                    return reject(new Error(`Failed to list scrapers: ${errorString}`));
+                }
+                try {
+                    resolve(JSON.parse(dataString));
+                } catch (err) {
+                    reject(new Error('Invalid JSON from scraper registry'));
+                }
+            });
+        });
+    }
+
+    /**
+     * Scrape a city using the specified scraper.
+     * The scraper name maps to a Python parser via the registry.
+     * The service is completely scraper-agnostic — it only consumes the strict JSON schema.
+     */
+    static async scrapeCity(city: string, limit: number = 10, scraper: string = 'magicbricks-direct'): Promise<{ added: number, errors: string[] }> {
+        return new Promise(async (resolve, reject) => {
+            console.log(`[ScrapingService] Starting scrape for ${city} (limit: ${limit}, scraper: ${scraper})`);
+
+            const args = [
+                this.PYTHON_SCRIPT_PATH,
+                '--scraper', scraper,
+                '--city', city,
+                '--limit', limit.toString(),
+            ];
+
+            // Pass appropriate API tokens based on scraper type
+            if (scraper.includes('apify')) {
+                const apifyToken = process.env.APIFY_TOKEN;
+                if (!apifyToken) {
+                    return reject(new Error('APIFY_TOKEN environment variable is required for Apify scrapers'));
+                }
+                args.push('--token', apifyToken);
+            }
+            if (scraper.includes('zenrows')) {
+                const zenrowsKey = process.env.ZENROWS_API_KEY;
+                if (!zenrowsKey) {
+                    return reject(new Error('ZENROWS_API_KEY environment variable is required for ZenRows scrapers'));
+                }
+                args.push('--zenrows-key', zenrowsKey);
+            }
+
+            const pythonProcess = spawn(ScrapingService.PYTHON_EXEC_PATH, args);
 
             let dataString = '';
             let errorString = '';
@@ -133,9 +190,7 @@ export class ScrapingService {
                 try {
                     const listings: ScrapedProperty[] = JSON.parse(dataString);
                     console.log(`[ScrapingService] Scraper returned ${listings.length} listings`);
-                    // console.log('[ScrapingService] Raw Scraper Output:', JSON.stringify(listings, null, 2));
 
-                    // const sellerId = await this.getSystemSellerId(); // Removed static system seller
                     const matchingService = new MatchingService();
                     let addedCount = 0;
                     const processingErrors: string[] = [];
@@ -144,12 +199,12 @@ export class ScrapingService {
                         try {
                             const sellerId = await this.getOrCreateSeller(listing.sellerName, listing.sellerType);
 
-                            // Check for existing property
+                            // Check for existing property (deduplication)
                             const existing = await prisma.property.findFirst({
                                 where: {
                                     title: listing.title,
                                     locality: listing.locality,
-                                    sellerId: sellerId // Now checking specific seller
+                                    sellerId: sellerId
                                 }
                             });
 
@@ -174,6 +229,12 @@ export class ScrapingService {
                                         sourceUrl: listing.sourceUrl,
                                         externalId: listing.externalId,
                                         source: listing.source,
+                                        scraper: scraper,
+                                        ownerName: listing.ownerName,
+                                        companyName: listing.companyName,
+                                        imageUrl: listing.imageUrl,
+                                        landmark: listing.landmark,
+                                        postedDate: listing.postedDate,
                                         scrapedAt: new Date().toISOString()
                                     })
                                 }
@@ -181,13 +242,11 @@ export class ScrapingService {
                             console.log(`[ScrapingService] Successfully added property: ${newProperty.title} (ID: ${newProperty.id})`);
                             addedCount++;
 
-
                             // --- AUTO-MATCHING & LEAD CREATION ---
                             try {
                                 const matches = await matchingService.findMatchesForProperty(newProperty.id);
                                 console.log(`[ScrapingService] Generated ${matches.length} matches for "${newProperty.title}"`);
 
-                                // Auto-create leads for high quality matches
                                 for (const match of matches) {
                                     if (match.matchScore >= 70) {
                                         await LeadService.createLead({
@@ -196,6 +255,7 @@ export class ScrapingService {
                                             matchScore: match.matchScore,
                                             metadata: {
                                                 source: 'auto-scraper',
+                                                scraper: scraper,
                                                 autoCreated: true
                                             }
                                         });
