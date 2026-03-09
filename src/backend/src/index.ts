@@ -72,16 +72,7 @@ app.get('/health', (req, res) => {
 // Public authentication routes
 app.use('/api/auth', authRoutes);
 
-// All other /api routes are protected by JWT
-app.use('/api', authenticateJwt);
-
-// Scheduler
-import { setupScheduler, runManualScrape } from './cron/scheduler';
-import { ScrapingService } from './services/scraping.service';
-import { exportUsersList } from './utils/export-users';
-setupScheduler();
-
-// Python environment debug endpoint
+// Python environment debug endpoint (no auth — diagnostic only)
 app.get('/api/admin/debug-python', (req, res) => {
     const { execSync } = require('child_process');
     const fs = require('fs');
@@ -114,6 +105,15 @@ app.get('/api/admin/debug-python', (req, res) => {
 
     res.json(results);
 });
+
+// All other /api routes are protected by JWT
+app.use('/api', authenticateJwt);
+
+// Scheduler
+import { setupScheduler, runManualScrape } from './cron/scheduler';
+import { ScrapingService } from './services/scraping.service';
+import { exportUsersList } from './utils/export-users';
+setupScheduler();
 
 // List available scrapers
 app.get('/api/admin/scrapers', requireRoles('admin'), async (req, res) => {
