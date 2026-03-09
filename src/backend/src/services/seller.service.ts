@@ -167,7 +167,9 @@ export class SellerService {
 
         const currentTotal = seller.rating * seller.ratingCount;
         const newTotalRatings = seller.ratingCount + 1;
-        const updatedRating = (currentTotal + newRating) / newTotalRatings;
+        // Compute updated average and round to one decimal place for display
+        const rawUpdated = (currentTotal + newRating) / newTotalRatings;
+        const updatedRating = Math.round(rawUpdated * 10) / 10;
 
         const trustScore = this.calculateTrustScore(updatedRating, seller.completedDeals);
 
