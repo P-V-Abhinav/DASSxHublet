@@ -35,19 +35,19 @@ interface ScrapedProperty {
 
 export class ScrapingService {
     private static SCRAPER_DIR = (() => {
-        // __dirname = dist/services/ → ../../scraper should be src/backend/scraper
-        // But if CWD-based resolution is off, also try resolved from __filename
         const fs = require('fs');
+        // process.cwd() = src/backend on Render (rootDir setting)
+        // __dirname can vary depending on tsx vs compiled js
         const candidates = [
+            path.join(process.cwd(), 'scraper'),
+            path.join(__dirname, '../scraper'),
             path.join(__dirname, '../../scraper'),
             path.join(__dirname, '../../../scraper'),
-            path.join(process.cwd(), 'scraper'),
-            path.join(process.cwd(), 'src/backend/scraper'),
         ];
         for (const c of candidates) {
             if (fs.existsSync(path.join(c, 'scraper.py'))) return c;
         }
-        return path.join(__dirname, '../../scraper'); // fallback
+        return path.join(process.cwd(), 'scraper'); // fallback
     })();
     // Resolve python executable: explicit env var > local venv > system python3
     private static PYTHON_EXEC_PATH = (() => {

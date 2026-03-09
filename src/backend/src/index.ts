@@ -79,7 +79,7 @@ app.get('/api/admin/debug-python', (req, res) => {
     };
 
     const PYTHON_PATH = process.env.PYTHON_PATH || 'python3';
-    const scraperDir = path.join(__dirname, '../../scraper');
+    const scraperDir = path.join(process.cwd(), 'scraper');
     const venvPython = path.join(scraperDir, 'venv/bin/python');
 
     results['__dirname'] = __dirname;
