@@ -36,8 +36,6 @@ interface ScrapedProperty {
 export class ScrapingService {
     private static SCRAPER_DIR = (() => {
         const fs = require('fs');
-        // process.cwd() = src/backend on Render (rootDir setting)
-        // __dirname can vary depending on tsx vs compiled js
         const candidates = [
             path.join(process.cwd(), 'scraper'),
             path.join(__dirname, '../scraper'),
@@ -47,18 +45,16 @@ export class ScrapingService {
         for (const c of candidates) {
             if (fs.existsSync(path.join(c, 'scraper.py'))) return c;
         }
-        return path.join(process.cwd(), 'scraper'); // fallback
+        return path.join(process.cwd(), 'scraper');
     })();
-    // Resolve python executable: explicit env var > local venv > system python3
+    // Resolve python: venv inside scraper dir takes priority (always has deps installed)
+    // then explicit PYTHON_PATH env var, then system python3
     private static PYTHON_EXEC_PATH = (() => {
-        if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
+        const fs = require('fs');
         const venvPython = path.join(ScrapingService.SCRAPER_DIR, 'venv/bin/python');
-        try {
-            require('fs').accessSync(venvPython);
-            return venvPython;
-        } catch {
-            return 'python3';
-        }
+        if (fs.existsSync(venvPython)) return venvPython;
+        if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
+        return 'python3';
     })();
     private static PYTHON_SCRIPT_PATH = path.join(ScrapingService.SCRAPER_DIR, 'scraper.py');
 

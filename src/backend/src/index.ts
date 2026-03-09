@@ -92,14 +92,16 @@ app.get('/api/admin/debug-python', (req, res) => {
         catch (e: any) { return `ERROR: ${e.message}`; }
     };
 
-    const PYTHON_PATH = process.env.PYTHON_PATH || 'python3';
     const scraperDir = path.join(process.cwd(), 'scraper');
     const venvPython = path.join(scraperDir, 'venv/bin/python');
+    const resolvedPython = fs.existsSync(venvPython)
+        ? venvPython
+        : (process.env.PYTHON_PATH || 'python3');
 
     results['__dirname'] = __dirname;
     results['process_cwd'] = process.cwd();
     results['PYTHON_PATH_env'] = process.env.PYTHON_PATH || '(not set)';
-    results['resolved_python'] = PYTHON_PATH;
+    results['resolved_python'] = resolvedPython;
     results['venv_python_exists'] = fs.existsSync(venvPython) ? 'YES' : 'NO';
     results['venv_python_path'] = venvPython;
     results['scraper_dir'] = scraperDir;
@@ -107,8 +109,8 @@ app.get('/api/admin/debug-python', (req, res) => {
     results['scraper_py_exists'] = fs.existsSync(path.join(scraperDir, 'scraper.py')) ? 'YES' : 'NO';
     results['which_python3'] = run('which python3');
     results['python3_version'] = run('python3 --version');
-    results['requests_check'] = run(`${PYTHON_PATH} -c "import requests; print('requests OK:', requests.__version__)"`);
-    results['sys_path'] = run(`${PYTHON_PATH} -c "import sys; print(sys.path)"`);
+    results['requests_check'] = run(`${resolvedPython} -c "import requests; print('requests OK:', requests.__version__)"`);
+    results['sys_path'] = run(`${resolvedPython} -c "import sys; print(sys.path)"`);
 
     res.json(results);
 });
