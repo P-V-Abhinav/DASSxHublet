@@ -125,8 +125,10 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
 
   const handleRateSeller = async (sellerId: string, rating: number) => {
     try {
+      // Use the same token key used by the app auth utilities
+      const token = localStorage.getItem('hublet_auth_token') || localStorage.getItem('token');
       await axios.post(`${API_BASE_URL}/sellers/${sellerId}/rate`, { rating }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       alert('Rating submitted successfully!');
       fetchMatches();
@@ -138,9 +140,10 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
   const handleContactAgent = async (sellerId: string) => {
     try {
       // Basic mock since real emailing happens in backend
+      const token = localStorage.getItem('hublet_auth_token') || localStorage.getItem('token');
       await axios.post(`${API_BASE_URL}/sellers/${sellerId}/contact`, 
         { message: 'I am interested in your property', buyerName, buyerEmail: '' },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
       alert('Email sent to seller successfully!');
     } catch (err) {

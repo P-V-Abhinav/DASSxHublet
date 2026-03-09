@@ -210,14 +210,13 @@ export const AdminDashboard = () => {
 
     const handleOverrideRating = async (sellerId: string, newRating: number) => {
         try {
-            await axios.put(`${API_BASE_URL}/sellers/${sellerId}`, {
-                rating: newRating,
-                ratingCount: 1 // Override it completely
-            });
-            alert('Rating overridden successfully!');
+            // Use the dedicated rating endpoint so the new rating is folded into the
+            // existing average (admin ratings count as one additional rating).
+            await axios.post(`${API_BASE_URL}/sellers/${sellerId}/rate`, { rating: newRating });
+            alert('Rating submitted successfully! (admin rating recorded)');
             fetchData();
-        } catch (error) {
-            alert('Failed to override rating. Make sure you are logged in as admin.');
+        } catch (error: any) {
+            alert('Failed to submit rating. Make sure you are logged in as admin. ' + (error?.response?.data?.error || ''));
         }
     };
 
@@ -482,7 +481,9 @@ export const AdminDashboard = () => {
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {seller.ratingCount === 0 ? "Not rated" : (
                                                     <>
-                                                        <span style={{ color: '#ff9800' }}>{'⭐'.repeat(Math.min(Math.round(seller.rating), 5))}</span> {seller.rating.toFixed(1)}
+                                                        <span style={{ color: '#ff9800' }}>{'⭐'.repeat(Math.min(Math.round(seller.rating), 5))}</span>
+                                                        <span style={{ marginLeft: '6px', fontWeight: 'bold' }}>{seller.rating.toFixed(1)}</span>
+                                                        <span style={{ marginLeft: '8px', fontSize: '12px', color: '#666' }}>({seller.ratingCount} ratings)</span>
                                                     </>
                                                 )}
                                             </td>
