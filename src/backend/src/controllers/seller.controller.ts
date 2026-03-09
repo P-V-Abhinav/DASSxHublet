@@ -95,4 +95,36 @@ export class SellerController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  /**
+   * Rate seller
+   */
+  static async rateSeller(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { rating } = req.body;
+      if (typeof rating !== 'number' || rating < 0 || rating > 5) {
+        return res.status(400).json({ error: 'Rating must be a number between 0 and 5' });
+      }
+      const seller = await SellerService.rateSeller(id, rating);
+      res.json(seller);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  /**
+   * Contact seller
+   */
+  static async contactSeller(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { message, buyerName, buyerEmail } = req.body;
+      // In a real app, integrate with email service here (e.g. SendGrid, Nodemailer)
+      console.log(`[Email Mock] To Seller ID ${id} from ${buyerName} (${buyerEmail}): ${message}`);
+      res.status(200).json({ success: true, message: 'Email sent to seller successfully.' });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }

@@ -51,10 +51,12 @@ export class ScrapingService {
     // then explicit PYTHON_PATH env var, then system python3
     private static PYTHON_EXEC_PATH = (() => {
         const fs = require('fs');
-        const venvPython = path.join(ScrapingService.SCRAPER_DIR, 'venv/bin/python');
-        if (fs.existsSync(venvPython)) return venvPython;
+        const venvPythonPosix = path.join(ScrapingService.SCRAPER_DIR, 'venv', 'bin', 'python');
+        const venvPythonWindows = path.join(ScrapingService.SCRAPER_DIR, 'venv', 'Scripts', 'python.exe');
+        if (fs.existsSync(venvPythonPosix)) return venvPythonPosix;
+        if (fs.existsSync(venvPythonWindows)) return venvPythonWindows;
         if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
-        return 'python3';
+        return process.platform === 'win32' ? 'python' : 'python3';
     })();
     private static PYTHON_SCRIPT_PATH = path.join(ScrapingService.SCRAPER_DIR, 'scraper.py');
 

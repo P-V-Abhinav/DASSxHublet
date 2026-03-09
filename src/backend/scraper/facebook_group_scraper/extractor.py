@@ -55,7 +55,7 @@ class GroqExtractor:
             return json.loads(response.choices[0].message.content)
 
         except Exception as e:
-            print(f"  ⚠️  ERROR: {e}")
+            print(f"  [ERROR] {e}")
             return self._fallback(title)
 
     # ── Batch extraction ───────────────────────────────
@@ -126,7 +126,7 @@ class GroqExtractor:
         ).reset_index(drop=True)
         final_dupes = before_final - len(out_df)
         if final_dupes > 0:
-            print(f"\n🧹 Removed {final_dupes} duplicate(s) from extracted output")
+            print(f"\n[DEDUPLICATION] Removed {final_dupes} duplicate(s) from extracted output")
 
         return out_df
 

@@ -18,10 +18,62 @@ export interface IntentParser {
 }
 
 /**
- * Basic keyword-based parser
- * Simple regex and keyword matching - to be replaced with NLP later
+ * Keyword-based parser with known-locality scanning
+ * Handles inputs like "Thane", "3 BHK in Thane", "Office space in Mumbai" etc.
  */
 export class KeywordIntentParser implements IntentParser {
+  /**
+   * Known Indian cities and localities — sorted longest-first so multi-word names
+   * (e.g. "Navi Mumbai", "Thane West") are matched before their shorter prefixes.
+   */
+  private readonly KNOWN_LOCALITIES: string[] = [
+    // Multi-word names first (will be sorted at runtime anyway, kept readable here)
+    'navi mumbai', 'thane west', 'thane east', 'mira road', 'vasai virar',
+    'lower parel', 'marine lines', 'nariman point', 'vile parle',
+    'kopar khairane', 'pimple saudagar', 'koregaon park', 'kalyani nagar',
+    'electronic city', 'hitech city', 'jubilee hills', 'banjara hills',
+    'hsr layout', 'jp nagar', 'kr puram', 'teen haath naka', 'vartak nagar',
+    'wagle estate', 'ghodbunder road', 'manpada', 'kolshet',
+    // Major Indian cities
+    'mumbai', 'delhi', 'bangalore', 'bengaluru', 'hyderabad', 'ahmedabad',
+    'chennai', 'kolkata', 'surat', 'pune', 'jaipur', 'lucknow', 'kanpur',
+    'nagpur', 'indore', 'thane', 'bhopal', 'visakhapatnam', 'patna',
+    'vadodara', 'ghaziabad', 'ludhiana', 'agra', 'nashik', 'faridabad',
+    'meerut', 'rajkot', 'varanasi', 'aurangabad', 'dhanbad', 'amritsar',
+    'coimbatore', 'mysore', 'mysuru', 'kochi', 'noida', 'gurgaon', 'gurugram',
+    // Mumbai / MMR
+    'andheri', 'bandra', 'powai', 'malad', 'goregaon', 'borivali', 'kandivali',
+    'dahisar', 'bhayander', 'vasai', 'virar', 'nalasopara', 'juhu', 'versova',
+    'lokhandwala', 'khar', 'santacruz', 'jogeshwari', 'kurla', 'ghatkopar',
+    'vikhroli', 'mulund', 'bhandup', 'nahur', 'worli', 'prabhadevi', 'mahim',
+    'dadar', 'matunga', 'sion', 'chembur', 'dharavi', 'colaba', 'fort',
+    'churchgate', 'kalyan', 'dombivli', 'ulhasnagar', 'bhiwandi', 'badlapur',
+    'ambernath', 'panvel', 'kharghar', 'nerul', 'belapur', 'vashi', 'turbhe',
+    'airoli', 'ghansoli', 'rabale', 'mahape', 'majiwada', 'naupada', 'charai',
+    'panchpakhadi', 'upvan', 'owale', 'pokhran', 'kopri', 'uthalsar',
+    // Pune
+    'kothrud', 'hadapsar', 'viman nagar', 'baner', 'aundh', 'hinjewadi',
+    'wakad', 'shivajinagar', 'kharadi', 'undri', 'kondhwa', 'sinhagad road',
+    // Bangalore
+    'koramangala', 'indiranagar', 'whitefield', 'marathahalli', 'hebbal',
+    'yelahanka', 'sarjapur', 'bannerghatta', 'jayanagar', 'ecity',
+    // Hyderabad
+    'gachibowli', 'madhapur', 'kondapur', 'ameerpet', 'secunderabad',
+    'kukatpally', 'miyapur',
+  ].sort((a, b) => b.length - a.length); // longest first
+
+  private readonly NOISE_WORDS = new Set([
+    'a', 'an', 'the', 'this', 'that', 'my', 'your', 'our', 'their',
+    'in', 'at', 'on', 'near', 'around', 'within', 'by', 'of', 'to',
+    'looking', 'for', 'need', 'want', 'buy', 'get', 'find',
+    'flat', 'house', 'apartment', 'property', 'properties', 'home', 'homes',
+    'room', 'rooms', 'studio', 'office', 'space', 'plot', 'land', 'villa',
+    'bhk', 'sqft', 'crore', 'budget', 'lakh', 'lac', 'cr',
+    'good', 'nice', 'best', 'affordable', 'cheap', 'luxury',
+    'residential', 'commercial', 'locality', 'area', 'location', 'sector',
+    'new', 'old', 'ready', 'possession',
+  ]);
+
   parse(rawText: string): ParsedIntent {
     const text = rawText.toLowerCase();
 
@@ -37,37 +89,82 @@ export class KeywordIntentParser implements IntentParser {
   }
 
   private extractLocalities(text: string): string[] {
-    const localities: string[] = [];
-    
-    // Common location keywords
-    const locationKeywords = ['in', 'near', 'around', 'locality', 'area'];
-    
-    // Look for patterns like "in Indiranagar" or "near Koramangala"
-    for (const keyword of locationKeywords) {
-      const regex = new RegExp(`${keyword}\\s+([a-z]+(?:\\s+[a-z]+)?)`, 'gi');
-      const matches = text.matchAll(regex);
-      
-      for (const match of matches) {
-        if (match[1]) {
-          localities.push(match[1].trim());
+    const found: string[] = [];
+
+    // ── Pass 1: scan for known localities directly in the text ────────────────
+    // Longest-first order prevents "mumbai" matching inside "navi mumbai".
+    const alreadyCovered = new Set<number>(); // track char positions consumed
+    for (const loc of this.KNOWN_LOCALITIES) {
+      const pattern = new RegExp(`\\b${loc.replace(/ /g, '\\s+')}\\b`, 'gi');
+      let m: RegExpExecArray | null;
+      while ((m = pattern.exec(text)) !== null) {
+        // Check no character in this match was already claimed by a longer match
+        const start = m.index;
+        const end = start + m[0].length;
+        let overlap = false;
+        for (let i = start; i < end; i++) {
+          if (alreadyCovered.has(i)) { overlap = true; break; }
+        }
+        if (!overlap) {
+          found.push(loc);
+          for (let i = start; i < end; i++) alreadyCovered.add(i);
+          break; // one hit per locality name is enough
         }
       }
     }
 
-    return [...new Set(localities)]; // Remove duplicates
+    // ── Pass 2: preposition-based extraction for unlisted localities ─────────
+    const prepositions = ['in', 'near', 'around', 'at'];
+    for (const prep of prepositions) {
+      // Match the preposition followed by 1–3 capitalised/title-case words
+      // (we run on the original-case input to catch "Thane", "Navi Mumbai" etc.)
+      const re = new RegExp(`\\b${prep}\\s+([A-Z][A-Za-z]+(?:\\s+[A-Z][A-Za-z]+){0,2})`, 'g');
+      let m: RegExpExecArray | null;
+      const original = text.replace(/\b\w/g, c => c.toUpperCase()); // re-capitalise for matching
+      while ((m = re.exec(original)) !== null) {
+        const candidate = m[1].toLowerCase().trim();
+        if (!this.isNoise(candidate) && !found.includes(candidate)) {
+          found.push(candidate);
+        }
+      }
+    }
+
+    // ── Pass 3: "localities/areas like X, Y" pattern ─────────────────────────
+    const listMatch = text.match(/(?:localities|areas)\s+(?:like|such as)\s+([a-z,\s]+)/i);
+    if (listMatch) {
+      listMatch[1].split(/,|\band\b/).map(s => s.trim()).forEach(c => {
+        if (!this.isNoise(c) && !found.includes(c)) found.push(c);
+      });
+    }
+
+    // Remove shorter entries that are strict substrings of a longer entry
+    const deduped = [...new Set(found)];
+    return deduped.filter(
+      loc => !deduped.some(other => other !== loc && other.includes(loc) && other.length > loc.length)
+    );
+  }
+
+  private isNoise(text: string): boolean {
+    return text.length < 3 || this.NOISE_WORDS.has(text);
   }
 
   private extractBHK(text: string): number | undefined {
-    // Look for patterns like "2 bhk", "3bhk", "2-bhk"
-    const bhkMatch = text.match(/(\d+)\s*[-]?\s*bhk/i);
+    // Look for patterns like "2 bhk", "3bhk", "2-bhk", "4.5bhk"
+    const bhkMatch = text.match(/(\d+(?:\.\d+)?)\s*[-]?\s*bhk/i);
     if (bhkMatch) {
-      return parseInt(bhkMatch[1]);
+      return Math.floor(parseFloat(bhkMatch[1]));
     }
 
-    // Look for patterns like "2 bedroom"
-    const bedroomMatch = text.match(/(\d+)\s*bedroom/i);
-    if (bedroomMatch) {
-      return parseInt(bedroomMatch[1]);
+    // Look for patterns like "2 bedroom", "3 rooms", "1 flat"
+    const roomMatch = text.match(/(\d+)\s*(?:bedroom|room|flat|apartment|bed)/i);
+    if (roomMatch) {
+      return parseInt(roomMatch[1]);
+    }
+
+    // Handle just "2bhk" as a single token
+    const simpleMatch = text.match(/\b(\d+)\s*b\b/i);
+    if (simpleMatch) {
+      return parseInt(simpleMatch[1]);
     }
 
     return undefined;
@@ -106,66 +203,64 @@ export class KeywordIntentParser implements IntentParser {
   }
 
   private extractBudgetMin(text: string): number | undefined {
-    // Look for patterns like "budget 50 lakhs to 70 lakhs"
-    const rangeMatch = text.match(/budget.*?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)\s*(?:to|[-])\s*(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
+    // Look for various shorthand patterns like '1.2cr', '50l', '75lac'
+    const lakhMultiplier = 100000;
+    const croreMultiplier = 10000000;
+
+    // Range patterns like "50-70 lakhs" or "1.2-1.5 cr"
+    const rangeMatch = text.match(/budget.*?(\d+\.?\d*)\s*[-to]\s*(\d+\.?\d*)\s*(?:lakhs?|lacs?|l|cr|crores?)/i);
     if (rangeMatch) {
-      return parseFloat(rangeMatch[1]) * 100000;
+      const isCr = /cr|crore/i.test(rangeMatch[0]);
+      return parseFloat(rangeMatch[1]) * (isCr ? croreMultiplier : lakhMultiplier);
     }
 
-    // Look for Crore ranges
-    const rangeMatchCr = text.match(/budget.*?(\d+\.?\d*)\s*(?:cr|crore|crores)\s*(?:to|[-])\s*(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
-    if (rangeMatchCr) {
-      return parseFloat(rangeMatchCr[1]) * 10000000;
-    }
+    // "Above 50L", "> 50L", "min 50L"
+    const minPatterns = [
+      /(?:minimum|min|at least|above|>|greater than|starting from)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l\b)/i,
+      /(?:minimum|min|at least|above|>|greater than|starting from)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores\b)/i
+    ];
 
-    // Look for patterns like "minimum 50 lakhs"
-    const minMatch = text.match(/(?:minimum|min|at least|above)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
-    if (minMatch) {
-      return parseFloat(minMatch[1]) * 100000;
-    }
-    
-    const minMatchCr = text.match(/(?:minimum|min|at least|above)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
-    if (minMatchCr) {
-      return parseFloat(minMatchCr[1]) * 10000000;
+    for (const pattern of minPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const isCr = /cr|crore/i.test(match[0]);
+        return parseFloat(match[1]) * (isCr ? croreMultiplier : lakhMultiplier);
+      }
     }
 
     return undefined;
   }
 
   private extractBudgetMax(text: string): number | undefined {
-    // Look for patterns like "budget 50 lakhs to 70 lakhs"
-    const rangeMatch = text.match(/budget.*?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)\s*(?:to|[-])\s*(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
+    const lakhMultiplier = 100000;
+    const croreMultiplier = 10000000;
+
+    // Range patterns like "50-70 lakhs" or "1.2-1.5 cr"
+    const rangeMatch = text.match(/budget.*?(\d+\.?\d*)\s*[-to]\s*(\d+\.?\d*)\s*(?:lakhs?|lacs?|l|cr|crores?)/i);
     if (rangeMatch) {
-      return parseFloat(rangeMatch[2]) * 100000;
+      const isCr = /cr|crore/i.test(rangeMatch[0]);
+      return parseFloat(rangeMatch[2]) * (isCr ? croreMultiplier : lakhMultiplier);
     }
 
-    // Look for Crore ranges
-    const rangeMatchCr = text.match(/budget.*?(\d+\.?\d*)\s*(?:cr|crore|crores)\s*(?:to|[-])\s*(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
-    if (rangeMatchCr) {
-      return parseFloat(rangeMatchCr[2]) * 10000000;
+    // "Under 70L", "< 70L", "max 70L", "below 70L"
+    const maxPatterns = [
+      /(?:maximum|max|up to|under|below|around|budget|within|<|less than)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l\b)/i,
+      /(?:maximum|max|up to|under|below|around|budget|within|<|less than)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores\b)/i
+    ];
+
+    for (const pattern of maxPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const isCr = /cr|crore/i.test(match[0]);
+        return parseFloat(match[1]) * (isCr ? croreMultiplier : lakhMultiplier);
+      }
     }
 
-    // Look for patterns like "maximum 70 lakhs" or "under 80 lakhs" OR "around 1 crore" (treat around as a cap or target)
-    // Adding "around" and "budget" (implied max)
-    const maxMatch = text.match(/(?:maximum|max|up to|under|below|around)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
-    if (maxMatch) {
-      return parseFloat(maxMatch[1]) * 100000;
-    }
-
-    const maxMatchCr = text.match(/(?:maximum|max|up to|under|below|around)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
-    if (maxMatchCr) {
-      return parseFloat(maxMatchCr[1]) * 10000000;
-    }
-    
-    // Fallback: if just "budget 1 crore" is said, treat as max
-    const simpleBudgetCr = text.match(/budget\s*(?:is\s*)?(?:around\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores)/i);
-    if (simpleBudgetCr) {
-       return parseFloat(simpleBudgetCr[1]) * 10000000;
-    }
-    
-    const simpleBudgetLakh = text.match(/budget\s*(?:is\s*)?(?:around\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l)/i);
-    if (simpleBudgetLakh) {
-       return parseFloat(simpleBudgetLakh[1]) * 100000;
+    // Shorthand cases like "budget 1.2cr" (treat as max)
+    const simpleBudget = text.match(/budget\s*(?:is\s*)?(\d+\.?\d*)\s*(?:cr|crore|l|lakhs?)/i);
+    if (simpleBudget) {
+      const isCr = /cr|crore/i.test(simpleBudget[0]);
+      return parseFloat(simpleBudget[1]) * (isCr ? croreMultiplier : lakhMultiplier);
     }
 
     return undefined;

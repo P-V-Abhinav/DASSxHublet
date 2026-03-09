@@ -200,20 +200,45 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
             }}>
               {property.isActive ? '✓ Active' : '✗ Inactive'}
             </p>
-            <button
-              onClick={() => fetchMatchesForProperty(property.id)}
-              style={{
-                width: '100%',
-                padding: '10px',
-                background: '#2196F3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              View Matches
-            </button>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button
+                onClick={() => fetchMatchesForProperty(property.id)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  background: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                View Matches
+              </button>
+              {property.isActive && (
+                <button
+                  onClick={async () => {
+                    if (window.confirm('Are you sure you want to mark this property as sold and remove it from active listings?')) {
+                      await axios.put(`${API_BASE_URL}/properties/${property.id}/mark-sold`, {}, {
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                      });
+                      fetchProperties();
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    background: '#f44336',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Mark as Sold
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>

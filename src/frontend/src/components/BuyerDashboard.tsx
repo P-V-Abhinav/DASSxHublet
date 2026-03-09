@@ -26,10 +26,12 @@ interface Match {
     amenities: string[];
     propertyType: string;
     seller: {
+      id: string;
       name: string;
       email: string;
       phone?: string;
       rating: number;
+      ratingCount: number;
       trustScore: number;
     };
   };
@@ -79,6 +81,31 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
 
   const handlePreferencesUpdated = () => {
     handleFindMatches();
+  };
+
+  const handleRateSeller = async (sellerId: string, rating: number) => {
+    try {
+      await axios.post(`${API_BASE_URL}/sellers/${sellerId}/rate`, { rating }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      alert('Rating submitted successfully!');
+      fetchMatches();
+    } catch (err) {
+      alert('Failed to rate seller');
+    }
+  };
+
+  const handleContactAgent = async (sellerId: string) => {
+    try {
+      // Basic mock since real emailing happens in backend
+      await axios.post(`${API_BASE_URL}/sellers/${sellerId}/contact`, 
+        { message: 'I am interested in your property', buyerName, buyerEmail: '' },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      alert('Email sent to seller successfully!');
+    } catch (err) {
+      alert('Failed to send email to seller');
+    }
   };
 
   return (
@@ -235,7 +262,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
               <div style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
                 <strong style={{ fontSize: '14px' }}>Seller:</strong>
                 <p style={{ margin: '5px 0', fontSize: '13px' }}>
-                  {match.property.seller.name} ⭐ {match.property.seller.rating.toFixed(1)}
+                  {match.property.seller.name} ⭐ {match.property.seller.ratingCount === 0 ? "Not rated" : match.property.seller.rating.toFixed(1)}
                 </p>
                 <p style={{ margin: '5px 0', fontSize: '13px', color: '#666' }}>
                   📧 {match.property.seller.email}
@@ -245,6 +272,33 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                     📞 {match.property.seller.phone}
                   </p>
                 )}
+
+                <div style={{ marginTop: '10px', display: 'flex', gap: '10px', flexDirection: 'column' }}>
+                  <button 
+                    onClick={() => handleContactAgent(match.property.seller.id)} 
+                    style={{ padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}
+                  >
+                    Contact Agent / Email Seller
+                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <select 
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        if (val) handleRateSeller(match.property.seller.id, val);
+                        e.target.value = "";
+                      }} 
+                      defaultValue=""
+                      style={{ padding: '4px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '13px', flex: 1 }}
+                    >
+                      <option value="" disabled>Rate this seller</option>
+                      <option value="1">1 Star</option>
+                      <option value="2">2 Stars</option>
+                      <option value="3">3 Stars</option>
+                      <option value="4">4 Stars</option>
+                      <option value="5">5 Stars</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

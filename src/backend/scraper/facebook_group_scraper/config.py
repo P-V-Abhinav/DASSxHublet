@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 # Override existing env vars (e.g. from Node process) with local .env
 load_dotenv(override=True)
 
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 #  API Keys (loaded from .env)
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 APIFY_TOKEN = os.getenv("APIFY_TOKEN_FB")
 
 GROQ_API_KEYS = [
@@ -21,24 +21,24 @@ GROQ_API_KEYS = [
 # Which key to use (0 = first, 1 = second)
 ACTIVE_GROQ_KEY = GROQ_API_KEYS[1]
 
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 #  Groq / LLM Settings
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 LLM_TEMPERATURE = 0
 API_DELAY_SECONDS = 1  # delay between API calls to avoid rate limits
 
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 #  Scraper Settings
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 APIFY_ACTOR_ID = "2chN8UQcH1CfxLRNE"
 RESULTS_LIMIT = 20
 VIEW_OPTION = "TOP_POSTS"
 
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 #  File Paths
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 
@@ -46,18 +46,18 @@ GROUPS_FILE = os.path.join(BASE_DIR, "groups.txt")
 RAW_CSV = os.path.join(DATA_DIR, "raw_listings.csv")
 EXTRACTED_CSV = os.path.join(DATA_DIR, "extracted_listings.csv")
 
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 #  Output Schema
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 EXPECTED_COLUMNS = [
     "TITLE", "LOCALITY", "TYPE", "BHK", "AREA",
     "PRICE", "AMENITIES", "SELLER", "STATUS", "CREATED_AT",
     "CONTACT", "GROUP_URL",
 ]
 
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 #  LLM Extraction Prompt
-# ──────────────────────────────────────────────
+# ----------------------------------------------
 EXTRACTION_PROMPT = """You are a real estate data extractor. Given a Facebook group listing, extract the following fields. Return ONLY a JSON object with these keys. Use "-" if a field cannot be determined.
 
 Fields:

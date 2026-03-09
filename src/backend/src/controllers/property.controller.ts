@@ -121,4 +121,22 @@ export class PropertyController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  /**
+   * Mark property as sold
+   */
+  static async markPropertyAsSold(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const existing = await PropertyService.getPropertyById(id);
+      if (!existing) {
+        return res.status(404).json({ error: 'Property not found' });
+      }
+      const mergedMetadata = { ...(existing.metadata || {}), markedAsSold: true };
+      const property = await PropertyService.updateProperty(id, { isActive: false, metadata: mergedMetadata });
+      res.json({ success: true, property });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }

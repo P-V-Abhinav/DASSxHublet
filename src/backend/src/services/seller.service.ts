@@ -118,6 +118,7 @@ export class SellerService {
         phone: string;
         sellerType: string;
         rating: number;
+        ratingCount: number;
         completedDeals: number;
         metadata: any;
     }>) {
@@ -154,6 +155,29 @@ export class SellerService {
     static async deleteSeller(id: string) {
         return await prisma.seller.delete({
             where: { id },
+        });
+    }
+
+    /**
+     * Rate seller
+     */
+    static async rateSeller(id: string, newRating: number) {
+        const seller = await prisma.seller.findUnique({ where: { id } });
+        if (!seller) throw new Error('Seller not found');
+
+        const currentTotal = seller.rating * seller.ratingCount;
+        const newTotalRatings = seller.ratingCount + 1;
+        const updatedRating = (currentTotal + newRating) / newTotalRatings;
+
+        const trustScore = this.calculateTrustScore(updatedRating, seller.completedDeals);
+
+        return await prisma.seller.update({
+            where: { id },
+            data: {
+                rating: updatedRating,
+                ratingCount: newTotalRatings,
+                trustScore,
+            },
         });
     }
 }

@@ -51,6 +51,7 @@ model Seller {
   
   // Reputation
   rating         Float    @default(0)
+  ratingCount    Int      @default(0)
   completedDeals Int      @default(0)
   trustScore     Float    @default(0)
   

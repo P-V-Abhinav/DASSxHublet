@@ -23,7 +23,7 @@ def load_group_urls(path: str = config.GROUPS_FILE) -> list[str]:
                 urls.append(line)
     if not urls:
         raise ValueError(f"No group URLs found in {path}")
-    print(f"📋 Loaded {len(urls)} group URL(s) from {path}")
+    print(f"[SCRAPER] Loaded {len(urls)} group URL(s) from {path}")
     return urls
 
 
@@ -38,7 +38,7 @@ def scrape_group(
     Returns:
         DataFrame with the raw scraped data.
     """
-    print(f"\n🔍 Scraping: {group_url}")
+    print(f"\n[SCRAPER] Scraping: {group_url}")
     print(f"   Limit: {limit} | View: {view_option}")
 
     client = ApifyClient(config.APIFY_TOKEN)
@@ -53,7 +53,7 @@ def scrape_group(
     items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
 
     df = pd.DataFrame(items)
-    print(f"✅ Scraped {len(df)} posts from this group")
+    print(f"[OK] Scraped {len(df)} posts from this group")
     return df
 
 
@@ -75,14 +75,14 @@ def scrape_all_groups(
         all_dfs.append(df)
 
     combined = pd.concat(all_dfs, ignore_index=True)
-    print(f"\n📊 Total scraped: {len(combined)} posts from {len(urls)} group(s)")
+    print(f"\n[DONE] Total scraped: {len(combined)} posts from {len(urls)} group(s)")
     return combined
 
 
 def save_raw(df: pd.DataFrame, path: str = config.RAW_CSV) -> None:
     """Save the raw scraped DataFrame to CSV."""
     df.to_csv(path, index=False)
-    print(f"💾 Saved raw data → {path}")
+    print(f"[SAVE] Saved raw data -> {path}")
 
 
 if __name__ == "__main__":

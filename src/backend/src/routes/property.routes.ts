@@ -13,5 +13,6 @@ router.get('/', requireRoles('admin', 'buyer', 'seller'), PropertyController.get
 router.get('/:id', requireRoles('admin', 'buyer', 'seller'), PropertyController.getPropertyById);
 router.put('/:id', requireRoles('admin', 'seller'), requirePropertyOwnerOrAdmin('id'), PropertyController.updateProperty);
 router.delete('/:id', requireRoles('admin', 'seller'), requirePropertyOwnerOrAdmin('id'), PropertyController.deleteProperty);
+router.put('/:id/mark-sold', requireRoles('admin', 'seller'), requirePropertyOwnerOrAdmin('id'), PropertyController.markPropertyAsSold);
 
 export default router;

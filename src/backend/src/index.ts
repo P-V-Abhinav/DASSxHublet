@@ -85,10 +85,11 @@ app.get('/debug-python', (req, res) => {
     };
 
     const scraperDir = path.join(process.cwd(), 'scraper');
-    const venvPython = path.join(scraperDir, 'venv/bin/python');
-    const resolvedPython = fs.existsSync(venvPython)
-        ? venvPython
-        : (process.env.PYTHON_PATH || 'python3');
+    const venvPythonPosix = path.join(scraperDir, 'venv', 'bin', 'python');
+    const venvPythonWindows = path.join(scraperDir, 'venv', 'Scripts', 'python.exe');
+    const resolvedPython = fs.existsSync(venvPythonPosix) ? venvPythonPosix 
+        : fs.existsSync(venvPythonWindows) ? venvPythonWindows
+        : (process.env.PYTHON_PATH || (process.platform === 'win32' ? 'python' : 'python3'));
 
     results['__dirname'] = __dirname;
     results['process_cwd'] = process.cwd();
@@ -155,7 +156,12 @@ import { MatchingService } from './services/matching.service';
 import { LeadService } from './services/lead.service';
 
 const FB_SCRAPER_DIR = path.join(__dirname, '../scraper/facebook_group_scraper');
-const FB_PYTHON = path.join(FB_SCRAPER_DIR, 'venv/bin/python');
+const fbVenvPythonPosix = path.join(FB_SCRAPER_DIR, 'venv', 'bin', 'python');
+const fbVenvPythonWindows = path.join(FB_SCRAPER_DIR, 'venv', 'Scripts', 'python.exe');
+const fsModule = require('fs');
+const FB_PYTHON = fsModule.existsSync(fbVenvPythonPosix) ? fbVenvPythonPosix 
+    : fsModule.existsSync(fbVenvPythonWindows) ? fbVenvPythonWindows 
+    : (process.platform === 'win32' ? 'python' : 'python3');
 const FB_SCRIPT = path.join(FB_SCRAPER_DIR, 'pipeline.py');
 
 // Trigger Facebook group scrape

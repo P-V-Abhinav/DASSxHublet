@@ -1,6 +1,9 @@
 import prisma from '../db/prisma';
 import { RuleBasedMatcher, Matcher, BuyerIntent, PropertyData } from '../matchers/rule-based-matcher';
 import { WorkflowEventService } from './workflow-event.service';
+import { KeywordIntentParser } from '../parsers/intent-parser';
+
+const intentParser = new KeywordIntentParser();
 
 export class MatchingService {
     private matcher: Matcher;
@@ -36,11 +39,21 @@ export class MatchingService {
         });
 
         // Score each property
+        // Re-parse rawPreferences on-the-fly if stored localities is empty
+        // (handles buyers created before the parser was improved)
+        let storedLocalities: string[] = JSON.parse(buyer.localities);
+        if (storedLocalities.length === 0 && buyer.rawPreferences) {
+            const reparsed = intentParser.parse(buyer.rawPreferences);
+            if (reparsed.localities.length > 0) {
+                storedLocalities = reparsed.localities;
+            }
+        }
+
         const matches = properties
             .map(property => {
                 // Parse JSON strings for SQLite
                 const buyerIntent: BuyerIntent = {
-                    localities: JSON.parse(buyer.localities),
+                    localities: storedLocalities,
                     areaMin: buyer.areaMin || undefined,
                     areaMax: buyer.areaMax || undefined,
                     bhk: buyer.bhk || undefined,

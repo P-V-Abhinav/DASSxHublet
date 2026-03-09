@@ -65,16 +65,16 @@ def main():
     # Ensure data directory exists
     os.makedirs(config.DATA_DIR, exist_ok=True)
 
-    print("\n🏠  Facebook Real Estate Pipeline")
-    print("─" * 55)
+    print("\n[Facebook Real Estate Pipeline]")
+    print("-" * 55)
 
     if args.scrape_only:
         run_scrape()
-        print("\n✅ Scraping complete.")
+        print("\nScraping complete.")
 
     elif args.extract_only:
         run_extract()
-        print("\n✅ Extraction complete.")
+        print("\nExtraction complete.")
 
     else:
         # Full pipeline

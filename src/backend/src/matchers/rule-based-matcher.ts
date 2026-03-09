@@ -65,25 +65,32 @@ export class RuleBasedMatcher implements Matcher {
 
   /**
    * Score location match (0-100)
+   * Returns 50 (neutral) when the buyer has no locality preference so that
+   * unspecified-location queries still surface properties rather than scoring 0.
    */
   private scoreLocation(buyerIntent: BuyerIntent, property: PropertyData): number {
-    // Check if property locality matches any of buyer's preferred localities
-    const normalizedBuyerLocalities = buyerIntent.localities.map(l => l.toLowerCase().trim());
-    const normalizedPropertyLocality = property.locality.toLowerCase().trim();
-
-    // Exact match
-    if (normalizedBuyerLocalities.includes(normalizedPropertyLocality)) {
-      return 100;
+    // No locality preference → neutral score
+    if (!buyerIntent.localities || buyerIntent.localities.length === 0) {
+      return 50;
     }
 
-    // Partial match (locality contains buyer preference or vice versa)
-    for (const buyerLocality of normalizedBuyerLocalities) {
-      if (
-        normalizedPropertyLocality.includes(buyerLocality) ||
-        buyerLocality.includes(normalizedPropertyLocality)
-      ) {
-        return 70;
-      }
+    const propLocality = property.locality.toLowerCase().trim();
+    const buyerLocalities = buyerIntent.localities.map(l => l.toLowerCase().trim());
+
+    for (const buyerLoc of buyerLocalities) {
+      // Exact match
+      if (propLocality === buyerLoc) return 100;
+
+      // Property locality contains buyer preference (e.g. "thane west" ⊇ "thane")
+      if (propLocality.includes(buyerLoc)) return 80;
+
+      // Buyer preference contains property locality (e.g. "thane west sector 5" ⊇ "thane west")
+      if (buyerLoc.includes(propLocality)) return 75;
+
+      // Token-level overlap: share at least one meaningful word
+      const propTokens = propLocality.split(/\s+/).filter(w => w.length > 2);
+      const buyerTokens = buyerLoc.split(/\s+/).filter(w => w.length > 2);
+      if (propTokens.some(t => buyerTokens.includes(t))) return 60;
     }
 
     return 0;
@@ -134,7 +141,7 @@ export class RuleBasedMatcher implements Matcher {
   private scoreSize(buyerIntent: BuyerIntent, property: PropertyData): number {
     let score = 0;
 
-    // BHK match
+    // BHK part:
     if (buyerIntent.bhk) {
       if (property.bhk === buyerIntent.bhk) {
         score += 50;
@@ -142,10 +149,10 @@ export class RuleBasedMatcher implements Matcher {
         score += 25; // One BHK difference
       }
     } else {
-      score += 25; // No preference specified
+      score += 25; // No BHK preference: +25
     }
 
-    // Area match
+    // Area part:
     if (buyerIntent.areaMin || buyerIntent.areaMax) {
       const propertyArea = property.area;
 
@@ -156,15 +163,21 @@ export class RuleBasedMatcher implements Matcher {
         score += 50;
       } else {
         // Partial score if close
-        const minDiff = buyerIntent.areaMin ? Math.abs(propertyArea - buyerIntent.areaMin) : 0;
-        const maxDiff = buyerIntent.areaMax ? Math.abs(propertyArea - buyerIntent.areaMax) : 0;
-        const closestDiff = Math.min(minDiff || Infinity, maxDiff || Infinity);
-        
-        if (closestDiff < 200) score += 25;
-        else if (closestDiff < 500) score += 10;
+        let closestDiff = Infinity;
+        if (buyerIntent.areaMin && propertyArea < buyerIntent.areaMin) {
+          closestDiff = buyerIntent.areaMin - propertyArea;
+        } else if (buyerIntent.areaMax && propertyArea > buyerIntent.areaMax) {
+          closestDiff = propertyArea - buyerIntent.areaMax;
+        }
+
+        if (closestDiff < 200) {
+          score += 25;
+        } else if (closestDiff < 500) {
+          score += 10;
+        }
       }
     } else {
-      score += 25; // No area preference specified
+      score += 25; // No area preference: +25
     }
 
     return Math.min(score, 100);

@@ -12,7 +12,7 @@ function readStoredToken(): string | null {
   return window.localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
