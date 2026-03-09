@@ -35,14 +35,15 @@ interface ScrapedProperty {
 
 export class ScrapingService {
     private static SCRAPER_DIR = path.join(__dirname, '../../scraper');
-    // Use venv python if it exists (local dev), otherwise fall back to system python3
+    // Resolve python executable: explicit env var > local venv > system python3
     private static PYTHON_EXEC_PATH = (() => {
+        if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
         const venvPython = path.join(__dirname, '../../scraper/venv/bin/python');
         try {
             require('fs').accessSync(venvPython);
             return venvPython;
         } catch {
-            return process.env.PYTHON_PATH || 'python3';
+            return 'python3';
         }
     })();
     private static PYTHON_SCRIPT_PATH = path.join(__dirname, '../../scraper/scraper.py');

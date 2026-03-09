@@ -7,18 +7,14 @@ services:
       npm install
       npx prisma generate
       npx prisma migrate deploy
-      python3 -m venv scraper/venv
-      scraper/venv/bin/pip install -r scraper/requirements.txt
+      pip3 install --user -r scraper/requirements.txt
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
         value: file:./dev.db
-      - key: BASE_URL
-        fromService:
-          type: web
-          name: hublet-backend
-          property: host
+      - key: PYTHON_PATH
+        value: python3
       # Set these manually in the Render dashboard (secret values):
       # APIFY_TOKEN, ZENROWS_API_KEY, MONGODB_URI, MONGODB_DB_NAME, CORS_ORIGIN, API_BASE_URL
