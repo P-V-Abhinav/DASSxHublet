@@ -41,6 +41,7 @@ interface Property {
     price: number;
     amenities: string[];
     propertyType: string;
+    contact?: string;
     isActive: boolean;
     metadata?: {
         sourceUrl?: string;
@@ -53,6 +54,7 @@ interface Property {
         landmark?: string;
         postedDate?: string;
         scrapedAt?: string;
+        groupUrl?: string;
     };
     createdAt: string;
     seller: Seller;
@@ -89,7 +91,22 @@ interface WorkflowEvent {
     createdAt: string;
 }
 
-type TabType = 'buyers' | 'sellers' | 'properties' | 'leads' | 'matches' | 'logs';
+interface FbScrapedRow {
+    TITLE: string;
+    LOCALITY: string;
+    TYPE: string;
+    BHK: string;
+    AREA: string;
+    PRICE: string;
+    AMENITIES: string;
+    SELLER: string;
+    STATUS: string;
+    CREATED_AT: string;
+    CONTACT: string;
+    GROUP_URL: string;
+}
+
+type TabType = 'buyers' | 'sellers' | 'properties' | 'leads' | 'matches' | 'logs' | 'fb-scrape';
 
 export const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState<TabType>('buyers');
@@ -101,6 +118,15 @@ export const AdminDashboard = () => {
     const [logs, setLogs] = useState<WorkflowEvent[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Facebook scraping state
+    const [fbGroupUrl, setFbGroupUrl] = useState('');
+    const [fbPostLimit, setFbPostLimit] = useState(10);
+    const [fbResults, setFbResults] = useState<FbScrapedRow[]>([]);
+    const [fbScraping, setFbScraping] = useState(false);
+    const [fbSaving, setFbSaving] = useState(false);
+    const [fbMessage, setFbMessage] = useState<string | null>(null);
+    const [fbError, setFbError] = useState<string | null>(null);
 
     // Fetch data based on active tab
     useEffect(() => {
@@ -159,15 +185,15 @@ export const AdminDashboard = () => {
             <h1 style={{ marginBottom: '20px', color: '#333' }}>🔐 Admin Dashboard</h1>
 
             {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ddd' }}>
-                {(['buyers', 'sellers', 'properties', 'leads', 'matches', 'logs'] as TabType[]).map(tab => (
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ddd', flexWrap: 'wrap' }}>
+                {(['buyers', 'sellers', 'properties', 'leads', 'matches', 'logs', 'fb-scrape'] as TabType[]).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         style={{
                             padding: '10px 20px',
                             border: 'none',
-                            background: activeTab === tab ? '#4CAF50' : '#f0f0f0',
+                            background: activeTab === tab ? (tab === 'fb-scrape' ? '#1877F2' : '#4CAF50') : '#f0f0f0',
                             color: activeTab === tab ? 'white' : '#333',
                             cursor: 'pointer',
                             borderRadius: '5px 5px 0 0',
@@ -175,7 +201,7 @@ export const AdminDashboard = () => {
                             textTransform: 'capitalize',
                         }}
                     >
-                        {tab}
+                        {tab === 'fb-scrape' ? '📘 FB Scrape' : tab}
                     </button>
                 ))}
             </div>
@@ -311,6 +337,7 @@ export const AdminDashboard = () => {
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Area</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Price</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Seller</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Contact</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Source</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Posted</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Status</th>
@@ -336,6 +363,9 @@ export const AdminDashboard = () => {
                                                 {property.metadata?.sourceUrl && (
                                                     <a href={property.metadata.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#2196F3' }}>View listing ↗</a>
                                                 )}
+                                                {property.metadata?.groupUrl && (
+                                                    <a href={property.metadata.groupUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#9C27B0', marginLeft: property.metadata?.sourceUrl ? '8px' : '0', display: 'inline-block' }}>View Group ↗</a>
+                                                )}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {property.locality}
@@ -351,6 +381,9 @@ export const AdminDashboard = () => {
                                                 <strong>{property.seller?.name || 'Unknown'}</strong>
                                                 <div style={{ fontSize: '11px', color: '#666' }}>{property.seller?.sellerType || ''}</div>
                                                 {property.metadata?.companyName && <div style={{ fontSize: '11px', color: '#888' }}>🏢 {property.metadata.companyName}</div>}
+                                            </td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                                {property.contact || 'N/A'}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {property.metadata?.source ? (
@@ -538,6 +571,272 @@ export const AdminDashboard = () => {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'fb-scrape' && (
+                    <div>
+                        <h2>📘 Facebook Group Scraper</h2>
+                        <p style={{ color: '#666', marginBottom: '20px' }}>Scrape real estate listings from Facebook groups using Apify + Groq LLM extraction.</p>
+
+                        {/* Scrape Form */}
+                        <div style={{
+                            background: '#f0f4ff',
+                            border: '1px solid #c5d5f7',
+                            borderRadius: '8px',
+                            padding: '20px',
+                            marginBottom: '20px',
+                            display: 'flex',
+                            gap: '15px',
+                            alignItems: 'flex-end',
+                            flexWrap: 'wrap',
+                        }}>
+                            <div style={{ flex: '1', minWidth: '300px' }}>
+                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: '#333' }}>Facebook Group URL</label>
+                                <input
+                                    type="text"
+                                    value={fbGroupUrl}
+                                    onChange={(e) => setFbGroupUrl(e.target.value)}
+                                    placeholder="https://www.facebook.com/groups/..."
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 14px',
+                                        border: '1px solid #bbb',
+                                        borderRadius: '6px',
+                                        fontSize: '14px',
+                                        boxSizing: 'border-box',
+                                    }}
+                                />
+                            </div>
+                            <div style={{ width: '140px' }}>
+                                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '6px', color: '#333' }}>No. of Posts</label>
+                                <input
+                                    type="number"
+                                    value={fbPostLimit}
+                                    onChange={(e) => setFbPostLimit(Number(e.target.value))}
+                                    min={1}
+                                    max={100}
+                                    style={{
+                                        width: '100%',
+                                        padding: '10px 14px',
+                                        border: '1px solid #bbb',
+                                        borderRadius: '6px',
+                                        fontSize: '14px',
+                                        boxSizing: 'border-box',
+                                    }}
+                                />
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    if (!fbGroupUrl.trim()) {
+                                        setFbError('Please enter a Facebook group URL');
+                                        return;
+                                    }
+                                    setFbScraping(true);
+                                    setFbError(null);
+                                    setFbMessage(null);
+                                    setFbResults([]);
+                                    try {
+                                        const res = await axios.post(`${API_BASE_URL}/admin/fb-scrape`, {
+                                            groupUrl: fbGroupUrl.trim(),
+                                            limit: fbPostLimit,
+                                        });
+                                        if (res.data.success && Array.isArray(res.data.data)) {
+                                            setFbResults(res.data.data);
+                                            setFbMessage(`✅ Scraped ${res.data.data.length} listing(s)`);
+                                        } else {
+                                            setFbError('Unexpected response format');
+                                        }
+                                    } catch (err: any) {
+                                        setFbError(err.response?.data?.error || err.message || 'Scraping failed');
+                                    } finally {
+                                        setFbScraping(false);
+                                    }
+                                }}
+                                disabled={fbScraping}
+                                style={{
+                                    padding: '10px 28px',
+                                    background: fbScraping ? '#90CAF9' : '#1877F2',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: fbScraping ? 'not-allowed' : 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                }}
+                            >
+                                {fbScraping ? '⏳ Scraping...' : '🔍 Scrape Group'}
+                            </button>
+                            
+                            <button
+                                onClick={async () => {
+                                    setFbScraping(true);
+                                    setFbError(null);
+                                    setFbMessage(null);
+                                    setFbResults([]);
+                                    try {
+                                        const res = await axios.get(`${API_BASE_URL}/admin/fb-load-csv`);
+                                        if (res.data.success && Array.isArray(res.data.data)) {
+                                            setFbResults(res.data.data);
+                                            setFbMessage(`✅ Loaded ${res.data.data.length} listing(s) from CSV`);
+                                        } else {
+                                            setFbError('Unexpected response format');
+                                        }
+                                    } catch (err: any) {
+                                        setFbError(err.response?.data?.error || err.message || 'Failed to load CSV');
+                                    } finally {
+                                        setFbScraping(false);
+                                    }
+                                }}
+                                disabled={fbScraping}
+                                style={{
+                                    padding: '10px 28px',
+                                    background: fbScraping ? '#B39DDB' : '#673AB7',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: fbScraping ? 'not-allowed' : 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '14px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                }}
+                            >
+                                📁 Load CSV
+                            </button>
+                        </div>
+
+                        {fbError && <p style={{ color: '#d32f2f', background: '#ffebee', padding: '10px 16px', borderRadius: '6px', marginBottom: '16px' }}>❌ {fbError}</p>}
+                        {fbMessage && <p style={{ color: '#2E7D32', background: '#e8f5e9', padding: '10px 16px', borderRadius: '6px', marginBottom: '16px' }}>{fbMessage}</p>}
+
+                        {fbScraping && (
+                            <div style={{ textAlign: 'center', padding: '40px', color: '#1877F2' }}>
+                                <div style={{ fontSize: '40px', marginBottom: '12px', animation: 'spin 1s linear infinite' }}>🔄</div>
+                                <p style={{ fontSize: '16px', fontWeight: 'bold' }}>Scraping in progress...</p>
+                                <p style={{ color: '#888', fontSize: '13px' }}>This may take a few minutes depending on the number of posts.</p>
+                                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                            </div>
+                        )}
+
+                        {/* Results Table */}
+                        {fbResults.length > 0 && (
+                            <div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                    <h3 style={{ margin: 0 }}>Scraped Results ({fbResults.length})</h3>
+                                    <button
+                                        onClick={async () => {
+                                            setFbSaving(true);
+                                            setFbError(null);
+                                            try {
+                                                const res = await axios.post(`${API_BASE_URL}/admin/fb-save`, { rows: fbResults });
+                                                if (res.data.success) {
+                                                    setFbMessage(`✅ Saved ${res.data.saved} properties to database!` +
+                                                        (res.data.errors?.length > 0 ? ` (${res.data.errors.length} errors)` : ''));
+                                                    setFbResults([]);
+                                                } else {
+                                                    setFbError('Save failed');
+                                                }
+                                            } catch (err: any) {
+                                                setFbError(err.response?.data?.error || err.message || 'Save failed');
+                                            } finally {
+                                                setFbSaving(false);
+                                            }
+                                        }}
+                                        disabled={fbSaving}
+                                        style={{
+                                            padding: '10px 24px',
+                                            background: fbSaving ? '#A5D6A7' : '#4CAF50',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            cursor: fbSaving ? 'not-allowed' : 'pointer',
+                                            fontWeight: 'bold',
+                                            fontSize: '14px',
+                                        }}
+                                    >
+                                        {fbSaving ? '⏳ Saving...' : '💾 Save to Database'}
+                                    </button>
+                                </div>
+
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd', fontSize: '13px' }}>
+                                        <thead style={{ background: '#1877F2', color: 'white' }}>
+                                            <tr>
+                                                <th style={{ padding: '10px 8px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.2)', width: '40px' }}>✕</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Title</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Locality</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Type</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>BHK</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Area</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Price</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Amenities</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Seller</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Contact</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Status</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Date</th>
+                                                <th style={{ padding: '10px 8px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.2)' }}>Group</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {fbResults.map((row, idx) => (
+                                                <tr key={idx} style={{ background: idx % 2 === 0 ? '#f9f9f9' : 'white' }}>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd', textAlign: 'center' }}>
+                                                        <button
+                                                            onClick={() => setFbResults(prev => prev.filter((_, i) => i !== idx))}
+                                                            title="Remove this row"
+                                                            style={{
+                                                                background: '#f44336',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                borderRadius: '4px',
+                                                                cursor: 'pointer',
+                                                                padding: '4px 8px',
+                                                                fontSize: '12px',
+                                                                fontWeight: 'bold',
+                                                            }}
+                                                        >✕</button>
+                                                    </td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd', fontWeight: 'bold', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.TITLE}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>{row.LOCALITY}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>
+                                                        <span style={{ background: '#E3F2FD', color: '#1565C0', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>{row.TYPE}</span>
+                                                    </td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>{row.BHK}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>{row.AREA}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd', fontWeight: 'bold', color: '#2E7D32' }}>{row.PRICE}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd', fontSize: '11px', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.AMENITIES}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>{row.SELLER}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>{row.CONTACT}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>
+                                                        <span style={{
+                                                            background: row.STATUS === 'ready_to_move' ? '#4CAF50' : row.STATUS === 'under_construction' ? '#ff9800' : '#9e9e9e',
+                                                            color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '10px',
+                                                        }}>{row.STATUS}</span>
+                                                    </td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd', fontSize: '11px' }}>{row.CREATED_AT}</td>
+                                                    <td style={{ padding: '8px', border: '1px solid #ddd' }}>
+                                                        {row.GROUP_URL && row.GROUP_URL !== '-' ? (
+                                                            <a href={row.GROUP_URL} target="_blank" rel="noopener noreferrer" style={{ color: '#1877F2', fontSize: '11px' }}>View Group ↗</a>
+                                                        ) : '-'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {!fbScraping && fbResults.length === 0 && !fbMessage && (
+                            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                                <div style={{ fontSize: '48px', marginBottom: '12px' }}>📘</div>
+                                <p>Enter a Facebook group URL and click <strong>Scrape Group</strong> to get started.</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

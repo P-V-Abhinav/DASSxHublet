@@ -19,6 +19,7 @@ function PropertyForm({ onSuccess, fixedSellerId }: PropertyFormProps = {}) {
     price: 0,
     amenities: '',
     propertyType: 'apartment',
+    contact: '',
   });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -57,6 +58,7 @@ function PropertyForm({ onSuccess, fixedSellerId }: PropertyFormProps = {}) {
       const response = await propertyApi.create({
         ...formData,
         amenities: amenitiesArray,
+        contact: formData.contact || undefined,
       });
 
       setMessage(`Property created successfully! ID: ${response.data.id}`);
@@ -77,6 +79,7 @@ function PropertyForm({ onSuccess, fixedSellerId }: PropertyFormProps = {}) {
         price: 0,
         amenities: '',
         propertyType: 'apartment',
+        contact: '',
       });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create property');
@@ -218,6 +221,16 @@ function PropertyForm({ onSuccess, fixedSellerId }: PropertyFormProps = {}) {
             value={formData.amenities}
             onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
             placeholder="e.g., parking, gym, swimming pool, garden"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Contact (phone/name)</label>
+          <input
+            type="text"
+            value={formData.contact}
+            onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+            placeholder="e.g., 9876543210 or John Doe"
           />
         </div>
 

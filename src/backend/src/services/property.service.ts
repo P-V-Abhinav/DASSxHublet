@@ -16,6 +16,7 @@ export class PropertyService {
     price: number;
     amenities?: string[];
     propertyType?: string;
+    contact?: string;
     metadata?: any;
   }) {
     return await prisma.property.create({
@@ -30,6 +31,7 @@ export class PropertyService {
         price: data.price,
         amenities: JSON.stringify(data.amenities || []), // SQLite: store as JSON string
         propertyType: data.propertyType || 'apartment',
+        contact: data.contact || null,
         metadata: data.metadata ? JSON.stringify(data.metadata) : null, // SQLite: store as JSON string
         isActive: true,
       },
@@ -145,6 +147,7 @@ export class PropertyService {
     price: number;
     amenities: string[];
     propertyType: string;
+    contact: string;
     isActive: boolean;
     metadata: any;
   }>) {

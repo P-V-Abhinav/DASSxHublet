@@ -1,61 +1,65 @@
 # 📋 Users List — Buyers & Sellers
 
-> Auto-generated on 9/3/2026, 9:46:09 pm. Updated after every scrape.
+> Auto-generated on 9/3/2026, 11:09:08 pm. Updated after every scrape.
 
 ---
 
-## 🏢 Sellers (44 total)
+## 🏢 Sellers (46 total)
 
 | # | Name | Email | Phone | Type | Rating | Properties |
 |---|------|-------|-------|------|--------|------------|
-| 1 | Test Seller | `seller.1773035594@test.local` | 9999999999 | owner | 4.5 ⭐ | 1 |
-| 2 | Sendhil | `sendhil@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 3 | Bhaskar Pai | `bhaskarpai@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 4 | Chetan Pichamuthu | `chetanpichamuthu@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 5 | Cdj | `cdj@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 6 | Urmil | `urmil@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 7 | vijayasarathi | `vijayasarathi@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 8 | Kapil Properties | `kapilproperties@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 9 | dhan | `dhan@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 10 | Raj Kay | `rajkay@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 11 | Ushasri | `ushasri@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 12 | Ikon Spaces | `ikonspaces@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 13 | saritha | `saritha@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 14 | SAY Properties | `sayproperties@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 15 | Websqft com | `websqftcom@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 16 | Spacewave Realty Solutions | `spacewaverealtysolutions@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 17 | Sammaan Capital | `sammaancapital@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 18 | Dinesh | `dinesh@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 19 | Sreedhar | `sreedhar@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 20 | Srinivas AP | `srinivasap@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 21 | Sahil Miglani | `sahilmiglani@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 22 | shankar Gupta | `shankargupta@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 23 | Naval Khanna | `navalkhanna@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 24 | Gurmeet Kohli | `gurmeetkohli@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 25 | Durga | `durga@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 26 | Kumar Linkers Estate Pvt. Ltd. | `kumarlinkersestatepvtltd@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 27 | AAA Capital Services Private Limited | `aaacapitalservicesprivatelimited@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 28 | Sugandh Chaturvedi | `sugandhchaturvedi@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 29 | Baraware II Llp | `barawareiillp@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 30 | Abhishek Atrey | `abhishekatrey@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 31 | Kusum Singh | `kusumsingh@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 32 | Shri Radha Swami Associates | `shriradhaswamiassociates@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 33 | Shobha | `shobha@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 34 | Sanjeev  Kapur | `sanjeevkapur@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 35 | REUBEN | `reuben@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
-| 36 | Seven Wonders Multi Services Pvt Ltd | `sevenwondersmultiservicespvtltd@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 37 | Sainath Estate | `sainathestate@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 38 | Dream Spaces | `dreamspaces@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 39 | Marathon Realty Pvt. Ltd. | `marathonrealtypvtltd@hublet.scraped` | 0000000000 | builder | 4.0 ⭐ | 1 |
-| 40 | HMAL. | `hmal@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 2 |
-| 41 | Maxxco Real Estate | `maxxcorealestate@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 42 | Fairdeal Realtors Pvt. Ltd. | `fairdealrealtorspvtltd@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
-| 43 | MPM Group | `mpmgroup@hublet.scraped` | 0000000000 | builder | 4.0 ⭐ | 1 |
-| 44 | Unknown | `unknown@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 33 |
+| 1 | Facebook Group Seller | `facebookgroupseller@hublet.fb` | 7337403583 | owner | 3.0 ⭐ | 26 |
+| 2 | Mohamed Hanif, M/s. AAFRAA REALTORS | `mohamedhanifmsaafraarealtors@hublet.fb` | 9940581173 | owner | 3.0 ⭐ | 1 |
+| 3 | Test Seller | `seller.1773035594@test.local` | 9999999999 | owner | 4.5 ⭐ | 1 |
+| 4 | Sendhil | `sendhil@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 5 | Bhaskar Pai | `bhaskarpai@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 6 | Chetan Pichamuthu | `chetanpichamuthu@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 7 | Cdj | `cdj@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 8 | Urmil | `urmil@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 9 | vijayasarathi | `vijayasarathi@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 10 | Kapil Properties | `kapilproperties@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 11 | dhan | `dhan@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 12 | Raj Kay | `rajkay@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 13 | Ushasri | `ushasri@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 14 | Ikon Spaces | `ikonspaces@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 15 | saritha | `saritha@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 16 | SAY Properties | `sayproperties@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 17 | Websqft com | `websqftcom@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 18 | Spacewave Realty Solutions | `spacewaverealtysolutions@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 19 | Sammaan Capital | `sammaancapital@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 20 | Dinesh | `dinesh@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 21 | Sreedhar | `sreedhar@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 22 | Srinivas AP | `srinivasap@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 23 | Sahil Miglani | `sahilmiglani@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 24 | shankar Gupta | `shankargupta@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 25 | Naval Khanna | `navalkhanna@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 26 | Gurmeet Kohli | `gurmeetkohli@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 27 | Durga | `durga@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 28 | Kumar Linkers Estate Pvt. Ltd. | `kumarlinkersestatepvtltd@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 29 | AAA Capital Services Private Limited | `aaacapitalservicesprivatelimited@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 30 | Sugandh Chaturvedi | `sugandhchaturvedi@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 31 | Baraware II Llp | `barawareiillp@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 32 | Abhishek Atrey | `abhishekatrey@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 33 | Kusum Singh | `kusumsingh@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 34 | Shri Radha Swami Associates | `shriradhaswamiassociates@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 35 | Shobha | `shobha@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 36 | Sanjeev  Kapur | `sanjeevkapur@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 37 | REUBEN | `reuben@hublet.scraped` | 0000000000 | owner | 4.0 ⭐ | 1 |
+| 38 | Seven Wonders Multi Services Pvt Ltd | `sevenwondersmultiservicespvtltd@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 39 | Sainath Estate | `sainathestate@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 40 | Dream Spaces | `dreamspaces@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 41 | Marathon Realty Pvt. Ltd. | `marathonrealtypvtltd@hublet.scraped` | 0000000000 | builder | 4.0 ⭐ | 1 |
+| 42 | HMAL. | `hmal@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 2 |
+| 43 | Maxxco Real Estate | `maxxcorealestate@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 44 | Fairdeal Realtors Pvt. Ltd. | `fairdealrealtorspvtltd@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 1 |
+| 45 | MPM Group | `mpmgroup@hublet.scraped` | 0000000000 | builder | 4.0 ⭐ | 1 |
+| 46 | Unknown | `unknown@hublet.scraped` | 0000000000 | agent | 4.0 ⭐ | 33 |
 
 <details><summary>🔑 Quick Login Emails (click to expand)</summary>
 
 ```
+facebookgroupseller@hublet.fb
+mohamedhanifmsaafraarealtors@hublet.fb
 seller.1773035594@test.local
 sendhil@hublet.scraped
 bhaskarpai@hublet.scraped
@@ -182,7 +186,7 @@ investor.mumbai.1@example.com
 
 ## 📊 Summary
 
-- **Total Sellers**: 44
+- **Total Sellers**: 46
 - **Total Buyers**: 31
-- **Total Properties**: 77
-- **Last Updated**: 9/3/2026, 9:46:09 pm
+- **Total Properties**: 104
+- **Last Updated**: 9/3/2026, 11:09:08 pm

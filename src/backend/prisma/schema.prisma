@@ -84,6 +84,9 @@ model Property {
   // Property type
   propertyType String  @default("apartment") // apartment, house, villa, plot
   
+  // Contact info
+  contact     String?  // contact phone/name for the listing
+  
   // Status
   isActive    Boolean  @default(true)
   
