@@ -72,8 +72,8 @@ app.get('/health', (req, res) => {
 // Public authentication routes
 app.use('/api/auth', authRoutes);
 
-// Python environment debug endpoint (no auth — diagnostic only)
-app.get('/api/admin/debug-python', (req, res) => {
+// Python environment debug endpoint — outside /api so JWT middleware doesn't apply
+app.get('/debug-python', (req, res) => {
     const { execSync } = require('child_process');
     const fs = require('fs');
     const results: Record<string, string> = {};
