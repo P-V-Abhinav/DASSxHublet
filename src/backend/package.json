@@ -10,7 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "mongo:migrate": "tsx src/scripts/migrate-to-mongo.ts"
+    "mongo:migrate": "tsx src/scripts/migrate-to-mongo.ts",
+    "auth:debug": "bash scripts/debug-auth-login.sh"
   },
   "keywords": [],
   "author": "",
