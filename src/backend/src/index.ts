@@ -67,6 +67,37 @@ import { ScrapingService } from './services/scraping.service';
 import { exportUsersList } from './utils/export-users';
 setupScheduler();
 
+// Python environment debug endpoint
+app.get('/api/admin/debug-python', (req, res) => {
+    const { execSync } = require('child_process');
+    const fs = require('fs');
+    const results: Record<string, string> = {};
+
+    const run = (cmd: string) => {
+        try { return execSync(cmd, { timeout: 5000 }).toString().trim(); }
+        catch (e: any) { return `ERROR: ${e.message}`; }
+    };
+
+    const PYTHON_PATH = process.env.PYTHON_PATH || 'python3';
+    const scraperDir = path.join(__dirname, '../../scraper');
+    const venvPython = path.join(scraperDir, 'venv/bin/python');
+
+    results['PYTHON_PATH_env'] = process.env.PYTHON_PATH || '(not set)';
+    results['resolved_python'] = PYTHON_PATH;
+    results['venv_python_exists'] = fs.existsSync(venvPython) ? 'YES' : 'NO';
+    results['venv_python_path'] = venvPython;
+    results['scraper_dir'] = scraperDir;
+    results['scraper_dir_exists'] = fs.existsSync(scraperDir) ? 'YES' : 'NO';
+    results['which_python3'] = run('which python3');
+    results['python3_version'] = run('python3 --version');
+    results['requests_check'] = run(`${PYTHON_PATH} -c "import requests; print('requests OK:', requests.__version__)"`);
+    results['pip_list_requests'] = run(`${PYTHON_PATH} -m pip show requests 2>&1 | head -3`);
+    results['user_site_packages'] = run('python3 -m site --user-site');
+    results['sys_path'] = run(`${PYTHON_PATH} -c "import sys; print(sys.path)"`);
+
+    res.json(results);
+});
+
 // List available scrapers
 app.get('/api/admin/scrapers', async (req, res) => {
     try {
