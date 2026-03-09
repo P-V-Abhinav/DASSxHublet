@@ -147,7 +147,7 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>🏢 Seller Dashboard - {sellerName}</h1>
+      <h1> Seller Dashboard - {sellerName}</h1>
 
       <button
         onClick={() => setShowAddForm(!showAddForm)}
@@ -189,8 +189,8 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
             }}
           >
             <h3>{property.title}</h3>
-            <p>📍 {property.locality}</p>
-            <p>🏠 {property.bhk} BHK | {property.area} sq ft</p>
+            <p> {property.locality}</p>
+            <p> {property.bhk} BHK | {property.area} sq ft</p>
             <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#4CAF50' }}>
               ₹{(property.price / 100000).toFixed(2)} Lakhs
             </p>

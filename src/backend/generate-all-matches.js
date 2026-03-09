@@ -63,16 +63,16 @@ async function main() {
     const matches = await makeRequest(buyer.id);
     
     if (matches.error) {
-      console.log(`  ❌ Error: ${matches.error}`);
+      console.log(`   Error: ${matches.error}`);
     } else if (Array.isArray(matches)) {
-      console.log(`  ✅ Generated ${matches.length} matches`);
+      console.log(`   Generated ${matches.length} matches`);
       totalMatches += matches.length;
     }
     
     await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
   }
 
-  console.log(`\n🎉 Complete! Total matches generated: ${totalMatches}`);
+  console.log(`\n Complete! Total matches generated: ${totalMatches}`);
 }
 
 main().catch(console.error);

@@ -12,7 +12,7 @@ const CITIES = {
 const AMENITIES = ['Parking', 'Gym', 'Pool', 'Security', 'Garden', 'Clubhouse', 'Elevator', 'Power Backup', 'Air Conditioning', 'Furnished'];
 
 async function main() {
-    console.log('🌱 Starting database seed for Buyers only...\n');
+    console.log(' Starting database seed for Buyers only...\n');
 
     // Clear existing data
     console.log('Clearing existing data...');
@@ -83,7 +83,7 @@ async function main() {
     }
     console.log(`✓ Created ${buyers.length} buyers across ${Object.keys(CITIES).length} cities\n`);
 
-    console.log('✅ Database seeding completed! Ready for scraping.');
+    console.log(' Database seeding completed! Ready for scraping.');
 }
 
 main()

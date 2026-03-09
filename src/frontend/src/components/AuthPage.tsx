@@ -150,7 +150,7 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
         }}
       >
         <h1 style={{ textAlign: 'center', marginBottom: '10px', color: '#333' }}>
-          {isAdmin ? '🔐 Admin' : userType === 'buyer' ? '🏠 Buyer' : '🏢 Seller'} {isLogin || isAdmin ? 'Login' : 'Signup'}
+          {isAdmin ? ' Admin' : userType === 'buyer' ? ' Buyer' : ' Seller'} {isLogin || isAdmin ? 'Login' : 'Signup'}
         </h1>
         <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
           {isLogin || isAdmin ? 'Welcome back!' : 'Create your account'}
@@ -202,7 +202,7 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
               {userType === 'buyer' && (
                 <div style={{ marginBottom: '20px', background: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
                   <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#4a5568' }}>
-                    ✨ What are you looking for? (AI Powered)
+                     What are you looking for? (AI Powered)
                   </label>
                   <textarea
                     name="rawQuery"

@@ -95,7 +95,7 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
       borderRadius: '12px',
       boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
     }}>
-      <h2 style={{ marginBottom: '10px', color: '#333' }}>📝 Update Your Preferences</h2>
+      <h2 style={{ marginBottom: '10px', color: '#333' }}> Update Your Preferences</h2>
       <p style={{ marginBottom: '25px', color: '#666', fontSize: '14px' }}>
         AI Agent will understand your needs and update your profile automatically.
       </p>
@@ -110,7 +110,7 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
           border: '1px solid #cce5ff'
         }}>
           <h3 style={{ fontSize: '16px', marginBottom: '10px', color: '#0056b3' }}>
-            ✨ AI / Natural Language Search
+             AI / Natural Language Search
           </h3>
           <p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
             Type your requirements naturally, e.g., "Looking for a 2 bhk in Indiranagar under 60 lakhs with parking"
@@ -175,7 +175,7 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
             transition: 'all 0.3s'
           }}
         >
-          {loading ? '⏳ Updating...' : '🔍 Update Preferences & Find Matches'}
+          {loading ? ' Updating...' : ' Update Preferences & Find Matches'}
         </button>
       </form>
     </div>

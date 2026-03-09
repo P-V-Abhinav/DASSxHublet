@@ -187,12 +187,12 @@ if (require.main === module) {
     const prisma = new PrismaClient();
     seedDemoBuyers(prisma)
         .then(({ created, skipped, buyers }) => {
-            console.log(`\n✅ Seeded ${created} demo buyers (${skipped} already existed)\n`);
+            console.log(`\n Seeded ${created} demo buyers (${skipped} already existed)\n`);
             console.log('Credentials:');
             buyers.forEach((b) => console.log(`  ${b.email}  →  password: ${b.password}`));
         })
         .catch((e) => {
-            console.error('❌ Seeding failed:', e);
+            console.error(' Seeding failed:', e);
             process.exit(1);
         })
         .finally(() => prisma.$disconnect());

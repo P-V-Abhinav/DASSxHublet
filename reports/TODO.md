@@ -4,7 +4,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🔐 Authentication & Authorization
+##  Authentication & Authorization
 
 ### Current State
 - No authentication implemented
@@ -28,7 +28,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🤖 ML-Based Matching
+##  ML-Based Matching
 
 ### Current State
 - Rule-based matcher with weighted scoring
@@ -58,7 +58,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🧠 Advanced NLP Intent Parsing
+##  Advanced NLP Intent Parsing
 
 ### Current State
 - Keyword-based regex parser
@@ -86,7 +86,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 📊 Comparative Market Analysis (CMA) Valuation
+##  Comparative Market Analysis (CMA) Valuation
 
 ### Current State
 - Properties have fixed prices
@@ -115,7 +115,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## ⚙️ Asynchronous Background Jobs
+## ️ Asynchronous Background Jobs
 
 ### Current State
 - All operations are synchronous
@@ -149,7 +149,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🌐 Web Scraping & Data Ingestion
+##  Web Scraping & Data Ingestion
 
 ### Current State
 - Properties entered manually via UI/API
@@ -180,7 +180,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 📧 Notifications System
+##  Notifications System
 
 ### Current State
 - No notifications on new matches
@@ -213,7 +213,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🔒 Advanced RBAC & Permissions
+##  Advanced RBAC & Permissions
 
 ### Current State
 - No user roles or permissions
@@ -240,7 +240,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 📈 Analytics & Reporting
+##  Analytics & Reporting
 
 ### Current State
 - Basic workflow event logging
@@ -269,7 +269,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🧪 Testing Infrastructure
+##  Testing Infrastructure
 
 ### Current State
 - No automated tests
@@ -299,7 +299,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 📦 Deployment & DevOps
+##  Deployment & DevOps
 
 ### Current State
 - Local development only
@@ -329,7 +329,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🗺 Geospatial Features
+##  Geospatial Features
 
 ### Current State
 - Locality is a text field
@@ -357,7 +357,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 💳 Payment Integration
+##  Payment Integration
 
 ### Current State
 - No payment processing
@@ -384,7 +384,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🔍 Advanced Search & Filters
+##  Advanced Search & Filters
 
 ### Current State
 - Basic filtering by locality, BHK, price
@@ -412,7 +412,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 📱 Mobile App
+##  Mobile App
 
 ### Current State
 - Web-only interface
@@ -435,7 +435,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 🛡 Rate Limiting & Security
+##  Rate Limiting & Security
 
 ### Current State
 - No rate limiting
@@ -461,7 +461,7 @@ This document tracks features that were intentionally deferred from the initial 
 
 ---
 
-## 📝 Summary
+##  Summary
 
 All deferred features have clear extension points in the current architecture. The modular design ensures that adding these features won't require major refactoring. Prioritize based on user feedback and business needs.
 

@@ -1,4 +1,4 @@
-# 🏠 Facebook Real Estate Pipeline
+#  Facebook Real Estate Pipeline
 
 Scrape real estate listings from Facebook groups and extract structured property data using AI (Groq LLM).
 

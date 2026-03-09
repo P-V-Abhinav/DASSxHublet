@@ -24,7 +24,7 @@ export async function exportUsersList(): Promise<void> {
     const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     const lines: string[] = [];
 
-    lines.push('# 📋 Users List — Buyers & Sellers');
+    lines.push('#  Users List — Buyers & Sellers');
     lines.push('');
     lines.push(`> Auto-generated on ${now}. Updated after every scrape.`);
     lines.push('');
@@ -32,7 +32,7 @@ export async function exportUsersList(): Promise<void> {
     // ── Sellers ──
     lines.push('---');
     lines.push('');
-    lines.push(`## 🏢 Sellers (${sellers.length} total)`);
+    lines.push(`##  Sellers (${sellers.length} total)`);
     lines.push('');
     lines.push('| # | Name | Email | Phone | Type | Rating | Properties |');
     lines.push('|---|------|-------|-------|------|--------|------------|');
@@ -40,7 +40,7 @@ export async function exportUsersList(): Promise<void> {
     sellers.forEach((s, i) => {
         const propCount = s.properties?.length || 0;
         const phone = s.phone || '—';
-        const rating = s.rating ? `${s.rating.toFixed(1)} ⭐` : '—';
+        const rating = s.rating ? `${s.rating.toFixed(1)} ` : '—';
         lines.push(`| ${i + 1} | ${s.name} | \`${s.email}\` | ${phone} | ${s.sellerType} | ${rating} | ${propCount} |`);
     });
 
@@ -48,7 +48,7 @@ export async function exportUsersList(): Promise<void> {
 
     // Quick login reference for sellers
     if (sellers.length > 0) {
-        lines.push('<details><summary>🔑 Quick Login Emails (click to expand)</summary>');
+        lines.push('<details><summary> Quick Login Emails (click to expand)</summary>');
         lines.push('');
         lines.push('```');
         sellers.forEach(s => {
@@ -62,7 +62,7 @@ export async function exportUsersList(): Promise<void> {
     // ── Buyers ──
     lines.push('---');
     lines.push('');
-    lines.push(`## 🛒 Buyers (${buyers.length} total)`);
+    lines.push(`##  Buyers (${buyers.length} total)`);
     lines.push('');
     lines.push('| # | Name | Email | Phone | BHK | Budget Range | Area Range | Localities |');
     lines.push('|---|------|-------|-------|-----|--------------|------------|------------|');
@@ -91,7 +91,7 @@ export async function exportUsersList(): Promise<void> {
 
     // Quick login reference for buyers
     if (buyers.length > 0) {
-        lines.push('<details><summary>🔑 Quick Login Emails (click to expand)</summary>');
+        lines.push('<details><summary> Quick Login Emails (click to expand)</summary>');
         lines.push('');
         lines.push('```');
         buyers.forEach(b => {
@@ -105,7 +105,7 @@ export async function exportUsersList(): Promise<void> {
     // ── Stats ──
     lines.push('---');
     lines.push('');
-    lines.push('## 📊 Summary');
+    lines.push('##  Summary');
     lines.push('');
     lines.push(`- **Total Sellers**: ${sellers.length}`);
     lines.push(`- **Total Buyers**: ${buyers.length}`);

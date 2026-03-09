@@ -51,17 +51,17 @@ All service files now handle JSON serialization/deserialization:
 - **Connection String**: `file:./dev.db`
 
 ## Benefits of SQLite
-1. ✅ **Zero Configuration**: No database server to install or configure
-2. ✅ **Portable**: Single file database, easy to backup and share
-3. ✅ **Fast Setup**: Instant database creation with `prisma migrate dev`
-4. ✅ **Perfect for Development**: Ideal for prototypes and demos
-5. ✅ **Easy Deployment**: Can be easily hosted on platforms like Railway, Fly.io
+1.  **Zero Configuration**: No database server to install or configure
+2.  **Portable**: Single file database, easy to backup and share
+3.  **Fast Setup**: Instant database creation with `prisma migrate dev`
+4.  **Perfect for Development**: Ideal for prototypes and demos
+5.  **Easy Deployment**: Can be easily hosted on platforms like Railway, Fly.io
 
 ## Limitations to Consider
-1. ⚠️ **Concurrency**: Limited concurrent write operations
-2. ⚠️ **Scale**: Not suitable for high-traffic production use
-3. ⚠️ **Array Queries**: No native array operations (filtered in-memory)
-4. ⚠️ **Type Safety**: JSON fields stored as strings, parsed at runtime
+1. ️ **Concurrency**: Limited concurrent write operations
+2. ️ **Scale**: Not suitable for high-traffic production use
+3. ️ **Array Queries**: No native array operations (filtered in-memory)
+4. ️ **Type Safety**: JSON fields stored as strings, parsed at runtime
 
 ## Migration Path to PostgreSQL
 If you need to migrate to PostgreSQL later:
@@ -92,15 +92,15 @@ If you need to migrate to PostgreSQL later:
 
 ## Testing
 All endpoints have been tested with SQLite and work correctly:
-- ✅ Buyer creation with free-text intent parsing
-- ✅ Property creation with amenities
-- ✅ Seller management
-- ✅ Lead creation and state transitions
-- ✅ Matching algorithm with score calculation
-- ✅ Workflow event logging
+-  Buyer creation with free-text intent parsing
+-  Property creation with amenities
+-  Seller management
+-  Lead creation and state transitions
+-  Matching algorithm with score calculation
+-  Workflow event logging
 
 ## Current Status
-- **Backend**: Running on port 3000 ✅
-- **Frontend**: Running on port 5173 ✅
-- **Database**: SQLite (`dev.db`) ✅
-- **All Services**: Updated for SQLite compatibility ✅
+- **Backend**: Running on port 3000 
+- **Frontend**: Running on port 5173 
+- **Database**: SQLite (`dev.db`) 
+- **All Services**: Updated for SQLite compatibility 

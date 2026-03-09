@@ -222,7 +222,7 @@ export const AdminDashboard = () => {
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <h1 style={{ marginBottom: '20px', color: '#333' }}>🔐 Admin Dashboard</h1>
+            <h1 style={{ marginBottom: '20px', color: '#333' }}> Admin Dashboard</h1>
 
             {/* Tab Navigation */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ddd', flexWrap: 'wrap' }}>
@@ -241,7 +241,7 @@ export const AdminDashboard = () => {
                             textTransform: 'capitalize',
                         }}
                     >
-                        {tab === 'fb-scrape' ? '📘 FB Scrape' : tab === 'manual-scrape' ? '🕸️ Manual Scrape' : tab}
+                        {tab === 'fb-scrape' ? ' FB Scrape' : tab === 'manual-scrape' ? '️ Manual Scrape' : tab}
                     </button>
                 ))}
             </div>
@@ -262,7 +262,7 @@ export const AdminDashboard = () => {
                 alignItems: 'center',
                 flexWrap: 'wrap',
             }}>
-                <span style={{ fontWeight: 'bold', color: '#4527A0', fontSize: '14px', marginRight: '8px' }}>🧪 Demo Tools:</span>
+                <span style={{ fontWeight: 'bold', color: '#4527A0', fontSize: '14px', marginRight: '8px' }}> Demo Tools:</span>
 
                 <button
                     onClick={async () => {
@@ -272,13 +272,13 @@ export const AdminDashboard = () => {
                         try {
                             const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-buyers`);
                             if (res.data.success) {
-                                setSeedBuyerMessage(`✅ ${res.data.message}`);
+                                setSeedBuyerMessage(` ${res.data.message}`);
                                 if (activeTab === 'buyers') fetchData();
                             } else {
-                                setSeedBuyerMessage(`❌ ${res.data.error || 'Failed'}`);
+                                setSeedBuyerMessage(` ${res.data.error || 'Failed'}`);
                             }
                         } catch (err: any) {
-                            setSeedBuyerMessage(`❌ ${err.response?.data?.error || err.message}`);
+                            setSeedBuyerMessage(` ${err.response?.data?.error || err.message}`);
                         } finally {
                             setSeedingBuyers(false);
                         }
@@ -298,7 +298,7 @@ export const AdminDashboard = () => {
                         gap: '6px',
                     }}
                 >
-                    {seedingBuyers ? '⏳ Seeding...' : '🌱 Seed Demo Buyers'}
+                    {seedingBuyers ? ' Seeding...' : ' Seed Demo Buyers'}
                 </button>
 
                 <button
@@ -309,13 +309,13 @@ export const AdminDashboard = () => {
                         try {
                             const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`);
                             if (res.data.success) {
-                                setResetSellerMessage(`✅ ${res.data.message}`);
+                                setResetSellerMessage(` ${res.data.message}`);
                                 if (activeTab === 'sellers') fetchData();
                             } else {
-                                setResetSellerMessage(`❌ ${res.data.error || 'Failed'}`);
+                                setResetSellerMessage(` ${res.data.error || 'Failed'}`);
                             }
                         } catch (err: any) {
-                            setResetSellerMessage(`❌ ${err.response?.data?.error || err.message}`);
+                            setResetSellerMessage(` ${err.response?.data?.error || err.message}`);
                         } finally {
                             setResettingSellers(false);
                         }
@@ -335,7 +335,7 @@ export const AdminDashboard = () => {
                         gap: '6px',
                     }}
                 >
-                    {resettingSellers ? '⏳ Resetting...' : '🔄 Reset Seller Trust to 0'}
+                    {resettingSellers ? ' Resetting...' : ' Reset Seller Trust to 0'}
                 </button>
             </div>
 
@@ -343,8 +343,8 @@ export const AdminDashboard = () => {
             {seedBuyerMessage && (
                 <div style={{
                     padding: '12px 16px',
-                    background: seedBuyerMessage.includes('✅') ? '#e8f5e9' : '#ffebee',
-                    color: seedBuyerMessage.includes('✅') ? '#2e7d32' : '#c62828',
+                    background: seedBuyerMessage.includes('') ? '#e8f5e9' : '#ffebee',
+                    color: seedBuyerMessage.includes('') ? '#2e7d32' : '#c62828',
                     borderRadius: '6px',
                     marginBottom: '12px',
                     fontSize: '14px',
@@ -355,8 +355,8 @@ export const AdminDashboard = () => {
             {resetSellerMessage && (
                 <div style={{
                     padding: '12px 16px',
-                    background: resetSellerMessage.includes('✅') ? '#e8f5e9' : '#ffebee',
-                    color: resetSellerMessage.includes('✅') ? '#2e7d32' : '#c62828',
+                    background: resetSellerMessage.includes('') ? '#e8f5e9' : '#ffebee',
+                    color: resetSellerMessage.includes('') ? '#2e7d32' : '#c62828',
                     borderRadius: '6px',
                     marginBottom: '12px',
                     fontSize: '14px',
@@ -426,7 +426,7 @@ export const AdminDashboard = () => {
                                                         padding: '5px 10px', background: '#f44336', color: 'white',
                                                         border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px',
                                                     }}
-                                                >🗑 Remove</button>
+                                                > Remove</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -481,7 +481,7 @@ export const AdminDashboard = () => {
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {seller.ratingCount === 0 ? "Not rated" : (
                                                     <>
-                                                        <span style={{ color: '#ff9800' }}>{'⭐'.repeat(Math.min(Math.round(seller.rating), 5))}</span>
+                                                        <span style={{ color: '#ff9800' }}>{''.repeat(Math.min(Math.round(seller.rating), 5))}</span>
                                                         <span style={{ marginLeft: '6px', fontWeight: 'bold' }}>{seller.rating.toFixed(1)}</span>
                                                         <span style={{ marginLeft: '8px', fontSize: '12px', color: '#666' }}>({seller.ratingCount} ratings)</span>
                                                     </>
@@ -529,7 +529,7 @@ export const AdminDashboard = () => {
                                                         border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px',
                                                         marginLeft: '6px',
                                                     }}
-                                                >🗑 Remove</button>
+                                                > Remove</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -568,7 +568,7 @@ export const AdminDashboard = () => {
                                                 {property.metadata?.imageUrl ? (
                                                     <img src={property.metadata.imageUrl} alt="" style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px' }} />
                                                 ) : (
-                                                    <div style={{ width: '48px', height: '48px', background: '#eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🏠</div>
+                                                    <div style={{ width: '48px', height: '48px', background: '#eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}></div>
                                                 )}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd', maxWidth: '250px' }}>
@@ -579,15 +579,15 @@ export const AdminDashboard = () => {
                                                     </div>
                                                 )}
                                                 {property.metadata?.sourceUrl && (
-                                                    <a href={property.metadata.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#2196F3' }}>View listing ↗</a>
+                                                    <a href={property.metadata.sourceUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#2196F3' }}>View listing </a>
                                                 )}
                                                 {property.metadata?.groupUrl && (
-                                                    <a href={property.metadata.groupUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#9C27B0', marginLeft: property.metadata?.sourceUrl ? '8px' : '0', display: 'inline-block' }}>View Group ↗</a>
+                                                    <a href={property.metadata.groupUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#9C27B0', marginLeft: property.metadata?.sourceUrl ? '8px' : '0', display: 'inline-block' }}>View Group </a>
                                                 )}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {property.locality}
-                                                {property.metadata?.landmark && <div style={{ fontSize: '11px', color: '#666' }}>📍 {property.metadata.landmark}</div>}
+                                                {property.metadata?.landmark && <div style={{ fontSize: '11px', color: '#666' }}> {property.metadata.landmark}</div>}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <span style={{ background: '#E3F2FD', color: '#1565C0', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', textTransform: 'capitalize' }}>{property.propertyType}</span>
@@ -598,7 +598,7 @@ export const AdminDashboard = () => {
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <strong>{property.seller?.name || 'Unknown'}</strong>
                                                 <div style={{ fontSize: '11px', color: '#666' }}>{property.seller?.sellerType || ''}</div>
-                                                {property.metadata?.companyName && <div style={{ fontSize: '11px', color: '#888' }}>🏢 {property.metadata.companyName}</div>}
+                                                {property.metadata?.companyName && <div style={{ fontSize: '11px', color: '#888' }}> {property.metadata.companyName}</div>}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {property.contact || 'N/A'}
@@ -676,7 +676,7 @@ export const AdminDashboard = () => {
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <strong>{lead.buyer.name}</strong><br />
                                                 <small style={{ color: '#666' }}>{lead.buyer.email}</small>
-                                                {lead.buyer.phone && <div style={{ fontSize: '11px', color: '#888' }}>📞 {lead.buyer.phone}</div>}
+                                                {lead.buyer.phone && <div style={{ fontSize: '11px', color: '#888' }}> {lead.buyer.phone}</div>}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <strong>{lead.property?.seller?.name || 'Unknown'}</strong><br />
@@ -815,7 +815,7 @@ export const AdminDashboard = () => {
 
                 {activeTab === 'manual-scrape' && (
                     <div>
-                        <h2>🕸️ Manual Scrape</h2>
+                        <h2>️ Manual Scrape</h2>
                         <p style={{ color: '#666', marginBottom: '20px' }}>Trigger a manual scrape for properties in a specific city using a selected scraper.</p>
                         
                         <div style={{
@@ -876,12 +876,12 @@ export const AdminDashboard = () => {
                                             scraper: manualScraper,
                                         });
                                         if (res.data.success) {
-                                            setManualScrapeMessage(`✅ Scrape triggered successfully. Results: ${JSON.stringify(res.data.results)}`);
+                                            setManualScrapeMessage(` Scrape triggered successfully. Results: ${JSON.stringify(res.data.results)}`);
                                         } else {
-                                            setManualScrapeMessage(`❌ Failed to trigger scrape: ${res.data.error || 'Unknown error'}`);
+                                            setManualScrapeMessage(` Failed to trigger scrape: ${res.data.error || 'Unknown error'}`);
                                         }
                                     } catch (err: any) {
-                                        setManualScrapeMessage(`❌ Failed to trigger scrape: ${err.response?.data?.error || err.message}`);
+                                        setManualScrapeMessage(` Failed to trigger scrape: ${err.response?.data?.error || err.message}`);
                                     } finally {
                                         setManualScraping(false);
                                     }
@@ -904,8 +904,8 @@ export const AdminDashboard = () => {
                         {manualScrapeMessage && (
                             <div style={{
                                 padding: '15px',
-                                background: manualScrapeMessage.includes('✅') ? '#e8f5e9' : '#ffebee',
-                                color: manualScrapeMessage.includes('✅') ? '#2e7d32' : '#c62828',
+                                background: manualScrapeMessage.includes('') ? '#e8f5e9' : '#ffebee',
+                                color: manualScrapeMessage.includes('') ? '#2e7d32' : '#c62828',
                                 borderRadius: '4px',
                                 marginBottom: '20px',
                             }}>
@@ -917,7 +917,7 @@ export const AdminDashboard = () => {
 
                 {activeTab === 'fb-scrape' && (
                     <div>
-                        <h2>📘 Facebook Group Scraper</h2>
+                        <h2> Facebook Group Scraper</h2>
                         <p style={{ color: '#666', marginBottom: '20px' }}>Scrape real estate listings from Facebook groups using Apify + Groq LLM extraction.</p>
 
                         {/* Scrape Form */}
@@ -984,7 +984,7 @@ export const AdminDashboard = () => {
                                         });
                                         if (res.data.success && Array.isArray(res.data.data)) {
                                             setFbResults(res.data.data);
-                                            setFbMessage(`✅ Scraped ${res.data.data.length} listing(s)`);
+                                            setFbMessage(` Scraped ${res.data.data.length} listing(s)`);
                                         } else {
                                             setFbError('Unexpected response format');
                                         }
@@ -1009,7 +1009,7 @@ export const AdminDashboard = () => {
                                     gap: '8px',
                                 }}
                             >
-                                {fbScraping ? '⏳ Scraping...' : '🔍 Scrape Group'}
+                                {fbScraping ? ' Scraping...' : ' Scrape Group'}
                             </button>
                             
                             <button
@@ -1022,7 +1022,7 @@ export const AdminDashboard = () => {
                                         const res = await axios.get(`${API_BASE_URL}/admin/fb-load-csv`);
                                         if (res.data.success && Array.isArray(res.data.data)) {
                                             setFbResults(res.data.data);
-                                            setFbMessage(`✅ Loaded ${res.data.data.length} listing(s) from CSV`);
+                                            setFbMessage(` Loaded ${res.data.data.length} listing(s) from CSV`);
                                         } else {
                                             setFbError('Unexpected response format');
                                         }
@@ -1047,16 +1047,16 @@ export const AdminDashboard = () => {
                                     gap: '8px',
                                 }}
                             >
-                                📁 Load CSV
+                                 Load CSV
                             </button>
                         </div>
 
-                        {fbError && <p style={{ color: '#d32f2f', background: '#ffebee', padding: '10px 16px', borderRadius: '6px', marginBottom: '16px' }}>❌ {fbError}</p>}
+                        {fbError && <p style={{ color: '#d32f2f', background: '#ffebee', padding: '10px 16px', borderRadius: '6px', marginBottom: '16px' }}> {fbError}</p>}
                         {fbMessage && <p style={{ color: '#2E7D32', background: '#e8f5e9', padding: '10px 16px', borderRadius: '6px', marginBottom: '16px' }}>{fbMessage}</p>}
 
                         {fbScraping && (
                             <div style={{ textAlign: 'center', padding: '40px', color: '#1877F2' }}>
-                                <div style={{ fontSize: '40px', marginBottom: '12px', animation: 'spin 1s linear infinite' }}>🔄</div>
+                                <div style={{ fontSize: '40px', marginBottom: '12px', animation: 'spin 1s linear infinite' }}></div>
                                 <p style={{ fontSize: '16px', fontWeight: 'bold' }}>Scraping in progress...</p>
                                 <p style={{ color: '#888', fontSize: '13px' }}>This may take a few minutes depending on the number of posts.</p>
                                 <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
@@ -1075,7 +1075,7 @@ export const AdminDashboard = () => {
                                             try {
                                                 const res = await axios.post(`${API_BASE_URL}/admin/fb-save`, { rows: fbResults });
                                                 if (res.data.success) {
-                                                    setFbMessage(`✅ Saved ${res.data.saved} properties to database!` +
+                                                    setFbMessage(` Saved ${res.data.saved} properties to database!` +
                                                         (res.data.errors?.length > 0 ? ` (${res.data.errors.length} errors)` : ''));
                                                     setFbResults([]);
                                                 } else {
@@ -1099,7 +1099,7 @@ export const AdminDashboard = () => {
                                             fontSize: '14px',
                                         }}
                                     >
-                                        {fbSaving ? '⏳ Saving...' : '💾 Save to Database'}
+                                        {fbSaving ? ' Saving...' : ' Save to Database'}
                                     </button>
                                 </div>
 
@@ -1161,7 +1161,7 @@ export const AdminDashboard = () => {
                                                     <td style={{ padding: '8px', border: '1px solid #ddd', fontSize: '11px' }}>{row.CREATED_AT}</td>
                                                     <td style={{ padding: '8px', border: '1px solid #ddd' }}>
                                                         {row.GROUP_URL && row.GROUP_URL !== '-' ? (
-                                                            <a href={row.GROUP_URL} target="_blank" rel="noopener noreferrer" style={{ color: '#1877F2', fontSize: '11px' }}>View Group ↗</a>
+                                                            <a href={row.GROUP_URL} target="_blank" rel="noopener noreferrer" style={{ color: '#1877F2', fontSize: '11px' }}>View Group </a>
                                                         ) : '-'}
                                                     </td>
                                                 </tr>
@@ -1174,7 +1174,7 @@ export const AdminDashboard = () => {
 
                         {!fbScraping && fbResults.length === 0 && !fbMessage && (
                             <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-                                <div style={{ fontSize: '48px', marginBottom: '12px' }}>📘</div>
+                                <div style={{ fontSize: '48px', marginBottom: '12px' }}></div>
                                 <p>Enter a Facebook group URL and click <strong>Scrape Group</strong> to get started.</p>
                             </div>
                         )}

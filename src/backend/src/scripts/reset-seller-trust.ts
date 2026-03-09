@@ -40,11 +40,11 @@ if (require.main === module) {
     const prisma = new PrismaClient();
     resetSellerTrust(prisma)
         .then(({ updated, sellers }) => {
-            console.log(`\n✅ Reset trust scores for ${updated} sellers\n`);
+            console.log(`\n Reset trust scores for ${updated} sellers\n`);
             sellers.forEach((s) => console.log(`  ${s.name} (${s.email}) → trust=0, deals=0, rating=0`));
         })
         .catch((e) => {
-            console.error('❌ Reset failed:', e);
+            console.error(' Reset failed:', e);
             process.exit(1);
         })
         .finally(() => prisma.$disconnect());

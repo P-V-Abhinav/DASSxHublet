@@ -396,15 +396,15 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // Start server
 app.listen(PORT, async () => {
     const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
-    console.log(`🚀 Hublet API server running on port ${PORT}`);
-    console.log(`📍 Health check: ${baseUrl}/health`);
-    console.log(`🕷️  Default scraper: ${process.env.SCRAPER || 'magicbricks-direct'}`);
-    console.log(`🌐 Allowed CORS origins: ${ALLOWED_ORIGINS.join(', ')}`);
+    console.log(` Hublet API server running on port ${PORT}`);
+    console.log(` Health check: ${baseUrl}/health`);
+    console.log(`️  Default scraper: ${process.env.SCRAPER || 'magicbricks-direct'}`);
+    console.log(` Allowed CORS origins: ${ALLOWED_ORIGINS.join(', ')}`);
 
     // Export users list on startup
     try {
         await exportUsersList();
-        console.log('📋 Users list exported to users_list.md');
+        console.log(' Users list exported to users_list.md');
     } catch (e) { /* db might be empty */ }
 
     console.log('\n  To trigger a scrape:');

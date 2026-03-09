@@ -1,24 +1,24 @@
 # Three View System - User Guide
 
-## 🏠 Hublet Platform Views
+##  Hublet Platform Views
 
 The Hublet platform now features three distinct role-based views with a simple login system.
 
 ---
 
-## 🚪 Login Screen
+##  Login Screen
 
 When you first load the application, you'll see a login screen with three options:
 
-1. **🔐 Login as Admin** - Full administrative access
-2. **🏠 Login as Buyer** - Buyer-focused property matching
-3. **🏢 Login as Seller** - Seller dashboard for property management
+1. ** Login as Admin** - Full administrative access
+2. ** Login as Buyer** - Buyer-focused property matching
+3. ** Login as Seller** - Seller dashboard for property management
 
 **Note:** This is a demo prototype with mock authentication. In production, this would be replaced with proper user authentication.
 
 ---
 
-## 1. 🔐 Admin View
+## 1.  Admin View
 
 ### Overview
 Complete administrative dashboard with full visibility into all platform data.
@@ -88,7 +88,7 @@ Real-time counts displayed at the bottom:
 
 ---
 
-## 2. 🏠 Buyer View
+## 2.  Buyer View
 
 ### Overview
 Personalized dashboard for buyers to manage preferences and view property matches.
@@ -123,10 +123,10 @@ Each match shows:
   - Price in lakhs
 - **Amenities**: First 4 amenities shown, +N more indicator
 - **Score Breakdown**: Individual component scores
-  - 📍 Location score
-  - 💰 Budget fit score
-  - 📏 Size match score
-  - ✨ Amenities match score
+  -  Location score
+  -  Budget fit score
+  -  Size match score
+  -  Amenities match score
 - **Seller Information**:
   - Name
   - Rating (star display)
@@ -148,7 +148,7 @@ Each match shows:
 
 ---
 
-## 3. 🏢 Seller View
+## 3.  Seller View
 
 ### Overview
 Dashboard for sellers to manage their property listings and view interested buyers.
@@ -197,16 +197,16 @@ Dashboard for sellers to manage their property listings and view interested buye
 
 ---
 
-## 🔄 Navigation
+##  Navigation
 
 ### Header Bar (All Views)
-- **Platform Name**: 🏠 Hublet
+- **Platform Name**:  Hublet
 - **User Context**: Shows current role and user name
 - **Logout Button**: Return to login screen
 
 ---
 
-## 📊 API Endpoints Used
+##  API Endpoints Used
 
 ### Admin View:
 - `GET /api/buyers` - All buyers
@@ -228,7 +228,7 @@ Dashboard for sellers to manage their property listings and view interested buye
 
 ---
 
-## 🎯 Key Benefits of Three-View System
+##  Key Benefits of Three-View System
 
 ### Separation of Concerns
 - **Admin**: Platform oversight and analytics
@@ -247,7 +247,7 @@ Dashboard for sellers to manage their property listings and view interested buye
 
 ---
 
-## 🚀 Demo Tips
+##  Demo Tips
 
 ### For Admin Demo:
 1. Show all 6 tabs
@@ -269,7 +269,7 @@ Dashboard for sellers to manage their property listings and view interested buye
 
 ---
 
-## 🔮 Future Enhancements
+##  Future Enhancements
 
 ### Authentication:
 - Real user signup/login
@@ -297,7 +297,7 @@ Dashboard for sellers to manage their property listings and view interested buye
 
 ---
 
-## 📝 Technical Notes
+##  Technical Notes
 
 ### State Management:
 - React useState hooks
@@ -323,7 +323,7 @@ Dashboard for sellers to manage their property listings and view interested buye
 
 ---
 
-## 🎓 Learning Outcomes
+##  Learning Outcomes
 
 This three-view system demonstrates:
 1. Role-based access control (RBAC)
@@ -335,7 +335,7 @@ This three-view system demonstrates:
 
 ---
 
-## 📞 Support
+##  Support
 
 For issues or questions about the three-view system:
 1. Check the main README.md
@@ -345,4 +345,4 @@ For issues or questions about the three-view system:
 
 ---
 
-**Built with ❤️ for DASS Spring 2026 Project**
+**Built with ️ for DASS Spring 2026 Project**

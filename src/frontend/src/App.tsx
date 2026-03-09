@@ -29,7 +29,7 @@ function HomePage() {
           width: '100%',
         }}
       >
-        <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>🏠 Hublet</h1>
+        <h1 style={{ textAlign: 'center', marginBottom: '10px' }}> Hublet</h1>
         <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
           Real Estate Lead Matching Platform
         </p>
@@ -49,7 +49,7 @@ function HomePage() {
               boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
             }}
           >
-            🔐 Login as Admin
+             Login as Admin
           </button>
           <button
             onClick={() => navigate('/auth/buyer')}
@@ -65,7 +65,7 @@ function HomePage() {
               boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
             }}
           >
-            🏠 Buyer Login / Signup
+             Buyer Login / Signup
           </button>
           <button
             onClick={() => navigate('/auth/seller')}
@@ -81,7 +81,7 @@ function HomePage() {
               boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
             }}
           >
-            🏢 Seller Login / Signup
+             Seller Login / Signup
           </button>
         </div>
       </div>
@@ -140,7 +140,7 @@ function AdminDashboardWrapper() {
         }}
       >
         <div>
-          <h2 style={{ margin: 0 }}>🏠 Hublet</h2>
+          <h2 style={{ margin: 0 }}> Hublet</h2>
           <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
             Logged in as: <strong>{user.email}</strong>
           </p>
@@ -197,7 +197,7 @@ function BuyerDashboardWrapper() {
         }}
       >
         <div>
-          <h2 style={{ margin: 0 }}>🏠 Hublet</h2>
+          <h2 style={{ margin: 0 }}> Hublet</h2>
           <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
             Logged in as: <strong>{user.name || user.email}</strong>
           </p>
@@ -254,7 +254,7 @@ function SellerDashboardWrapper() {
         }}
       >
         <div>
-          <h2 style={{ margin: 0 }}>🏠 Hublet</h2>
+          <h2 style={{ margin: 0 }}> Hublet</h2>
           <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
             Logged in as: <strong>{user.name || user.email}</strong>
           </p>

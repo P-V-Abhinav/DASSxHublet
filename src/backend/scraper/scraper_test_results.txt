@@ -96,13 +96,13 @@
   SCRAPER: magicbricks-apify
   Duration: 1.6s  |  Results: 0
 ====================================================================================================
-  ❌ ERROR: {"error": "403 Client Error: Forbidden for url: https://api.apify.com/v2/acts/ecomscrape~magicbricks-property-search-scraper/runs"}
+   ERROR: {"error": "403 Client Error: Forbidden for url: https://api.apify.com/v2/acts/ecomscrape~magicbricks-property-search-scraper/runs"}
 
 ====================================================================================================
   SCRAPER: 99acres-direct
   Duration: 0.3s  |  Results: 0
 ====================================================================================================
-  ⚠ No listings returned (page may have changed or blocked request).
+   No listings returned (page may have changed or blocked request).
 
 ====================================================================================================
   SCRAPER: 99acres-apify

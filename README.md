@@ -1,7 +1,7 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/4T_GxXnv)
 [![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=22465709&assignment_repo_type=AssignmentRepo)
 
-# 🏠 Hublet - Real Estate Lead Matching Platform
+#  Hublet - Real Estate Lead Matching Platform
 
 **DASS Spring 2026 Course Project**
 
@@ -9,16 +9,16 @@ A minimal, demo-ready prototype of a real-estate lead matching and market-intell
 
 ---
 
-## 🎯 Project Overview
+##  Project Overview
 
 Hublet is a platform that matches property buyers with relevant listings using intelligent scoring algorithms. This prototype includes:
 
-- ✅ Buyer intent capture (structured + free-text)
-- ✅ Seller & property management
-- ✅ Rule-based matching with weighted scoring
-- ✅ Lead lifecycle state machine
-- ✅ Full audit trail of all operations
-- ✅ REST API + React frontend
+-  Buyer intent capture (structured + free-text)
+-  Seller & property management
+-  Rule-based matching with weighted scoring
+-  Lead lifecycle state machine
+-  Full audit trail of all operations
+-  REST API + React frontend
 
 **For complete project documentation, see:** [`src/README.md`](src/README.md)
 
@@ -26,7 +26,7 @@ Hublet is a platform that matches property buyers with relevant listings using i
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ```bash
 # Navigate to source directory
@@ -47,7 +47,7 @@ cd frontend && npm run dev
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 .
@@ -66,7 +66,7 @@ cd frontend && npm run dev
 
 ---
 
-## 📊 Course Requirements
+##  Course Requirements
 
 This template includes an Excel-based status tracker and an automated weekly snapshot workflow for submissions.
 

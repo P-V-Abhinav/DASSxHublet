@@ -2,9 +2,9 @@
 
 A minimal, demo-ready prototype of a real-estate lead matching and market-intelligence platform. This prototype demonstrates core flows with clean, modular architecture.
 
-## 🎯 Features
+##  Features
 
-### Implemented ✅
+### Implemented 
 - **Buyer Intent Capture**: Submit property preferences (structured + free-text)
 - **Seller & Property Management**: Create seller profiles and property listings
 - **Rule-Based Matching**: Deterministic weighted scoring algorithm
@@ -27,7 +27,7 @@ A minimal, demo-ready prototype of a real-estate lead matching and market-intell
 
 ---
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 ### Backend
 - **Node.js** with **TypeScript**
@@ -42,7 +42,7 @@ A minimal, demo-ready prototype of a real-estate lead matching and market-intell
 
 ---
 
-## 📦 Setup Instructions
+##  Setup Instructions
 
 ### Prerequisites
 - Node.js 18+ and npm
@@ -96,7 +96,7 @@ Open your browser and navigate to:
 
 ---
 
-## 📖 API Documentation
+##  API Documentation
 
 ### Buyers
 
@@ -149,7 +149,7 @@ Open your browser and navigate to:
 
 ---
 
-## 🎮 Usage Flow
+##  Usage Flow
 
 ### 1. Create a Seller
 ```json
@@ -201,7 +201,7 @@ The system will:
 
 ---
 
-## 🧪 Testing the Prototype
+##  Testing the Prototype
 
 ### Using the UI (Recommended)
 1. Open http://localhost:5173
@@ -232,7 +232,7 @@ curl -X POST http://localhost:3000/api/buyers \
 
 ---
 
-## 🗄 Database Schema
+##  Database Schema
 
 The system uses PostgreSQL with the following main tables:
 
@@ -247,7 +247,7 @@ All tables use UUIDs as primary keys and include proper indexes for performance.
 
 ---
 
-## 🏗 Architecture
+##  Architecture
 
 ```
 backend/
@@ -274,13 +274,13 @@ frontend/
 
 ---
 
-## 🚀 Next Steps
+##  Next Steps
 
 See [TODO.md](../TODO.md) for planned features and enhancements.
 
 ---
 
-## 📝 Notes
+##  Notes
 
 - This is a **demo prototype**, not production-ready
 - No authentication/authorization implemented yet
@@ -291,6 +291,6 @@ See [TODO.md](../TODO.md) for planned features and enhancements.
 
 ---
 
-## 📄 License
+##  License
 
 This project is for educational purposes as part of the DASS Spring 2026 course.

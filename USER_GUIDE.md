@@ -1,4 +1,4 @@
-# 📘 Hublet User Guide
+#  Hublet User Guide
 
 Complete guide to using the Hublet real estate platform with step-by-step instructions for all user roles.
 

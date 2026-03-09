@@ -1,4 +1,4 @@
-# 🎬 Hublet Demo Script
+#  Hublet Demo Script
 
 This guide walks you through demonstrating the Hublet prototype to your client.
 
@@ -210,11 +210,11 @@ fetch('http://localhost:3000/health')
 ## Demo Tips
 
 ### Before the Demo
-1. ✅ Test the full flow once
-2. ✅ Clear the database or have clean test data
-3. ✅ Have both terminals running (backend + frontend)
-4. ✅ Browser zoom set to comfortable level
-5. ✅ Close unnecessary tabs
+1.  Test the full flow once
+2.  Clear the database or have clean test data
+3.  Have both terminals running (backend + frontend)
+4.  Browser zoom set to comfortable level
+5.  Close unnecessary tabs
 
 ### During the Demo
 - **Go slowly** - Let the client absorb each step
@@ -288,4 +288,4 @@ curl -X POST "http://localhost:3000/api/matches/buyer/{id}/find?minScore=50"
 
 ---
 
-**Good luck with your demo! 🚀**
+**Good luck with your demo! **
