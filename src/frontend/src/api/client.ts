@@ -4,6 +4,13 @@ import axios from 'axios';
 // Set VITE_API_BASE_URL=https://project-monorepo-team-46.onrender.com/api for production.
 // Set VITE_API_BASE_URL=http://localhost:3000/api for local development.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const AUTH_TOKEN_KEY = 'hublet_auth_token';
+const AUTH_USER_KEY = 'hublet_auth_user';
+
+function readStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,6 +18,63 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+const initialToken = readStoredToken();
+if (initialToken) {
+  api.defaults.headers.common.Authorization = `Bearer ${initialToken}`;
+  axios.defaults.headers.common.Authorization = `Bearer ${initialToken}`;
+}
+
+api.interceptors.request.use((config) => {
+  const token = readStoredToken();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export function setAuthSession(token: string, user: any) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  window.localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  api.defaults.headers.common.Authorization = `Bearer ${token}`;
+  axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+}
+
+export function clearAuthSession() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  window.localStorage.removeItem(AUTH_USER_KEY);
+  delete api.defaults.headers.common.Authorization;
+  delete axios.defaults.headers.common.Authorization;
+}
+
+export function getAuthSession(): { token: string | null; user: any | null } {
+  if (typeof window === 'undefined') {
+    return { token: null, user: null };
+  }
+  const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+  const rawUser = window.localStorage.getItem(AUTH_USER_KEY);
+  let user = null;
+  if (rawUser) {
+    try {
+      user = JSON.parse(rawUser);
+    } catch {
+      user = null;
+    }
+  }
+  return { token, user };
+}
+
+// Auth
+export const authApi = {
+  adminLogin: (data: { email: string; password: string }) => api.post('/auth/admin/login', data),
+  buyerSignup: (data: any) => api.post('/auth/buyer/signup', data),
+  buyerLogin: (data: { email: string; password: string }) => api.post('/auth/buyer/login', data),
+  sellerSignup: (data: any) => api.post('/auth/seller/signup', data),
+  sellerLogin: (data: { email: string; password: string }) => api.post('/auth/seller/login', data),
+};
 
 // Buyers
 export const buyerApi = {

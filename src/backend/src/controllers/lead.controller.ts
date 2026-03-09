@@ -47,9 +47,19 @@ export class LeadController {
   static async getAllLeads(req: Request, res: Response) {
     try {
       const { buyerId, propertyId, state, minMatchScore, limit } = req.query;
+      const currentUser = req.user;
+
+      const effectiveBuyerId = currentUser?.role === 'buyer'
+        ? currentUser.userId
+        : (buyerId as string | undefined);
+
+      const effectiveSellerId = currentUser?.role === 'seller'
+        ? currentUser.userId
+        : undefined;
 
       const leads = await LeadService.getAllLeads({
-        buyerId: buyerId as string,
+        buyerId: effectiveBuyerId,
+        sellerId: effectiveSellerId,
         propertyId: propertyId as string,
         state: state as LeadState,
         minMatchScore: minMatchScore ? parseFloat(minMatchScore as string) : undefined,

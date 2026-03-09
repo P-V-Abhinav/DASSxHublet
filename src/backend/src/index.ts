@@ -8,6 +8,9 @@ import propertyRoutes from './routes/property.routes';
 import leadRoutes from './routes/lead.routes';
 import matchingRoutes from './routes/matching.routes';
 import workflowEventRoutes from './routes/workflow-event.routes';
+import authRoutes from './routes/auth.routes';
+import { authenticateJwt, requireRoles } from './middleware/auth.middleware';
+import { sanitizeResponsePayload } from './utils/response-sanitizer';
 
 // Load environment variables
 dotenv.config();
@@ -55,11 +58,22 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+    const originalJson = res.json.bind(res);
+    res.json = ((body: any) => originalJson(sanitizeResponsePayload(body))) as typeof res.json;
+    next();
+});
 
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'Hublet API is running' });
 });
+
+// Public authentication routes
+app.use('/api/auth', authRoutes);
+
+// All other /api routes are protected by JWT
+app.use('/api', authenticateJwt);
 
 // Scheduler
 import { setupScheduler, runManualScrape } from './cron/scheduler';
@@ -100,7 +114,7 @@ app.get('/api/admin/debug-python', (req, res) => {
 });
 
 // List available scrapers
-app.get('/api/admin/scrapers', async (req, res) => {
+app.get('/api/admin/scrapers', requireRoles('admin'), async (req, res) => {
     try {
         const scrapers = await ScrapingService.listScrapers();
         res.json({ success: true, scrapers });
@@ -110,7 +124,7 @@ app.get('/api/admin/scrapers', async (req, res) => {
 });
 
 // Admin scraping trigger
-app.post('/api/admin/trigger-scrape', async (req, res) => {
+app.post('/api/admin/trigger-scrape', requireRoles('admin'), async (req, res) => {
     const { city, scraper } = req.body;
     try {
         const results = await runManualScrape(city, scraper);
@@ -163,4 +177,3 @@ app.listen(PORT, async () => {
 });
 
 export default app;
-

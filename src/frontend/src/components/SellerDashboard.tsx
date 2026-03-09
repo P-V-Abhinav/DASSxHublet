@@ -90,7 +90,7 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
 
       {showAddForm && (
         <div style={{ marginBottom: '30px', padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>
-          <PropertyForm onSuccess={() => {
+          <PropertyForm fixedSellerId={sellerId} onSuccess={() => {
             setShowAddForm(false);
             fetchProperties();
           }} />
