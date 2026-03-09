@@ -7,7 +7,7 @@ services:
       npm install
       npx prisma generate
       npx prisma migrate deploy
-      pip3 install --user -r scraper/requirements.txt
+      /opt/render/project/src/.venv/bin/pip install -r scraper/requirements.txt
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
