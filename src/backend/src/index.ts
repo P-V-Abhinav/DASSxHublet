@@ -15,20 +15,39 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS — allow origins from env, comma-separated, fallback to localhost for dev
+// CORS — allow origins from env, comma-separated, fallback to localhost for dev.
+// Each entry can be:
+//   - an exact origin:  https://dass-hublet-frontend.vercel.app
+//   - a wildcard glob:  *.vercel.app  (matches all Vercel preview deployments)
+//   - a bare wildcard:  *             (allow all — dev only)
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .split(',')
   .map((o) => o.trim());
+
+/** Returns true if `origin` matches an allowed entry (exact or *.domain glob). */
+function isOriginAllowed(origin: string): boolean {
+  for (const allowed of ALLOWED_ORIGINS) {
+    if (allowed === '*') return true;
+    if (allowed === origin) return true;
+    // Wildcard prefix: *.example.com matches anything.example.com (http or https)
+    if (allowed.startsWith('*.')) {
+      const suffix = allowed.slice(1); // e.g. ".vercel.app"
+      try {
+        const { hostname } = new URL(origin);
+        if (hostname.endsWith(suffix)) return true;
+      } catch { /* invalid URL, skip */ }
+    }
+  }
+  return false;
+}
 
 // Middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (curl, mobile apps, etc.)
+      // Allow requests with no origin (curl, Render health checks, mobile apps, etc.)
       if (!origin) return callback(null, true);
-      if (ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.includes('*')) {
-        return callback(null, true);
-      }
+      if (isOriginAllowed(origin)) return callback(null, true);
       return callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     credentials: true,
