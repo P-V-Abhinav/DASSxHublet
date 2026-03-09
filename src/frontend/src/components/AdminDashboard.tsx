@@ -136,6 +136,12 @@ export const AdminDashboard = () => {
     const [fbMessage, setFbMessage] = useState<string | null>(null);
     const [fbError, setFbError] = useState<string | null>(null);
 
+    // Demo seeder state
+    const [seedingBuyers, setSeedingBuyers] = useState(false);
+    const [seedBuyerMessage, setSeedBuyerMessage] = useState<string | null>(null);
+    const [resettingSellers, setResettingSellers] = useState(false);
+    const [resetSellerMessage, setResetSellerMessage] = useState<string | null>(null);
+
     // Fetch data based on active tab
     useEffect(() => {
         fetchData();
@@ -245,6 +251,121 @@ export const AdminDashboard = () => {
             {loading && <p>Loading...</p>}
             {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
+            {/* Demo Seeder Tools */}
+            <div style={{
+                display: 'flex',
+                gap: '12px',
+                marginBottom: '20px',
+                padding: '16px 20px',
+                background: 'linear-gradient(135deg, #e8eaf6 0%, #f3e5f5 100%)',
+                borderRadius: '8px',
+                border: '1px solid #d1c4e9',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+            }}>
+                <span style={{ fontWeight: 'bold', color: '#4527A0', fontSize: '14px', marginRight: '8px' }}>🧪 Demo Tools:</span>
+
+                <button
+                    onClick={async () => {
+                        if (!window.confirm('Seed 6-7 demo buyers for Mumbai, Chennai, Hyderabad, Bangalore, Pune & Kochi?\n\nExisting demo buyers will be skipped.')) return;
+                        setSeedingBuyers(true);
+                        setSeedBuyerMessage(null);
+                        try {
+                            const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-buyers`);
+                            if (res.data.success) {
+                                setSeedBuyerMessage(`✅ ${res.data.message}`);
+                                if (activeTab === 'buyers') fetchData();
+                            } else {
+                                setSeedBuyerMessage(`❌ ${res.data.error || 'Failed'}`);
+                            }
+                        } catch (err: any) {
+                            setSeedBuyerMessage(`❌ ${err.response?.data?.error || err.message}`);
+                        } finally {
+                            setSeedingBuyers(false);
+                        }
+                    }}
+                    disabled={seedingBuyers}
+                    style={{
+                        padding: '10px 20px',
+                        background: seedingBuyers ? '#B39DDB' : '#7C4DFF',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: seedingBuyers ? 'not-allowed' : 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                    }}
+                >
+                    {seedingBuyers ? '⏳ Seeding...' : '🌱 Seed Demo Buyers'}
+                </button>
+
+                <button
+                    onClick={async () => {
+                        if (!window.confirm('Reset ALL seller trust scores, ratings, and deals to 0?\n\nThis cannot be undone.')) return;
+                        setResettingSellers(true);
+                        setResetSellerMessage(null);
+                        try {
+                            const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`);
+                            if (res.data.success) {
+                                setResetSellerMessage(`✅ ${res.data.message}`);
+                                if (activeTab === 'sellers') fetchData();
+                            } else {
+                                setResetSellerMessage(`❌ ${res.data.error || 'Failed'}`);
+                            }
+                        } catch (err: any) {
+                            setResetSellerMessage(`❌ ${err.response?.data?.error || err.message}`);
+                        } finally {
+                            setResettingSellers(false);
+                        }
+                    }}
+                    disabled={resettingSellers}
+                    style={{
+                        padding: '10px 20px',
+                        background: resettingSellers ? '#ef9a9a' : '#d32f2f',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: resettingSellers ? 'not-allowed' : 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                    }}
+                >
+                    {resettingSellers ? '⏳ Resetting...' : '🔄 Reset Seller Trust to 0'}
+                </button>
+            </div>
+
+            {/* Seeder feedback messages */}
+            {seedBuyerMessage && (
+                <div style={{
+                    padding: '12px 16px',
+                    background: seedBuyerMessage.includes('✅') ? '#e8f5e9' : '#ffebee',
+                    color: seedBuyerMessage.includes('✅') ? '#2e7d32' : '#c62828',
+                    borderRadius: '6px',
+                    marginBottom: '12px',
+                    fontSize: '14px',
+                }}>
+                    {seedBuyerMessage}
+                </div>
+            )}
+            {resetSellerMessage && (
+                <div style={{
+                    padding: '12px 16px',
+                    background: resetSellerMessage.includes('✅') ? '#e8f5e9' : '#ffebee',
+                    color: resetSellerMessage.includes('✅') ? '#2e7d32' : '#c62828',
+                    borderRadius: '6px',
+                    marginBottom: '12px',
+                    fontSize: '14px',
+                }}>
+                    {resetSellerMessage}
+                </div>
+            )}
+
             {/* Content based on active tab */}
             <div style={{ marginTop: '20px' }}>
                 {activeTab === 'buyers' && (
@@ -263,6 +384,7 @@ export const AdminDashboard = () => {
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Area</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Amenities</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Joined</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -289,6 +411,24 @@ export const AdminDashboard = () => {
                                                 {Array.isArray(buyer.amenities) && buyer.amenities.length > 0 ? buyer.amenities.join(', ') : 'None'}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '12px' }}>{formatDate(buyer.createdAt)}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (window.confirm(`Delete buyer "${buyer.name}" (${buyer.email})?`)) {
+                                                            try {
+                                                                await axios.delete(`${API_BASE_URL}/buyers/${buyer.id}`);
+                                                                fetchData();
+                                                            } catch (err) {
+                                                                alert('Failed to delete buyer');
+                                                            }
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        padding: '5px 10px', background: '#f44336', color: 'white',
+                                                        border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px',
+                                                    }}
+                                                >🗑 Remove</button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -372,6 +512,23 @@ export const AdminDashboard = () => {
                                                     <option value="4">4 Stars</option>
                                                     <option value="5">5 Stars</option>
                                                 </select>
+                                                <button
+                                                    onClick={async () => {
+                                                        if (window.confirm(`Delete seller "${seller.name}" (${seller.email}) and all their properties?`)) {
+                                                            try {
+                                                                await axios.delete(`${API_BASE_URL}/sellers/${seller.id}`);
+                                                                fetchData();
+                                                            } catch (err) {
+                                                                alert('Failed to delete seller');
+                                                            }
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        padding: '5px 10px', background: '#f44336', color: 'white',
+                                                        border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px',
+                                                        marginLeft: '6px',
+                                                    }}
+                                                >🗑 Remove</button>
                                             </td>
                                         </tr>
                                     ))}

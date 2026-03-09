@@ -10,6 +10,7 @@ import leadRoutes from './routes/lead.routes';
 import matchingRoutes from './routes/matching.routes';
 import workflowEventRoutes from './routes/workflow-event.routes';
 import authRoutes from './routes/auth.routes';
+import seedRoutes from './routes/seed.routes';
 import { authenticateJwt, requireRoles } from './middleware/auth.middleware';
 import { sanitizeResponsePayload } from './utils/response-sanitizer';
 
@@ -147,6 +148,7 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/matches', matchingRoutes);
 app.use('/api/workflow-events', workflowEventRoutes);
+app.use('/api/admin/seed', seedRoutes);
 
 // ── Facebook Group Scraper ────────────────────────────────────────────────
 import fs from 'fs';
