@@ -15,6 +15,7 @@ model Buyer {
   name      String
   email     String   @unique
   phone     String?
+  passwordHash String?
   
   // Structured intent (stored as JSON strings for SQLite)
   localities     String   // JSON array of locations
@@ -45,6 +46,7 @@ model Seller {
   name           String
   email          String   @unique
   phone          String?
+  passwordHash   String?
   sellerType     String   @default("owner") // owner, broker, agent
   
   // Reputation
@@ -81,6 +83,9 @@ model Property {
   
   // Property type
   propertyType String  @default("apartment") // apartment, house, villa, plot
+  
+  // Contact info
+  contact     String?  // contact phone/name for the listing
   
   // Status
   isActive    Boolean  @default(true)

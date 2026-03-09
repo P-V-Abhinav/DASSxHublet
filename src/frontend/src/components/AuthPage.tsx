@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+import { authApi, setAuthSession } from '../api/client';
 
 interface AuthPageProps {
-  userType: 'buyer' | 'seller';
+  userType: 'buyer' | 'seller' | 'admin';
   onAuthSuccess: (userId: string, userName: string) => void;
   onBack: () => void;
 }
@@ -16,76 +14,83 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
     email: '',
     phone: '',
     password: '',
-    // Buyer specific
-    rawQuery: '', // New field
+    rawQuery: '',
     localities: '',
     minBudget: '',
     maxBudget: '',
     bhk: '2',
     amenities: '',
-    // Seller specific
     sellerType: 'individual',
     rating: '4',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+
+  const isAdmin = userType === 'admin';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setMessage('');
 
     try {
-      if (isLogin) {
-        // Login - find user by email
-        const endpoint = userType === 'buyer' ? '/buyers' : '/sellers';
-        const response = await axios.get(`${API_BASE_URL}${endpoint}`);
-        const user = response.data.find((u: any) => u.email === formData.email);
-        
-        if (user) {
-          onAuthSuccess(user.id, user.name);
-        } else {
-          setError('User not found. Please sign up first.');
-        }
-      } else {
-        // Signup - create new user
+      if (isLogin || isAdmin) {
+        let response;
         if (userType === 'buyer') {
-          const localitiesArray = formData.localities
-            .split(',')
-            .map((l) => l.trim())
-            .filter((l) => l.length > 0);
-          
-          const amenitiesArray = formData.amenities
-            .split(',')
-            .map((a) => a.trim())
-            .filter((a) => a.length > 0);
-
-          const payload: any = {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            rawPreferences: formData.rawQuery,
-          };
-          
-          if (localitiesArray.length > 0) payload.localities = localitiesArray;
-          if (formData.minBudget) payload.minBudget = parseInt(formData.minBudget);
-          if (formData.maxBudget) payload.maxBudget = parseInt(formData.maxBudget);
-          if (formData.bhk) payload.bhk = parseInt(formData.bhk);
-          if (amenitiesArray.length > 0) payload.amenities = amenitiesArray;
-
-          const response = await axios.post(`${API_BASE_URL}/buyers`, payload);
-          onAuthSuccess(response.data.id, response.data.name);
+          response = await authApi.buyerLogin({ email: formData.email, password: formData.password });
+        } else if (userType === 'seller') {
+          response = await authApi.sellerLogin({ email: formData.email, password: formData.password });
         } else {
-          const response = await axios.post(`${API_BASE_URL}/sellers`, {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            sellerType: formData.sellerType,
-            rating: parseFloat(formData.rating) || 4.0,
-          });
-          onAuthSuccess(response.data.id, response.data.name);
+          response = await authApi.adminLogin({ email: formData.email, password: formData.password });
         }
+
+        const { token, user } = response.data;
+        setAuthSession(token, user);
+        onAuthSuccess(user.id || 'admin', user.name || 'Admin');
+        return;
       }
+
+      if (userType === 'buyer') {
+        const localitiesArray = formData.localities
+          .split(',')
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+
+        const amenitiesArray = formData.amenities
+          .split(',')
+          .map((a) => a.trim())
+          .filter((a) => a.length > 0);
+
+        const payload: any = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          rawPreferences: formData.rawQuery,
+        };
+
+        if (localitiesArray.length > 0) payload.localities = localitiesArray;
+        if (formData.minBudget) payload.minBudget = parseInt(formData.minBudget, 10);
+        if (formData.maxBudget) payload.maxBudget = parseInt(formData.maxBudget, 10);
+        if (formData.bhk) payload.bhk = parseInt(formData.bhk, 10);
+        if (amenitiesArray.length > 0) payload.amenities = amenitiesArray;
+
+        await authApi.buyerSignup(payload);
+      } else {
+        await authApi.sellerSignup({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+          sellerType: formData.sellerType,
+          rating: parseFloat(formData.rating) || 4.0,
+        });
+      }
+
+      setMessage('Signup successful. Please login with your email and password.');
+      setIsLogin(true);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Authentication failed');
     } finally {
@@ -101,16 +106,17 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      position: 'relative',
-    }}>
-      {/* Back Button */}
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        position: 'relative',
+      }}
+    >
       <button
         onClick={onBack}
         style={{
@@ -127,29 +133,31 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
           color: '#667eea',
           display: 'flex',
           alignItems: 'center',
-          gap: '5px'
+          gap: '5px',
         }}
       >
         ← Back to Home
       </button>
 
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-        maxWidth: '500px',
-        width: '100%',
-        padding: '40px',
-      }}>
+      <div
+        style={{
+          background: 'white',
+          borderRadius: '12px',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          maxWidth: '500px',
+          width: '100%',
+          padding: '40px',
+        }}
+      >
         <h1 style={{ textAlign: 'center', marginBottom: '10px', color: '#333' }}>
-          {userType === 'buyer' ? '🏠 Buyer' : '🏢 Seller'} {isLogin ? 'Login' : 'Signup'}
+          {isAdmin ? '🔐 Admin' : userType === 'buyer' ? '🏠 Buyer' : '🏢 Seller'} {isLogin || isAdmin ? 'Login' : 'Signup'}
         </h1>
         <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
-          {isLogin ? 'Welcome back!' : 'Create your account'}
+          {isLogin || isAdmin ? 'Welcome back!' : 'Create your account'}
         </p>
 
         <form onSubmit={handleSubmit}>
-          {!isLogin && (
+          {!isLogin && !isAdmin && (
             <>
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
@@ -166,7 +174,7 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
                     padding: '12px',
                     border: '1px solid #ddd',
                     borderRadius: '6px',
-                    fontSize: '14px'
+                    fontSize: '14px',
                   }}
                 />
               </div>
@@ -186,41 +194,36 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
                     padding: '12px',
                     border: '1px solid #ddd',
                     borderRadius: '6px',
-                    fontSize: '14px'
+                    fontSize: '14px',
                   }}
                 />
               </div>
 
               {userType === 'buyer' && (
-                <>
-                  {/* Natural Language Input */}
-                  <div style={{ marginBottom: '20px', background: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#4a5568' }}>
-                      ✨ What are you looking for? (AI Powered)
-                    </label>
-                    <textarea
-                      name="rawQuery"
-                      value={formData.rawQuery}
-                      onChange={handleChange}
-                      placeholder="e.g. 2bhk in Indiranagar under 60 lakhs with parking"
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        border: '1px solid #cbd5e0',
-                        borderRadius: '6px',
-                        minHeight: '80px',
-                        fontSize: '14px',
-                        marginBottom: '4px',
-                        fontFamily: 'inherit'
-                      }}
-                    />
-                    <small style={{display:'block', color:'#718096', fontSize:'12px'}}>
-                      Describe in your own words - our AI will understand!
-                    </small>
-                  </div>
-
-
-                </>
+                <div style={{ marginBottom: '20px', background: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#4a5568' }}>
+                    ✨ What are you looking for? (AI Powered)
+                  </label>
+                  <textarea
+                    name="rawQuery"
+                    value={formData.rawQuery}
+                    onChange={handleChange}
+                    placeholder="e.g. 2bhk in Indiranagar under 60 lakhs with parking"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #cbd5e0',
+                      borderRadius: '6px',
+                      minHeight: '80px',
+                      fontSize: '14px',
+                      marginBottom: '4px',
+                      fontFamily: 'inherit',
+                    }}
+                  />
+                  <small style={{ display: 'block', color: '#718096', fontSize: '12px' }}>
+                    Describe in your own words - our AI will understand.
+                  </small>
+                </div>
               )}
 
               {userType === 'seller' && (
@@ -237,7 +240,7 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
                       padding: '12px',
                       border: '1px solid #ddd',
                       borderRadius: '6px',
-                      fontSize: '14px'
+                      fontSize: '14px',
                     }}
                   >
                     <option value="individual">Individual</option>
@@ -264,20 +267,57 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
                 padding: '12px',
                 border: '1px solid #ddd',
                 borderRadius: '6px',
-                fontSize: '14px'
+                fontSize: '14px',
               }}
             />
           </div>
 
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Password *
+            </label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                fontSize: '14px',
+              }}
+            />
+          </div>
+
+          {message && (
+            <div
+              style={{
+                padding: '10px',
+                background: '#d4edda',
+                color: '#155724',
+                borderRadius: '6px',
+                marginBottom: '15px',
+                fontSize: '14px',
+              }}
+            >
+              {message}
+            </div>
+          )}
+
           {error && (
-            <div style={{
-              padding: '10px',
-              background: '#f8d7da',
-              color: '#721c24',
-              borderRadius: '6px',
-              marginBottom: '15px',
-              fontSize: '14px'
-            }}>
+            <div
+              style={{
+                padding: '10px',
+                background: '#f8d7da',
+                color: '#721c24',
+                borderRadius: '6px',
+                marginBottom: '15px',
+                fontSize: '14px',
+              }}
+            >
               {error}
             </div>
           )}
@@ -295,31 +335,34 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
               fontSize: '16px',
               fontWeight: 'bold',
               cursor: loading ? 'not-allowed' : 'pointer',
-              marginBottom: '15px'
+              marginBottom: '15px',
             }}
           >
-            {loading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
+            {loading ? 'Processing...' : (isLogin || isAdmin ? 'Login' : 'Sign Up')}
           </button>
 
-          <div style={{ textAlign: 'center' }}>
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setError('');
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#667eea',
-                cursor: 'pointer',
-                fontSize: '14px',
-                textDecoration: 'underline'
-              }}
-            >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
-            </button>
-          </div>
+          {!isAdmin && (
+            <div style={{ textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError('');
+                  setMessage('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#667eea',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  textDecoration: 'underline',
+                }}
+              >
+                {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

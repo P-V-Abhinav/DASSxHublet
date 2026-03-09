@@ -3,12 +3,13 @@ import { propertyApi, sellerApi } from '../api/client';
 
 interface PropertyFormProps {
   onSuccess?: () => void;
+  fixedSellerId?: string;
 }
 
-function PropertyForm({ onSuccess }: PropertyFormProps = {}) {
+function PropertyForm({ onSuccess, fixedSellerId }: PropertyFormProps = {}) {
   const [sellers, setSellers] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    sellerId: '',
+    sellerId: fixedSellerId || '',
     title: '',
     description: '',
     locality: '',
@@ -18,12 +19,18 @@ function PropertyForm({ onSuccess }: PropertyFormProps = {}) {
     price: 0,
     amenities: '',
     propertyType: 'apartment',
+    contact: '',
   });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (fixedSellerId) {
+      setFormData((prev) => ({ ...prev, sellerId: fixedSellerId }));
+      return;
+    }
+
     // Load sellers for dropdown
     const fetchSellers = async () => {
       try {
@@ -34,7 +41,7 @@ function PropertyForm({ onSuccess }: PropertyFormProps = {}) {
       }
     };
     fetchSellers();
-  }, []);
+  }, [fixedSellerId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +58,7 @@ function PropertyForm({ onSuccess }: PropertyFormProps = {}) {
       const response = await propertyApi.create({
         ...formData,
         amenities: amenitiesArray,
+        contact: formData.contact || undefined,
       });
 
       setMessage(`Property created successfully! ID: ${response.data.id}`);
@@ -61,7 +69,7 @@ function PropertyForm({ onSuccess }: PropertyFormProps = {}) {
       }
       
       setFormData({
-        sellerId: formData.sellerId,
+        sellerId: fixedSellerId || formData.sellerId,
         title: '',
         description: '',
         locality: '',
@@ -71,6 +79,7 @@ function PropertyForm({ onSuccess }: PropertyFormProps = {}) {
         price: 0,
         amenities: '',
         propertyType: 'apartment',
+        contact: '',
       });
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create property');
@@ -83,26 +92,33 @@ function PropertyForm({ onSuccess }: PropertyFormProps = {}) {
     <div className="card">
       <h2>Add Property Listing</h2>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Seller *</label>
-          <select
-            required
-            value={formData.sellerId}
-            onChange={(e) => setFormData({ ...formData, sellerId: e.target.value })}
-          >
-            <option value="">Select a seller</option>
-            {sellers.map((seller) => (
-              <option key={seller.id} value={seller.id}>
-                {seller.name} ({seller.email})
-              </option>
-            ))}
-          </select>
-          {sellers.length === 0 && (
-            <small style={{ color: '#ef4444' }}>
-              No sellers found. Please create a seller first.
-            </small>
-          )}
-        </div>
+        {fixedSellerId ? (
+          <div className="form-group">
+            <label>Seller *</label>
+            <input type="text" value="Current logged-in seller" disabled />
+          </div>
+        ) : (
+          <div className="form-group">
+            <label>Seller *</label>
+            <select
+              required
+              value={formData.sellerId}
+              onChange={(e) => setFormData({ ...formData, sellerId: e.target.value })}
+            >
+              <option value="">Select a seller</option>
+              {sellers.map((seller) => (
+                <option key={seller.id} value={seller.id}>
+                  {seller.name} ({seller.email})
+                </option>
+              ))}
+            </select>
+            {sellers.length === 0 && (
+              <small style={{ color: '#ef4444' }}>
+                No sellers found. Please create a seller first.
+              </small>
+            )}
+          </div>
+        )}
 
         <div className="form-group">
           <label>Title *</label>
@@ -205,6 +221,16 @@ function PropertyForm({ onSuccess }: PropertyFormProps = {}) {
             value={formData.amenities}
             onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
             placeholder="e.g., parking, gym, swimming pool, garden"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Contact (phone/name)</label>
+          <input
+            type="text"
+            value={formData.contact}
+            onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+            placeholder="e.g., 9876543210 or John Doe"
           />
         </div>
 

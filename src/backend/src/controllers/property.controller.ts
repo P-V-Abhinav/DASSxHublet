@@ -18,6 +18,7 @@ export class PropertyController {
         price,
         amenities,
         propertyType,
+        contact,
         metadata,
       } = req.body;
 
@@ -32,6 +33,7 @@ export class PropertyController {
         price,
         amenities,
         propertyType,
+        contact,
         metadata,
       });
 

@@ -34,9 +34,29 @@ interface ScrapedProperty {
 }
 
 export class ScrapingService {
-    private static SCRAPER_DIR = path.join(__dirname, '../../scraper');
-    private static PYTHON_EXEC_PATH = path.join(__dirname, '../../scraper/venv/bin/python');
-    private static PYTHON_SCRIPT_PATH = path.join(__dirname, '../../scraper/scraper.py');
+    private static SCRAPER_DIR = (() => {
+        const fs = require('fs');
+        const candidates = [
+            path.join(process.cwd(), 'scraper'),
+            path.join(__dirname, '../scraper'),
+            path.join(__dirname, '../../scraper'),
+            path.join(__dirname, '../../../scraper'),
+        ];
+        for (const c of candidates) {
+            if (fs.existsSync(path.join(c, 'scraper.py'))) return c;
+        }
+        return path.join(process.cwd(), 'scraper');
+    })();
+    // Resolve python: venv inside scraper dir takes priority (always has deps installed)
+    // then explicit PYTHON_PATH env var, then system python3
+    private static PYTHON_EXEC_PATH = (() => {
+        const fs = require('fs');
+        const venvPython = path.join(ScrapingService.SCRAPER_DIR, 'venv/bin/python');
+        if (fs.existsSync(venvPython)) return venvPython;
+        if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
+        return 'python3';
+    })();
+    private static PYTHON_SCRIPT_PATH = path.join(ScrapingService.SCRAPER_DIR, 'scraper.py');
 
     // Helper to get or create a seller based on scraped data
     private static async getOrCreateSeller(name: string = 'System Scraper', type: string = 'system') {

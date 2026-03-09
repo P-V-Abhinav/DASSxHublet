@@ -20,6 +20,8 @@ export class BuyerController {
         bhk,
         budgetMin,
         budgetMax,
+        minBudget,
+        maxBudget,
         amenities,
         rawPreferences,
         metadata,
@@ -39,8 +41,8 @@ export class BuyerController {
         areaMin: areaMin || parsedIntent?.areaMin,
         areaMax: areaMax || parsedIntent?.areaMax,
         bhk: bhk || parsedIntent?.bhk,
-        budgetMin: budgetMin || parsedIntent?.budgetMin,
-        budgetMax: budgetMax || parsedIntent?.budgetMax,
+        budgetMin: budgetMin ?? minBudget ?? parsedIntent?.budgetMin,
+        budgetMax: budgetMax ?? maxBudget ?? parsedIntent?.budgetMax,
         amenities: amenities || parsedIntent?.amenities || [],
         rawPreferences,
         metadata,
@@ -95,9 +97,17 @@ export class BuyerController {
   static async updateBuyer(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const { rawPreferences, ...otherFields } = req.body;
+      const { rawPreferences } = req.body;
       
-      let updateData = { ...req.body };
+      let updateData = { ...req.body } as Record<string, any>;
+      if (updateData.minBudget !== undefined && updateData.budgetMin === undefined) {
+        updateData.budgetMin = updateData.minBudget;
+      }
+      if (updateData.maxBudget !== undefined && updateData.budgetMax === undefined) {
+        updateData.budgetMax = updateData.maxBudget;
+      }
+      delete updateData.minBudget;
+      delete updateData.maxBudget;
       
       // If raw preferences are updated, re-parse them
       if (rawPreferences) {

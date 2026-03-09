@@ -131,6 +131,7 @@ export class LeadService {
      */
     static async getAllLeads(filters?: {
         buyerId?: string;
+        sellerId?: string;
         propertyId?: string;
         state?: LeadState;
         minMatchScore?: number;
@@ -141,6 +142,11 @@ export class LeadService {
                 buyerId: filters?.buyerId,
                 propertyId: filters?.propertyId,
                 state: filters?.state,
+                ...(filters?.sellerId && {
+                    property: {
+                        sellerId: filters.sellerId,
+                    },
+                }),
                 ...(filters?.minMatchScore && {
                     matchScore: { gte: filters.minMatchScore },
                 }),

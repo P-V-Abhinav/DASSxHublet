@@ -1,43 +1,34 @@
-import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import './App.css';
 import { AdminDashboard } from './components/AdminDashboard';
 import { BuyerDashboard } from './components/BuyerDashboard';
 import { SellerDashboard } from './components/SellerDashboard';
 import { AuthPage } from './components/AuthPage';
+import { clearAuthSession, getAuthSession } from './api/client';
 
-// Home Page Component
 function HomePage() {
   const navigate = useNavigate();
 
-  const handleAdminLogin = () => {
-    navigate('/admin');
-  };
-
-  const handleBuyerClick = () => {
-    navigate('/auth/buyer');
-  };
-
-  const handleSellerClick = () => {
-    navigate('/auth/seller');
-  };
-
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    }}>
-      <div style={{
-        background: 'white',
-        padding: '40px',
-        borderRadius: '12px',
-        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-        maxWidth: '400px',
-        width: '100%',
-      }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      }}
+    >
+      <div
+        style={{
+          background: 'white',
+          padding: '40px',
+          borderRadius: '12px',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          maxWidth: '400px',
+          width: '100%',
+        }}
+      >
         <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>🏠 Hublet</h1>
         <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
           Real Estate Lead Matching Platform
@@ -45,7 +36,7 @@ function HomePage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           <button
-            onClick={handleAdminLogin}
+            onClick={() => navigate('/auth/admin')}
             style={{
               padding: '16px 24px',
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -61,7 +52,7 @@ function HomePage() {
             🔐 Login as Admin
           </button>
           <button
-            onClick={handleBuyerClick}
+            onClick={() => navigate('/auth/buyer')}
             style={{
               padding: '16px 24px',
               background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
@@ -77,7 +68,7 @@ function HomePage() {
             🏠 Buyer Login / Signup
           </button>
           <button
-            onClick={handleSellerClick}
+            onClick={() => navigate('/auth/seller')}
             style={{
               padding: '16px 24px',
               background: 'linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)',
@@ -93,75 +84,67 @@ function HomePage() {
             🏢 Seller Login / Signup
           </button>
         </div>
-
-        <div style={{
-          marginTop: '30px',
-          padding: '15px',
-          background: '#f5f5f5',
-          borderRadius: '8px',
-          fontSize: '12px',
-          color: '#666',
-          textAlign: 'center'
-        }}>
-          <strong>Demo Data Available:</strong><br/>
-          Mumbai, Hyderabad, Delhi<br/>
-          18 Properties • 18 Buyers
-        </div>
       </div>
     </div>
   );
 }
 
-// Auth Page Wrapper
 function AuthPageWrapper() {
   const navigate = useNavigate();
-  const { userType } = useParams<{ userType: 'buyer' | 'seller' }>();
+  const { userType } = useParams<{ userType: 'buyer' | 'seller' | 'admin' }>();
 
-  const handleAuthSuccess = (userId: string, userName: string) => {
-    if (userType === 'buyer') {
-      navigate(`/buyer/${userId}`, { state: { userName } });
-    } else if (userType === 'seller') {
-      navigate(`/seller/${userId}`, { state: { userName } });
-    }
-  };
-
-  const handleBack = () => {
-    navigate('/');
-  };
-
-  if (!userType || (userType !== 'buyer' && userType !== 'seller')) {
-    navigate('/');
-    return null;
+  if (!userType || !['buyer', 'seller', 'admin'].includes(userType)) {
+    return <Navigate to="/" replace />;
   }
 
-  return <AuthPage userType={userType} onAuthSuccess={handleAuthSuccess} onBack={handleBack} />;
+  const handleAuthSuccess = (userId: string, _userName: string) => {
+    if (userType === 'admin') {
+      navigate('/admin');
+      return;
+    }
+    navigate(`/${userType}/${userId}`);
+  };
+
+  return (
+    <AuthPage
+      userType={userType}
+      onAuthSuccess={handleAuthSuccess}
+      onBack={() => navigate('/')}
+    />
+  );
 }
 
-// Admin Dashboard Wrapper
 function AdminDashboardWrapper() {
   const navigate = useNavigate();
+  const { user } = getAuthSession();
+
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/auth/admin" replace />;
+  }
 
   const handleLogout = () => {
+    clearAuthSession();
     navigate('/');
   };
 
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
-      <div style={{
-        background: 'white',
-        padding: '15px 30px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
+      <div
+        style={{
+          background: 'white',
+          padding: '15px 30px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <div>
           <h2 style={{ margin: 0 }}>🏠 Hublet</h2>
           <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
-            Logged in as: <strong>Admin User</strong>
+            Logged in as: <strong>{user.email}</strong>
           </p>
         </div>
-
         <button
           onClick={handleLogout}
           style={{
@@ -178,44 +161,47 @@ function AdminDashboardWrapper() {
           Logout
         </button>
       </div>
-
       <AdminDashboard />
     </div>
   );
 }
 
-// Buyer Dashboard Wrapper
 function BuyerDashboardWrapper() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
-  const [userName] = useState<string>('Buyer User');
+  const { user } = getAuthSession();
+
+  if (!userId) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!user || user.role !== 'buyer' || user.id !== userId) {
+    return <Navigate to="/auth/buyer" replace />;
+  }
 
   const handleLogout = () => {
+    clearAuthSession();
     navigate('/');
   };
 
-  if (!userId) {
-    navigate('/');
-    return null;
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
-      <div style={{
-        background: 'white',
-        padding: '15px 30px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
+      <div
+        style={{
+          background: 'white',
+          padding: '15px 30px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <div>
           <h2 style={{ margin: 0 }}>🏠 Hublet</h2>
           <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
-            Logged in as: <strong>{userName}</strong>
+            Logged in as: <strong>{user.name || user.email}</strong>
           </p>
         </div>
-
         <button
           onClick={handleLogout}
           style={{
@@ -232,44 +218,47 @@ function BuyerDashboardWrapper() {
           Logout
         </button>
       </div>
-
-      <BuyerDashboard buyerId={userId} buyerName={userName} />
+      <BuyerDashboard buyerId={userId} buyerName={user.name || 'Buyer'} />
     </div>
   );
 }
 
-// Seller Dashboard Wrapper
 function SellerDashboardWrapper() {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
-  const [userName] = useState<string>('Seller User');
+  const { user } = getAuthSession();
+
+  if (!userId) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!user || user.role !== 'seller' || user.id !== userId) {
+    return <Navigate to="/auth/seller" replace />;
+  }
 
   const handleLogout = () => {
+    clearAuthSession();
     navigate('/');
   };
 
-  if (!userId) {
-    navigate('/');
-    return null;
-  }
-
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
-      <div style={{
-        background: 'white',
-        padding: '15px 30px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-      }}>
+      <div
+        style={{
+          background: 'white',
+          padding: '15px 30px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
         <div>
           <h2 style={{ margin: 0 }}>🏠 Hublet</h2>
           <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
-            Logged in as: <strong>{userName}</strong>
+            Logged in as: <strong>{user.name || user.email}</strong>
           </p>
         </div>
-
         <button
           onClick={handleLogout}
           style={{
@@ -286,8 +275,7 @@ function SellerDashboardWrapper() {
           Logout
         </button>
       </div>
-
-      <SellerDashboard sellerId={userId} sellerName={userName} />
+      <SellerDashboard sellerId={userId} sellerName={user.name || 'Seller'} />
     </div>
   );
 }

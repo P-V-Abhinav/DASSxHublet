@@ -2,12 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import { spawn } from 'child_process';
 import buyerRoutes from './routes/buyer.routes';
 import sellerRoutes from './routes/seller.routes';
 import propertyRoutes from './routes/property.routes';
 import leadRoutes from './routes/lead.routes';
 import matchingRoutes from './routes/matching.routes';
 import workflowEventRoutes from './routes/workflow-event.routes';
+import authRoutes from './routes/auth.routes';
+import { authenticateJwt, requireRoles } from './middleware/auth.middleware';
+import { sanitizeResponsePayload } from './utils/response-sanitizer';
 
 // Load environment variables
 dotenv.config();
@@ -55,11 +59,56 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+    const originalJson = res.json.bind(res);
+    res.json = ((body: any) => originalJson(sanitizeResponsePayload(body))) as typeof res.json;
+    next();
+});
 
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'Hublet API is running' });
 });
+
+// Public authentication routes
+app.use('/api/auth', authRoutes);
+
+// Python environment debug endpoint — outside /api so JWT middleware doesn't apply
+app.get('/debug-python', (req, res) => {
+    const { execSync } = require('child_process');
+    const fs = require('fs');
+    const results: Record<string, string> = {};
+
+    const run = (cmd: string) => {
+        try { return execSync(cmd, { timeout: 5000 }).toString().trim(); }
+        catch (e: any) { return `ERROR: ${e.message}`; }
+    };
+
+    const scraperDir = path.join(process.cwd(), 'scraper');
+    const venvPython = path.join(scraperDir, 'venv/bin/python');
+    const resolvedPython = fs.existsSync(venvPython)
+        ? venvPython
+        : (process.env.PYTHON_PATH || 'python3');
+
+    results['__dirname'] = __dirname;
+    results['process_cwd'] = process.cwd();
+    results['PYTHON_PATH_env'] = process.env.PYTHON_PATH || '(not set)';
+    results['resolved_python'] = resolvedPython;
+    results['venv_python_exists'] = fs.existsSync(venvPython) ? 'YES' : 'NO';
+    results['venv_python_path'] = venvPython;
+    results['scraper_dir'] = scraperDir;
+    results['scraper_dir_exists'] = fs.existsSync(scraperDir) ? 'YES' : 'NO';
+    results['scraper_py_exists'] = fs.existsSync(path.join(scraperDir, 'scraper.py')) ? 'YES' : 'NO';
+    results['which_python3'] = run('which python3');
+    results['python3_version'] = run('python3 --version');
+    results['requests_check'] = run(`${resolvedPython} -c "import requests; print('requests OK:', requests.__version__)"`);
+    results['sys_path'] = run(`${resolvedPython} -c "import sys; print(sys.path)"`);
+
+    res.json(results);
+});
+
+// All other /api routes are protected by JWT
+app.use('/api', authenticateJwt);
 
 // Scheduler
 import { setupScheduler, runManualScrape } from './cron/scheduler';
@@ -68,7 +117,7 @@ import { exportUsersList } from './utils/export-users';
 setupScheduler();
 
 // List available scrapers
-app.get('/api/admin/scrapers', async (req, res) => {
+app.get('/api/admin/scrapers', requireRoles('admin'), async (req, res) => {
     try {
         const scrapers = await ScrapingService.listScrapers();
         res.json({ success: true, scrapers });
@@ -78,7 +127,7 @@ app.get('/api/admin/scrapers', async (req, res) => {
 });
 
 // Admin scraping trigger
-app.post('/api/admin/trigger-scrape', async (req, res) => {
+app.post('/api/admin/trigger-scrape', requireRoles('admin'), async (req, res) => {
     const { city, scraper } = req.body;
     try {
         const results = await runManualScrape(city, scraper);
@@ -97,6 +146,233 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/matches', matchingRoutes);
 app.use('/api/workflow-events', workflowEventRoutes);
+
+// ── Facebook Group Scraper ────────────────────────────────────────────────
+import fs from 'fs';
+import csv from 'csv-parser';
+import { PropertyService } from './services/property.service';
+import { MatchingService } from './services/matching.service';
+import { LeadService } from './services/lead.service';
+
+const FB_SCRAPER_DIR = path.join(__dirname, '../scraper/facebook_group_scraper');
+const FB_PYTHON = path.join(FB_SCRAPER_DIR, 'venv/bin/python');
+const FB_SCRIPT = path.join(FB_SCRAPER_DIR, 'pipeline.py');
+
+// Trigger Facebook group scrape
+app.post('/api/admin/fb-scrape', async (req, res) => {
+    const { groupUrl } = req.body;
+    if (!groupUrl) {
+        return res.status(400).json({ success: false, error: 'groupUrl is required' });
+    }
+
+    try {
+        // 1. Clear data directory
+        const dataDir = path.join(FB_SCRAPER_DIR, 'data');
+        if (fs.existsSync(dataDir)) {
+            fs.rmSync(dataDir, { recursive: true, force: true });
+        }
+        fs.mkdirSync(dataDir, { recursive: true });
+
+        // 2. Write groupUrl to groups.txt
+        const groupsFile = path.join(FB_SCRAPER_DIR, 'groups.txt');
+        fs.writeFileSync(groupsFile, groupUrl, 'utf8');
+
+        // 3. Run pipeline.py
+        await new Promise((resolve, reject) => {
+            const proc = spawn(FB_PYTHON, [
+                FB_SCRIPT
+            ], { cwd: FB_SCRAPER_DIR });
+
+            let stdout = '';
+            let stderr = '';
+
+            proc.stdout.on('data', (d: Buffer) => { stdout += d.toString(); });
+            proc.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+
+            proc.on('close', (code: number) => {
+                if (stdout) console.log(`[FB-Scrape] stdout:\n${stdout}`);
+                if (stderr) console.error(`[FB-Scrape] stderr:\n${stderr}`);
+                
+                if (code !== 0) {
+                    return reject(new Error(`Facebook scraper exited with code ${code}: ${stderr.slice(-500)}`));
+                }
+                resolve(true);
+            });
+        });
+
+        // 4. Load extracted_listings.csv and return it
+        const csvPath = path.join(FB_SCRAPER_DIR, 'data/extracted_listings.csv');
+        if (!fs.existsSync(csvPath)) {
+            return res.status(500).json({ success: false, error: 'Scraping finished but extracted_listings.csv not found.' });
+        }
+
+        const results: any[] = [];
+        fs.createReadStream(csvPath)
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', () => {
+                res.json({ success: true, data: results });
+            })
+            .on('error', (error) => {
+                res.status(500).json({ success: false, error: 'Failed to parse CSV file: ' + error.message });
+            });
+
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Load locally saved extracted_listings.csv
+app.get('/api/admin/fb-load-csv', async (req, res) => {
+    const csvPath = path.join(FB_SCRAPER_DIR, 'data/extracted_listings.csv');
+    
+    if (!fs.existsSync(csvPath)) {
+        return res.status(404).json({ success: false, error: 'extracted_listings.csv not found. Run the python scraper first.' });
+    }
+
+    const results: any[] = [];
+    fs.createReadStream(csvPath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+            res.json({ success: true, data: results });
+        })
+        .on('error', (error) => {
+            res.status(500).json({ success: false, error: 'Failed to parse CSV file: ' + error.message });
+        });
+});
+
+// Save curated Facebook scrape results to the DB
+app.post('/api/admin/fb-save', async (req, res) => {
+    const { rows } = req.body; // array of scraped row objects
+    if (!rows || !Array.isArray(rows)) {
+        return res.status(400).json({ success: false, error: 'rows array is required' });
+    }
+
+    let saved = 0;
+    const errors: string[] = [];
+    const matchingService = new MatchingService();
+
+    for (const row of rows) {
+        try {
+            // Create a seller placeholder if needed
+            const sellerName = row.SELLER && row.SELLER !== '-' ? row.SELLER : 'Facebook Group Seller';
+            const prisma = (await import('./db/prisma')).default;
+
+            const safeName = sellerName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const email = `${safeName}@hublet.fb`;
+
+            let seller = await prisma.seller.findUnique({ where: { email } });
+            if (!seller) {
+                seller = await prisma.seller.create({
+                    data: {
+                        name: sellerName,
+                        email: email,
+                        phone: row.CONTACT && row.CONTACT !== '-' ? row.CONTACT : '0000000000',
+                        sellerType: 'owner',
+                        rating: 3.0,
+                        completedDeals: 0,
+                    }
+                });
+            }
+
+            const title = row.TITLE && row.TITLE !== '-' ? row.TITLE : 'Facebook Listing';
+            const locality = row.LOCALITY && row.LOCALITY !== '-' ? row.LOCALITY : 'Unknown';
+
+            // Check for existing property (deduplication)
+            const existing = await prisma.property.findFirst({
+                where: {
+                    title: title,
+                    locality: locality,
+                    sellerId: seller.id
+                }
+            });
+
+            if (existing) {
+                console.log(`[FB-Save] Skipping existing property: ${title}`);
+                continue;
+            }
+
+            // Parse price
+            let price = 0;
+            if (row.PRICE && row.PRICE !== '-') {
+                const parsed = parseFloat(String(row.PRICE).replace(/[^0-9.]/g, ''));
+                if (!isNaN(parsed)) price = parsed;
+            }
+
+            // Parse area
+            let area = 0;
+            if (row.AREA && row.AREA !== '-') {
+                const parsed = parseInt(String(row.AREA).replace(/[^0-9]/g, ''));
+                if (!isNaN(parsed)) area = parsed;
+            }
+
+            // Parse bhk
+            let bhk = 0;
+            if (row.BHK && row.BHK !== '-') {
+                const parsed = parseInt(String(row.BHK));
+                if (!isNaN(parsed)) bhk = parsed;
+            }
+
+            // Parse amenities
+            let amenities: string[] = [];
+            if (row.AMENITIES && row.AMENITIES !== '-') {
+                amenities = String(row.AMENITIES).split(',').map((a: string) => a.trim()).filter((a: string) => a.length > 0);
+            }
+
+            const newProperty = await PropertyService.createProperty({
+                sellerId: seller.id,
+                title: title,
+                locality: locality,
+                area: area,
+                bhk: bhk,
+                price: price,
+                amenities: amenities,
+                propertyType: row.TYPE && row.TYPE !== '-' ? row.TYPE.toLowerCase() : 'apartment',
+                contact: row.CONTACT && row.CONTACT !== '-' ? row.CONTACT : undefined,
+                metadata: {
+                    source: 'facebook-group',
+                    scraper: 'facebook_group_scraper',
+                    groupUrl: row.GROUP_URL || '-',
+                    postedDate: row.CREATED_AT || '-',
+                    status: row.STATUS || '-',
+                    scrapedAt: new Date().toISOString()
+                },
+            });
+            saved++;
+            
+            // --- AUTO-MATCHING & LEAD CREATION ---
+            try {
+                const matches = await matchingService.findMatchesForProperty(newProperty.id);
+                console.log(`[FB-Save] Generated ${matches.length} matches for "${newProperty.title}"`);
+
+                for (const match of matches) {
+                    if (match.matchScore >= 70) {
+                        await LeadService.createLead({
+                            buyerId: match.buyerId,
+                            propertyId: newProperty.id,
+                            matchScore: match.matchScore,
+                            metadata: {
+                                source: 'facebook-group',
+                                scraper: 'facebook_group_scraper',
+                                autoCreated: true
+                            }
+                        });
+                        console.log(`[FB-Save] Auto-created LEAD for Buyer ${match.buyerId}`);
+                    }
+                }
+            } catch (matchErr: any) {
+                console.error(`[FB-Save] Matching failed for property ${newProperty.id}:`, matchErr.message);
+            }
+            // -------------------------------------
+
+        } catch (err: any) {
+            errors.push(`${row.TITLE || 'unknown'}: ${err.message}`);
+        }
+    }
+
+    res.json({ success: true, saved, errors });
+});
 
 // 404 handler
 app.use((req, res) => {
@@ -131,4 +407,3 @@ app.listen(PORT, async () => {
 });
 
 export default app;
-
