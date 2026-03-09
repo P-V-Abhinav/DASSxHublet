@@ -82,17 +82,18 @@ app.get('/api/admin/debug-python', (req, res) => {
     const scraperDir = path.join(__dirname, '../../scraper');
     const venvPython = path.join(scraperDir, 'venv/bin/python');
 
+    results['__dirname'] = __dirname;
+    results['process_cwd'] = process.cwd();
     results['PYTHON_PATH_env'] = process.env.PYTHON_PATH || '(not set)';
     results['resolved_python'] = PYTHON_PATH;
     results['venv_python_exists'] = fs.existsSync(venvPython) ? 'YES' : 'NO';
     results['venv_python_path'] = venvPython;
     results['scraper_dir'] = scraperDir;
     results['scraper_dir_exists'] = fs.existsSync(scraperDir) ? 'YES' : 'NO';
+    results['scraper_py_exists'] = fs.existsSync(path.join(scraperDir, 'scraper.py')) ? 'YES' : 'NO';
     results['which_python3'] = run('which python3');
     results['python3_version'] = run('python3 --version');
     results['requests_check'] = run(`${PYTHON_PATH} -c "import requests; print('requests OK:', requests.__version__)"`);
-    results['pip_list_requests'] = run(`${PYTHON_PATH} -m pip show requests 2>&1 | head -3`);
-    results['user_site_packages'] = run('python3 -m site --user-site');
     results['sys_path'] = run(`${PYTHON_PATH} -c "import sys; print(sys.path)"`);
 
     res.json(results);

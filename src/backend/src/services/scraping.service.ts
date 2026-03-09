@@ -34,11 +34,25 @@ interface ScrapedProperty {
 }
 
 export class ScrapingService {
-    private static SCRAPER_DIR = path.join(__dirname, '../../scraper');
+    private static SCRAPER_DIR = (() => {
+        // __dirname = dist/services/ → ../../scraper should be src/backend/scraper
+        // But if CWD-based resolution is off, also try resolved from __filename
+        const fs = require('fs');
+        const candidates = [
+            path.join(__dirname, '../../scraper'),
+            path.join(__dirname, '../../../scraper'),
+            path.join(process.cwd(), 'scraper'),
+            path.join(process.cwd(), 'src/backend/scraper'),
+        ];
+        for (const c of candidates) {
+            if (fs.existsSync(path.join(c, 'scraper.py'))) return c;
+        }
+        return path.join(__dirname, '../../scraper'); // fallback
+    })();
     // Resolve python executable: explicit env var > local venv > system python3
     private static PYTHON_EXEC_PATH = (() => {
         if (process.env.PYTHON_PATH) return process.env.PYTHON_PATH;
-        const venvPython = path.join(__dirname, '../../scraper/venv/bin/python');
+        const venvPython = path.join(ScrapingService.SCRAPER_DIR, 'venv/bin/python');
         try {
             require('fs').accessSync(venvPython);
             return venvPython;
@@ -46,7 +60,7 @@ export class ScrapingService {
             return 'python3';
         }
     })();
-    private static PYTHON_SCRIPT_PATH = path.join(__dirname, '../../scraper/scraper.py');
+    private static PYTHON_SCRIPT_PATH = path.join(ScrapingService.SCRAPER_DIR, 'scraper.py');
 
     // Helper to get or create a seller based on scraped data
     private static async getOrCreateSeller(name: string = 'System Scraper', type: string = 'system') {
