@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000/api';
+// Reads from .env / Vercel environment variables at build time.
+// Set VITE_API_BASE_URL=https://project-monorepo-team-46.onrender.com/api for production.
+// Set VITE_API_BASE_URL=http://localhost:3000/api for local development.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
