@@ -1,6 +1,6 @@
 # 📋 Users List — Buyers & Sellers
 
-> Auto-generated on 10/3/2026, 2:34:24 am. Updated after every scrape.
+> Auto-generated on 10/3/2026, 3:45:10 am. Updated after every scrape.
 
 ---
 
@@ -51,7 +51,7 @@ unknown@hublet.scraped
 
 | # | Name | Email | Phone | BHK | Budget Range | Area Range | Localities |
 |---|------|-------|-------|-----|--------------|------------|------------|
-| 1 | Abhinav | `meow@gmail.com` | 7715006399 | 2 BHK | — | — | thane |
+| 1 | Abhinav | `meow@gmail.com` | 7715006399 | 4 BHK | — | — | kochi |
 
 <details><summary>🔑 Quick Login Emails (click to expand)</summary>
 
@@ -67,4 +67,4 @@ meow@gmail.com
 - **Total Sellers**: 15
 - **Total Buyers**: 1
 - **Total Properties**: 20
-- **Last Updated**: 10/3/2026, 2:34:24 am
+- **Last Updated**: 10/3/2026, 3:45:10 am

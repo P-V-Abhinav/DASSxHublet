@@ -113,16 +113,18 @@ export class BuyerController {
       if (rawPreferences) {
         const parsedIntent = intentParser.parse(rawPreferences);
         
-        // Merge parsed data, but allow explicit overrides from the request
+        // Replace all parsed fields from the new intent (always overwrite)
+        // This ensures that parameters NOT mentioned in the current query (like BHK or amenities)
+        // are set to null/empty in the database, rather than keeping the old values.
         updateData = {
-          localities: parsedIntent.localities.length > 0 ? parsedIntent.localities : undefined,
-          areaMin: parsedIntent.areaMin,
-          areaMax: parsedIntent.areaMax,
-          bhk: parsedIntent.bhk,
-          budgetMin: parsedIntent.budgetMin,
-          budgetMax: parsedIntent.budgetMax,
-          amenities: parsedIntent.amenities.length > 0 ? parsedIntent.amenities : undefined,
-          ...updateData, // Explicit fields in req.body take precedence if they are not undefined
+          localities: parsedIntent.localities,
+          areaMin: parsedIntent.areaMin ?? null,
+          areaMax: parsedIntent.areaMax ?? null,
+          bhk: parsedIntent.bhk ?? null,
+          budgetMin: parsedIntent.budgetMin ?? null,
+          budgetMax: parsedIntent.budgetMax ?? null,
+          amenities: parsedIntent.amenities,
+          ...updateData, // Explicit fields in req.body take precedence
         };
         
         // Clean up undefineds to avoid overwriting existing data with nulls if we don't want to

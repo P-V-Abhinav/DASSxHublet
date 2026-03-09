@@ -37,15 +37,50 @@ interface Match {
   };
 }
 
+interface BuyerPrefs {
+  minBudget?: number;
+  maxBudget?: number;
+  bhk?: number;
+  localities: string[];
+  amenities: string[];
+}
+
+const formatPrice = (price: number): string => {
+  if (price >= 10000000) return `₹${(price / 10000000).toFixed(2)} Cr`;
+  if (price >= 100000) return `₹${(price / 100000).toFixed(1)}L`;
+  return `₹${price.toLocaleString()}`;
+};
+
 export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(true);
+  const [buyerPrefs, setBuyerPrefs] = useState<BuyerPrefs | null>(null);
+
+  const fetchBuyerPrefs = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/buyers/${buyerId}`);
+      const b = res.data;
+      const parseArr = (val: any): string[] => {
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') { try { return JSON.parse(val); } catch { return []; } }
+        return [];
+      };
+      setBuyerPrefs({
+        minBudget: b.minBudget ?? undefined,
+        maxBudget: b.maxBudget ?? undefined,
+        bhk: b.bhk ?? undefined,
+        localities: parseArr(b.localities),
+        amenities: parseArr(b.amenities),
+      });
+    } catch {}
+  };
 
   // Fetch matches on component load
   useEffect(() => {
     fetchMatches();
+    fetchBuyerPrefs();
   }, [buyerId]);
 
   const fetchMatches = async () => {
@@ -80,6 +115,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
   };
 
   const handlePreferencesUpdated = () => {
+    fetchBuyerPrefs();
     handleFindMatches();
   };
 
@@ -160,6 +196,56 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
 
         {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
+        {/* Your Preferences Summary */}
+        {buyerPrefs && (buyerPrefs.localities.length > 0 || buyerPrefs.minBudget || buyerPrefs.maxBudget || buyerPrefs.bhk || buyerPrefs.amenities.length > 0) && (
+          <div style={{
+            background: 'white',
+            borderRadius: '10px',
+            padding: '14px 18px',
+            marginBottom: '20px',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.07)',
+            border: '1px solid #e8edf5',
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: '#888', marginBottom: '10px', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+              📋 Your Search Preferences
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+              {buyerPrefs.localities.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '13px' }}>📍</span>
+                  {buyerPrefs.localities.map((loc, i) => (
+                    <span key={i} style={{ background: '#f0f4ff', color: '#3b4eb8', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>{loc}</span>
+                  ))}
+                </div>
+              )}
+              {(buyerPrefs.minBudget || buyerPrefs.maxBudget) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '13px' }}>💰</span>
+                  <span style={{ background: '#f0fff4', color: '#166534', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>
+                    {buyerPrefs.minBudget ? formatPrice(buyerPrefs.minBudget) : '–'}
+                    {' → '}
+                    {buyerPrefs.maxBudget ? formatPrice(buyerPrefs.maxBudget) : '–'}
+                  </span>
+                </div>
+              )}
+              {buyerPrefs.bhk && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '13px' }}>🛏</span>
+                  <span style={{ background: '#fff7eb', color: '#92400e', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>{buyerPrefs.bhk} BHK</span>
+                </div>
+              )}
+              {buyerPrefs.amenities.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '13px' }}>✨</span>
+                  {buyerPrefs.amenities.map((a, i) => (
+                    <span key={i} style={{ background: '#fdf4ff', color: '#7e22ce', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>{a}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {matches.length === 0 && !loading && (
           <p style={{ textAlign: 'center', color: '#666', padding: '40px' }}>
             No matches found yet. Update your preferences and click "Find Matches" to see properties!
@@ -228,33 +314,154 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
               )}
 
               {/* Match Score Breakdown */}
-              <div style={{ marginTop: '15px', padding: '12px', background: '#f9f9f9', borderRadius: '4px' }}>
-                <strong style={{ fontSize: '14px' }}>Match Breakdown:</strong>
-                <div style={{ marginTop: '8px' }}>
+              <div style={{ marginTop: '15px', padding: '14px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #eee' }}>
+                <strong style={{ fontSize: '13px', color: '#444' }}>Match Breakdown:</strong>
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+                  {/* Location */}
                   {match.locationScore !== undefined && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px' }}>Location:</span>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{match.locationScore}%</span>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>📍 Location</span>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.locationScore >= 75 ? '#16a34a' : match.locationScore >= 40 ? '#d97706' : '#dc2626' }}>
+                          {match.locationScore}%
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                        {buyerPrefs && buyerPrefs.localities.length > 0
+                          ? buyerPrefs.localities.map((loc, i) => {
+                              const matched =
+                                match.property.locality.toLowerCase().includes(loc.toLowerCase()) ||
+                                loc.toLowerCase().includes(match.property.locality.toLowerCase());
+                              return (
+                                <span key={i} style={{
+                                  padding: '2px 8px', borderRadius: '10px', fontSize: '11px',
+                                  background: matched ? '#dcfce7' : '#f3f4f6',
+                                  color: matched ? '#15803d' : '#6b7280',
+                                  border: `1px solid ${matched ? '#86efac' : '#d1d5db'}`,
+                                }}>
+                                  {matched ? '✓' : '○'} {loc}
+                                </span>
+                              );
+                            })
+                          : null
+                        }
+                        <span style={{ fontSize: '11px', color: '#888', marginLeft: '2px' }}>→ {match.property.locality}</span>
+                      </div>
                     </div>
                   )}
-                  {match.budgetScore !== undefined && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px' }}>Budget:</span>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{match.budgetScore}%</span>
-                    </div>
-                  )}
+
+                  {/* Budget */}
+                  {match.budgetScore !== undefined && (() => {
+                    const price = match.property.price;
+                    const pMin = buyerPrefs?.minBudget || 0;
+                    const pMax = buyerPrefs?.maxBudget || price * 2;
+                    const domainMax = Math.max(pMax, price) * 1.3;
+                    const toP = (v: number) => Math.min(98, Math.max(2, (v / domainMax) * 100));
+                    const inRange = price >= pMin && price <= (buyerPrefs?.maxBudget ?? Infinity);
+                    const hasBudgetPrefs = buyerPrefs?.minBudget || buyerPrefs?.maxBudget;
+                    return (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>💰 Budget</span>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.budgetScore >= 75 ? '#16a34a' : match.budgetScore >= 40 ? '#d97706' : '#dc2626' }}>
+                            {match.budgetScore}%
+                          </span>
+                        </div>
+                        {hasBudgetPrefs && (
+                          <>
+                            <div style={{ position: 'relative', height: '16px', background: '#e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
+                              <div style={{
+                                position: 'absolute', left: `${toP(pMin)}%`, width: `${toP(pMax) - toP(pMin)}%`,
+                                height: '100%', background: '#bbf7d0',
+                              }} />
+                              <div style={{
+                                position: 'absolute', left: `${toP(price)}%`, top: 0,
+                                transform: 'translateX(-50%)',
+                                width: '8px', height: '16px',
+                                background: inRange ? '#16a34a' : '#f59e0b',
+                                borderRadius: '4px', border: '1.5px solid white',
+                              }} />
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '11px' }}>
+                              <span style={{ color: '#888' }}>
+                                Your range: {formatPrice(pMin)} – {formatPrice(pMax)}
+                              </span>
+                              <span style={{ fontWeight: '600', color: inRange ? '#16a34a' : '#f59e0b' }}>
+                                {formatPrice(price)} {inRange ? '✓' : '⚠ over'}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Size / BHK */}
                   {match.sizeScore !== undefined && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px' }}>Size:</span>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{match.sizeScore}%</span>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>🏠 Size</span>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.sizeScore >= 75 ? '#16a34a' : match.sizeScore >= 40 ? '#d97706' : '#dc2626' }}>
+                          {match.sizeScore}%
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                        {buyerPrefs?.bhk && (
+                          <>
+                            <span style={{ background: '#f0f4ff', padding: '2px 8px', borderRadius: '8px', color: '#3b4eb8' }}>
+                              Wanted: {buyerPrefs.bhk} BHK
+                            </span>
+                            <span style={{ color: '#ccc' }}>→</span>
+                          </>
+                        )}
+                        <span style={{
+                          background: buyerPrefs?.bhk === match.property.bhk ? '#dcfce7' : '#fef9c3',
+                          padding: '2px 8px', borderRadius: '8px',
+                          color: buyerPrefs?.bhk === match.property.bhk ? '#15803d' : '#713f12',
+                        }}>
+                          {buyerPrefs?.bhk != null && buyerPrefs.bhk === match.property.bhk ? '✓ ' : buyerPrefs?.bhk != null ? '~ ' : ''}
+                          {match.property.bhk} BHK · {match.property.area} sq.ft
+                        </span>
+                      </div>
                     </div>
                   )}
+
+                  {/* Amenities */}
                   {match.amenitiesScore !== undefined && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px' }}>Amenities:</span>
-                      <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{match.amenitiesScore}%</span>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>✨ Amenities</span>
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.amenitiesScore >= 75 ? '#16a34a' : match.amenitiesScore >= 40 ? '#d97706' : '#dc2626' }}>
+                          {match.amenitiesScore}%
+                        </span>
+                      </div>
+                      {buyerPrefs && buyerPrefs.amenities.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {buyerPrefs.amenities.map((am, i) => {
+                            const has = match.property.amenities.some(
+                              (pa: string) =>
+                                pa.toLowerCase().includes(am.toLowerCase()) ||
+                                am.toLowerCase().includes(pa.toLowerCase())
+                            );
+                            return (
+                              <span key={i} style={{
+                                padding: '2px 8px', borderRadius: '10px', fontSize: '11px',
+                                background: has ? '#dcfce7' : '#fee2e2',
+                                color: has ? '#15803d' : '#991b1b',
+                                border: `1px solid ${has ? '#86efac' : '#fca5a5'}`,
+                              }}>
+                                {has ? '✓' : '✗'} {am}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '11px', color: '#888' }}>No specific amenities in your preferences</span>
+                      )}
                     </div>
                   )}
+
                 </div>
               </div>
 
