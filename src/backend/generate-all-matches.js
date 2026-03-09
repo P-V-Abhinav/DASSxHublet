@@ -1,13 +1,24 @@
 // Quick script to generate matches for all buyers
 const http = require('http');
+const https = require('https');
+require('dotenv').config();
+
+// Use API_BASE_URL env variable or fall back to localhost for dev
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+const parsedUrl = new URL(API_BASE_URL);
+const isHttps = parsedUrl.protocol === 'https:';
+const httpClient = isHttps ? https : http;
+const API_HOST = parsedUrl.hostname;
+const API_PORT = parsedUrl.port || (isHttps ? 443 : 3000);
+const API_PATH_PREFIX = parsedUrl.pathname.replace(/\/$/, '');
 
 async function makeRequest(buyerId) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify({ minScore: 50, limit: 50 });
     const options = {
-      hostname: 'localhost',
-      port: 3000,
-      path: `/api/matches/buyer/${buyerId}/find`,
+      hostname: API_HOST,
+      port: API_PORT,
+      path: `${API_PATH_PREFIX}/api/matches/buyer/${buyerId}/find`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -15,7 +26,7 @@ async function makeRequest(buyerId) {
       }
     };
 
-    const req = http.request(options, (res) => {
+    const req = httpClient.request(options, (res) => {
       let body = '';
       res.on('data', (chunk) => body += chunk);
       res.on('end', () => {
@@ -36,7 +47,7 @@ async function makeRequest(buyerId) {
 async function main() {
   // Get all buyers
   const getBuyers = () => new Promise((resolve, reject) => {
-    http.get('http://localhost:3000/api/buyers', (res) => {
+    httpClient.get(`${API_BASE_URL}/api/buyers`, (res) => {
       let body = '';
       res.on('data', (chunk) => body += chunk);
       res.on('end', () => resolve(JSON.parse(body)));

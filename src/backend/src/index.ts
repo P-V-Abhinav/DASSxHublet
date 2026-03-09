@@ -15,8 +15,25 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS — allow origins from env, comma-separated, fallback to localhost for dev
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim());
+
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (curl, mobile apps, etc.)
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.includes('*')) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -75,9 +92,11 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // Start server
 app.listen(PORT, async () => {
+    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
     console.log(`🚀 Hublet API server running on port ${PORT}`);
-    console.log(`📍 Health check: http://localhost:${PORT}/health`);
+    console.log(`📍 Health check: ${baseUrl}/health`);
     console.log(`🕷️  Default scraper: ${process.env.SCRAPER || 'magicbricks-direct'}`);
+    console.log(`🌐 Allowed CORS origins: ${ALLOWED_ORIGINS.join(', ')}`);
 
     // Export users list on startup
     try {
@@ -86,10 +105,10 @@ app.listen(PORT, async () => {
     } catch (e) { /* db might be empty */ }
 
     console.log('\n  To trigger a scrape:');
-    console.log('  curl -X POST http://localhost:3000/api/admin/trigger-scrape \\');
+    console.log(`  curl -X POST ${baseUrl}/api/admin/trigger-scrape \\`);
     console.log('    -H "Content-Type: application/json" \\');
     console.log('    -d \'{"city": "pune", "scraper": "99acres-apify"}\'');
-    console.log('\n  To list scrapers: curl http://localhost:3000/api/admin/scrapers\n');
+    console.log(`\n  To list scrapers: curl ${baseUrl}/api/admin/scrapers\n`);
 });
 
 export default app;
