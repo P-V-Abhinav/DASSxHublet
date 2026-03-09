@@ -40,6 +40,8 @@ interface Match {
 interface BuyerPrefs {
   minBudget?: number;
   maxBudget?: number;
+  areaMin?: number;
+  areaMax?: number;
   bhk?: number;
   localities: string[];
   amenities: string[];
@@ -68,8 +70,10 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
         return [];
       };
       setBuyerPrefs({
-        minBudget: b.minBudget ?? undefined,
-        maxBudget: b.maxBudget ?? undefined,
+        minBudget: b.budgetMin ?? undefined,
+        maxBudget: b.budgetMax ?? undefined,
+        areaMin: b.areaMin ?? undefined,
+        areaMax: b.areaMax ?? undefined,
         bhk: b.bhk ?? undefined,
         localities: parseArr(b.localities),
         amenities: parseArr(b.amenities),
@@ -359,7 +363,8 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                     const domainMax = Math.max(pMax, price) * 1.3;
                     const toP = (v: number) => Math.min(98, Math.max(2, (v / domainMax) * 100));
                     const inRange = price >= pMin && price <= (buyerPrefs?.maxBudget ?? Infinity);
-                    const hasBudgetPrefs = buyerPrefs?.minBudget || buyerPrefs?.maxBudget;
+                    const hasBudgetPrefs = (buyerPrefs?.minBudget !== undefined && buyerPrefs?.minBudget !== null) || 
+                                         (buyerPrefs?.maxBudget !== undefined && buyerPrefs?.maxBudget !== null);
                     return (
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -368,7 +373,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                             {match.budgetScore}%
                           </span>
                         </div>
-                        {hasBudgetPrefs && (
+                        {hasBudgetPrefs ? (
                           <>
                             <div style={{ position: 'relative', height: '16px', background: '#e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
                               <div style={{
@@ -392,40 +397,79 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                               </span>
                             </div>
                           </>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: '#888' }}>No specific budget in your preferences</span>
                         )}
                       </div>
                     );
                   })()}
 
                   {/* Size / BHK */}
-                  {match.sizeScore !== undefined && (
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>🏠 Size</span>
-                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.sizeScore >= 75 ? '#16a34a' : match.sizeScore >= 40 ? '#d97706' : '#dc2626' }}>
-                          {match.sizeScore}%
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-                        {buyerPrefs?.bhk && (
+                  {match.sizeScore !== undefined && (() => {
+                    const area = match.property.area;
+                    const aMin = buyerPrefs?.areaMin || 0;
+                    const aMax = buyerPrefs?.areaMax || area * 2;
+                    const domainMax = Math.max(aMax, area) * 1.3;
+                    const toP = (v: number) => Math.min(98, Math.max(2, (v / domainMax) * 100));
+                    const inRange = area >= aMin && area <= (buyerPrefs?.areaMax ?? Infinity);
+                    const hasSizePrefs = (buyerPrefs?.areaMin !== undefined && buyerPrefs?.areaMin !== null) || 
+                                       (buyerPrefs?.areaMax !== undefined && buyerPrefs?.areaMax !== null) || 
+                                       (buyerPrefs?.bhk !== undefined && buyerPrefs?.bhk !== null);
+                    
+                    return (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                          <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>🏠 Size</span>
+                          <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.sizeScore >= 75 ? '#16a34a' : match.sizeScore >= 40 ? '#d97706' : '#dc2626' }}>
+                            {match.sizeScore}%
+                          </span>
+                        </div>
+                        {hasSizePrefs ? (
                           <>
-                            <span style={{ background: '#f0f4ff', padding: '2px 8px', borderRadius: '8px', color: '#3b4eb8' }}>
-                              Wanted: {buyerPrefs.bhk} BHK
-                            </span>
-                            <span style={{ color: '#ccc' }}>→</span>
+                            {/* Visual Bar for Area if min/max exists */}
+                            {(buyerPrefs?.areaMin || buyerPrefs?.areaMax) && (
+                              <div style={{ position: 'relative', height: '12px', background: '#e5e7eb', borderRadius: '6px', overflow: 'hidden', margin: '8px 0' }}>
+                                <div style={{
+                                  position: 'absolute', left: `${toP(aMin)}%`, width: `${toP(aMax) - toP(aMin)}%`,
+                                  height: '100%', background: '#dbeafe',
+                                }} />
+                                <div style={{
+                                  position: 'absolute', left: `${toP(area)}%`, top: 0,
+                                  transform: 'translateX(-50%)',
+                                  width: '6px', height: '12px',
+                                  background: inRange ? '#3b82f6' : '#f59e0b',
+                                  borderRadius: '3px', border: '1px solid white',
+                                }} />
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', flexWrap: 'wrap' }}>
+                              {buyerPrefs?.bhk && (
+                                <span style={{ background: '#f0f4ff', padding: '2px 8px', borderRadius: '8px', color: '#3b4eb8' }}>
+                                  Wanted: {buyerPrefs.bhk} BHK
+                                </span>
+                              )}
+                              {buyerPrefs?.areaMin || buyerPrefs?.areaMax ? (
+                                <span style={{ color: '#666' }}>({buyerPrefs.areaMin || 0}-{buyerPrefs.areaMax || '∞'} sq.ft)</span>
+                              ) : null}
+                              
+                              <span style={{ color: '#ccc' }}>→</span>
+                              
+                              <span style={{
+                                background: buyerPrefs?.bhk === match.property.bhk ? '#dcfce7' : '#fef9c3',
+                                padding: '2px 8px', borderRadius: '8px',
+                                color: buyerPrefs?.bhk === match.property.bhk ? '#15803d' : '#713f12',
+                              }}>
+                                {buyerPrefs?.bhk != null && buyerPrefs.bhk === match.property.bhk ? '✓ ' : buyerPrefs?.bhk != null ? '~ ' : ''}
+                                {match.property.bhk} BHK · {match.property.area} sq.ft
+                              </span>
+                            </div>
                           </>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: '#888' }}>No specific size in your preferences</span>
                         )}
-                        <span style={{
-                          background: buyerPrefs?.bhk === match.property.bhk ? '#dcfce7' : '#fef9c3',
-                          padding: '2px 8px', borderRadius: '8px',
-                          color: buyerPrefs?.bhk === match.property.bhk ? '#15803d' : '#713f12',
-                        }}>
-                          {buyerPrefs?.bhk != null && buyerPrefs.bhk === match.property.bhk ? '✓ ' : buyerPrefs?.bhk != null ? '~ ' : ''}
-                          {match.property.bhk} BHK · {match.property.area} sq.ft
-                        </span>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Amenities */}
                   {match.amenitiesScore !== undefined && (

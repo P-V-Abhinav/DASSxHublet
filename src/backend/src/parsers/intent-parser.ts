@@ -214,6 +214,13 @@ export class KeywordIntentParser implements IntentParser {
       return parseFloat(rangeMatch[1]) * (isCr ? croreMultiplier : lakhMultiplier);
     }
 
+    // Handle "under {Price}" pattern (often implies max, but check for "above/min" too)
+    const priceContextMatch = text.match(/(?:under|below|max|maximum|up to)\s*(\d+\.?\d*)\s*(?:lakhs?|lacs?|l\b|cr|crores?\b)/i);
+    if (priceContextMatch) {
+      // If the query only has one price and it's an "under" pattern, budgetMin is undefined/null
+      return undefined;
+    }
+
     // "Above 50L", "> 50L", "min 50L"
     const minPatterns = [
       /(?:minimum|min|at least|above|>|greater than|starting from)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l\b)/i,
@@ -245,14 +252,26 @@ export class KeywordIntentParser implements IntentParser {
     // "Under 70L", "< 70L", "max 70L", "below 70L"
     const maxPatterns = [
       /(?:maximum|max|up to|under|below|around|budget|within|<|less than)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:lakhs?|lacs?|l\b)/i,
-      /(?:maximum|max|up to|under|below|around|budget|within|<|less than)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores\b)/i
+      /(?:maximum|max|up to|under|below|around|budget|within|<|less than)\s*(?:budget\s*)?(\d+\.?\d*)\s*(?:cr|crore|crores\b)/i,
+      /\b(\d+\.?\d*)\s*(?:lakhs?|lacs?|l\b)/i, // Suffix only fallback: "70 Lakhs"
+      /\b(\d+\.?\d*)\s*(?:cr|crore|crores\b)/i  // Suffix only fallback: "1.2 Cr"
     ];
+
+    // Priority check: avoid picking up BHK numbers (like 3) if they precede "bhk"
+    const bhkMatch = text.match(/(\d+)\s*bhk/i);
+    const bhkVal = bhkMatch ? bhkMatch[1] : null;
 
     for (const pattern of maxPatterns) {
       const match = text.match(pattern);
       if (match) {
+        const valStr = match[1];
+        // If this matched value is actually the BHK count (e.g. "3" in "3BHK"), skip it
+        if (bhkVal && valStr === bhkVal && !match[0].includes('lakh') && !match[0].includes('cr')) {
+          continue;
+        }
+
         const isCr = /cr|crore/i.test(match[0]);
-        return parseFloat(match[1]) * (isCr ? croreMultiplier : lakhMultiplier);
+        return parseFloat(valStr) * (isCr ? croreMultiplier : lakhMultiplier);
       }
     }
 
@@ -271,28 +290,25 @@ export class KeywordIntentParser implements IntentParser {
     
     // Common amenities to look for
     const commonAmenities = [
-      'parking',
-      'gym',
-      'swimming pool',
-      'pool',
-      'garden',
-      'security',
-      'lift',
-      'elevator',
-      'power backup',
-      'clubhouse',
-      'playground',
-      'wifi',
-      'internet',
-      'ac',
-      'air conditioning',
-      'balcony',
-      'terrace',
+      'parking', 'gym', 'swimming pool', 'pool', 'garden', 'security', 'lift',
+      'elevator', 'power backup', 'clubhouse', 'playground', 'wifi', 'internet',
+      'ac', 'air conditioning', 'balcony', 'terrace',
     ];
 
     for (const amenity of commonAmenities) {
       if (text.includes(amenity)) {
         amenities.push(amenity);
+      }
+    }
+
+    // Pass 2: flexible parsing after "with" keyword for comma-separated items
+    const withMatch = text.match(/with\s+([a-z\s,]+)(?:$|under|in|budget)/i);
+    if (withMatch) {
+      const candidates = withMatch[1].split(/,|\band\b/).map(s => s.trim());
+      for (const cand of candidates) {
+        if (cand.length > 2 && !this.NOISE_WORDS.has(cand) && !amenities.includes(cand)) {
+          amenities.push(cand);
+        }
       }
     }
 
