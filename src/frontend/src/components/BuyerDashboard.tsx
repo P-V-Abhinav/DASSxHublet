@@ -153,7 +153,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', background: '#f5f5f5', minHeight: '100vh' }}>
-      <h1 style={{ marginBottom: '20px' }}>🏠 Welcome, {buyerName}!</h1>
+      <h1 style={{ marginBottom: '20px' }}> Welcome, {buyerName}!</h1>
 
       {/* Form Section */}
       {showForm && (
@@ -214,12 +214,12 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
             border: '1px solid #e8edf5',
           }}>
             <div style={{ fontSize: '12px', fontWeight: '700', color: '#888', marginBottom: '10px', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-              📋 Your Search Preferences
+               Your Search Preferences
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               {buyerPrefs.localities.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '13px' }}>📍</span>
+                  <span style={{ fontSize: '13px' }}></span>
                   {buyerPrefs.localities.map((loc, i) => (
                     <span key={i} style={{ background: '#f0f4ff', color: '#3b4eb8', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>{loc}</span>
                   ))}
@@ -227,7 +227,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
               )}
               {(buyerPrefs.minBudget || buyerPrefs.maxBudget) && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '13px' }}>💰</span>
+                  <span style={{ fontSize: '13px' }}></span>
                   <span style={{ background: '#f0fff4', color: '#166534', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>
                     {buyerPrefs.minBudget ? formatPrice(buyerPrefs.minBudget) : '–'}
                     {' → '}
@@ -237,13 +237,13 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
               )}
               {buyerPrefs.bhk && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '13px' }}>🛏</span>
+                  <span style={{ fontSize: '13px' }}></span>
                   <span style={{ background: '#fff7eb', color: '#92400e', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>{buyerPrefs.bhk} BHK</span>
                 </div>
               )}
               {buyerPrefs.amenities.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '13px' }}>✨</span>
+                  <span style={{ fontSize: '13px' }}></span>
                   {buyerPrefs.amenities.map((a, i) => (
                     <span key={i} style={{ background: '#fdf4ff', color: '#7e22ce', padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '500' }}>{a}</span>
                   ))}
@@ -285,13 +285,13 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
               </div>
 
               <p style={{ color: '#666', margin: '8px 0' }}>
-                📍 {match.property.locality}
+                 {match.property.locality}
               </p>
 
               <div style={{ display: 'flex', gap: '15px', margin: '12px 0' }}>
-                <span style={{ fontSize: '14px' }}>🏠 {match.property.bhk} BHK</span>
-                <span style={{ fontSize: '14px' }}>📏 {match.property.area} sq.ft</span>
-                <span style={{ fontSize: '14px' }}>🏢 {match.property.propertyType}</span>
+                <span style={{ fontSize: '14px' }}> {match.property.bhk} BHK</span>
+                <span style={{ fontSize: '14px' }}> {match.property.area} sq.ft</span>
+                <span style={{ fontSize: '14px' }}> {match.property.propertyType}</span>
               </div>
 
               <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#4CAF50', margin: '12px 0' }}>
@@ -329,7 +329,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                   {match.locationScore !== undefined && (
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>📍 Location</span>
+                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}> Location</span>
                         <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.locationScore >= 75 ? '#16a34a' : match.locationScore >= 40 ? '#d97706' : '#dc2626' }}>
                           {match.locationScore}%
                         </span>
@@ -371,7 +371,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                     return (
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>💰 Budget</span>
+                          <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}> Budget</span>
                           <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.budgetScore >= 75 ? '#16a34a' : match.budgetScore >= 40 ? '#d97706' : '#dc2626' }}>
                             {match.budgetScore}%
                           </span>
@@ -396,7 +396,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                 Your range: {formatPrice(pMin)} – {formatPrice(pMax)}
                               </span>
                               <span style={{ fontWeight: '600', color: inRange ? '#16a34a' : '#f59e0b' }}>
-                                {formatPrice(price)} {inRange ? '✓' : '⚠ over'}
+                                {formatPrice(price)} {inRange ? '✓' : ' over'}
                               </span>
                             </div>
                           </>
@@ -422,7 +422,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                     return (
                       <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                          <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>🏠 Size</span>
+                          <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}> Size</span>
                           <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.sizeScore >= 75 ? '#16a34a' : match.sizeScore >= 40 ? '#d97706' : '#dc2626' }}>
                             {match.sizeScore}%
                           </span>
@@ -478,7 +478,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                   {match.amenitiesScore !== undefined && (
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>✨ Amenities</span>
+                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}> Amenities</span>
                         <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.amenitiesScore >= 75 ? '#16a34a' : match.amenitiesScore >= 40 ? '#d97706' : '#dc2626' }}>
                           {match.amenitiesScore}%
                         </span>
@@ -516,14 +516,14 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
               <div style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
                 <strong style={{ fontSize: '14px' }}>Seller:</strong>
                 <p style={{ margin: '5px 0', fontSize: '13px' }}>
-                  {match.property.seller.name} ⭐ {match.property.seller.ratingCount === 0 ? "Not rated" : match.property.seller.rating.toFixed(1)}
+                  {match.property.seller.name}  {match.property.seller.ratingCount === 0 ? "Not rated" : match.property.seller.rating.toFixed(1)}
                 </p>
                 <p style={{ margin: '5px 0', fontSize: '13px', color: '#666' }}>
-                  📧 {match.property.seller.email}
+                   {match.property.seller.email}
                 </p>
                 {match.property.seller.phone && (
                   <p style={{ margin: '5px 0', fontSize: '13px', color: '#666' }}>
-                    📞 {match.property.seller.phone}
+                     {match.property.seller.phone}
                   </p>
                 )}
 

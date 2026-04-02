@@ -413,13 +413,11 @@ export const AdminDashboard = () => {
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <button
                                                     onClick={async () => {
-                                                        if (window.confirm(`Delete buyer "${buyer.name}" (${buyer.email})?`)) {
-                                                            try {
-                                                                await axios.delete(`${API_BASE_URL}/buyers/${buyer.id}`);
-                                                                fetchData();
-                                                            } catch (err) {
-                                                                alert('Failed to delete buyer');
-                                                            }
+                                                        try {
+                                                            await axios.delete(`${API_BASE_URL}/buyers/${buyer.id}`);
+                                                            fetchData();
+                                                        } catch (err) {
+                                                            alert('Failed to delete buyer');
                                                         }
                                                     }}
                                                     style={{
