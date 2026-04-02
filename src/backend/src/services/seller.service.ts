@@ -1,5 +1,6 @@
 import prisma from '../db/prisma';
 import { Prisma } from '@prisma/client';
+import { removeCredentialByEmail } from '../utils/credential-logger';
 
 export class SellerService {
     /**
@@ -153,9 +154,14 @@ export class SellerService {
      * Delete seller
      */
     static async deleteSeller(id: string) {
-        return await prisma.seller.delete({
+        const seller = await prisma.seller.findUnique({ where: { id } });
+        const result = await prisma.seller.delete({
             where: { id },
         });
+        if (seller?.email) {
+            removeCredentialByEmail(seller.email);
+        }
+        return result;
     }
 
     /**

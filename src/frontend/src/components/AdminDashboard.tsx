@@ -1,5 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import MapSearchBar from './MapSearchBar';
+
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+});
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -107,7 +121,7 @@ interface FbScrapedRow {
     GROUP_URL: string;
 }
 
-type TabType = 'buyers' | 'sellers' | 'properties' | 'leads' | 'matches' | 'logs' | 'fb-scrape' | 'manual-scrape';
+type TabType = 'buyers' | 'sellers' | 'properties' | 'leads' | 'matches' | 'logs' | 'fb-scrape' | 'manual-scrape' | 'property-map' | 'buyer-map';
 
 export const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState<TabType>('buyers');
@@ -138,9 +152,18 @@ export const AdminDashboard = () => {
 
     // Demo seeder state
     const [seedingBuyers, setSeedingBuyers] = useState(false);
-    const [seedBuyerMessage, setSeedBuyerMessage] = useState<string | null>(null);
+    const [seedingSellers, setSeedingSellers] = useState(false);
+    const [deletingBuyers, setDeletingBuyers] = useState(false);
+    const [deletingSellers, setDeletingSellers] = useState(false);
     const [resettingSellers, setResettingSellers] = useState(false);
-    const [resetSellerMessage, setResetSellerMessage] = useState<string | null>(null);
+    const [credentials, setCredentials] = useState<any[] | null>(null);
+    const [actionMessage, setActionMessage] = useState<string | null>(null);
+
+    // Map state
+    const propertyMapRef = useRef<HTMLDivElement>(null);
+    const propertyMapInstance = useRef<L.Map | null>(null);
+    const buyerMapRef = useRef<HTMLDivElement>(null);
+    const buyerMapInstance = useRef<L.Map | null>(null);
 
     // Fetch data based on active tab
     useEffect(() => {
@@ -222,18 +245,22 @@ export const AdminDashboard = () => {
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <h1 style={{ marginBottom: '20px', color: '#333' }}> Admin Dashboard</h1>
+            <h1 style={{ marginBottom: '20px', color: '#333' }}>Admin Dashboard</h1>
 
             {/* Tab Navigation */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ddd', flexWrap: 'wrap' }}>
-                {(['buyers', 'sellers', 'properties', 'leads', 'matches', 'logs', 'manual-scrape', 'fb-scrape'] as TabType[]).map(tab => (
+                {(['buyers', 'sellers', 'properties', 'leads', 'matches', 'logs', 'property-map', 'buyer-map', 'manual-scrape', 'fb-scrape'] as TabType[]).map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         style={{
                             padding: '10px 20px',
                             border: 'none',
-                            background: activeTab === tab ? (tab === 'fb-scrape' || tab === 'manual-scrape' ? '#1877F2' : '#4CAF50') : '#f0f0f0',
+                            background: activeTab === tab
+                                ? (tab === 'fb-scrape' || tab === 'manual-scrape' ? '#1877F2'
+                                    : tab === 'property-map' || tab === 'buyer-map' ? '#667eea'
+                                        : '#4CAF50')
+                                : '#f0f0f0',
                             color: activeTab === tab ? 'white' : '#333',
                             cursor: 'pointer',
                             borderRadius: '5px 5px 0 0',
@@ -241,7 +268,11 @@ export const AdminDashboard = () => {
                             textTransform: 'capitalize',
                         }}
                     >
-                        {tab === 'fb-scrape' ? ' FB Scrape' : tab === 'manual-scrape' ? '️ Manual Scrape' : tab}
+                        {tab === 'fb-scrape' ? 'FB Scrape'
+                            : tab === 'manual-scrape' ? 'Manual Scrape'
+                                : tab === 'property-map' ? 'Property Map'
+                                    : tab === 'buyer-map' ? 'Buyer Map'
+                                        : tab}
                     </button>
                 ))}
             </div>
@@ -250,7 +281,7 @@ export const AdminDashboard = () => {
             {loading && <p>Loading...</p>}
             {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
-            {/* Demo Seeder Tools */}
+            {/* Global Admin Tools */}
             <div style={{
                 display: 'flex',
                 gap: '12px',
@@ -262,60 +293,23 @@ export const AdminDashboard = () => {
                 alignItems: 'center',
                 flexWrap: 'wrap',
             }}>
-                <span style={{ fontWeight: 'bold', color: '#4527A0', fontSize: '14px', marginRight: '8px' }}> Demo Tools:</span>
-
-                <button
-                    onClick={async () => {
-                        if (!window.confirm('Seed 6-7 demo buyers for Mumbai, Chennai, Hyderabad, Bangalore, Pune & Kochi?\n\nExisting demo buyers will be skipped.')) return;
-                        setSeedingBuyers(true);
-                        setSeedBuyerMessage(null);
-                        try {
-                            const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-buyers`);
-                            if (res.data.success) {
-                                setSeedBuyerMessage(` ${res.data.message}`);
-                                if (activeTab === 'buyers') fetchData();
-                            } else {
-                                setSeedBuyerMessage(` ${res.data.error || 'Failed'}`);
-                            }
-                        } catch (err: any) {
-                            setSeedBuyerMessage(` ${err.response?.data?.error || err.message}`);
-                        } finally {
-                            setSeedingBuyers(false);
-                        }
-                    }}
-                    disabled={seedingBuyers}
-                    style={{
-                        padding: '10px 20px',
-                        background: seedingBuyers ? '#B39DDB' : '#7C4DFF',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: seedingBuyers ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold',
-                        fontSize: '13px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                    }}
-                >
-                    {seedingBuyers ? ' Seeding...' : ' Seed Demo Buyers'}
-                </button>
+                <span style={{ fontWeight: 'bold', color: '#4527A0', fontSize: '14px', marginRight: '8px' }}>Admin Tools:</span>
 
                 <button
                     onClick={async () => {
                         if (!window.confirm('Reset ALL seller trust scores, ratings, and deals to 0?\n\nThis cannot be undone.')) return;
                         setResettingSellers(true);
-                        setResetSellerMessage(null);
+                        setActionMessage(null);
                         try {
                             const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`);
                             if (res.data.success) {
-                                setResetSellerMessage(` ${res.data.message}`);
+                                setActionMessage(`[OK] ${res.data.message}`);
                                 if (activeTab === 'sellers') fetchData();
                             } else {
-                                setResetSellerMessage(` ${res.data.error || 'Failed'}`);
+                                setActionMessage(`[ERR] ${res.data.error || 'Failed'}`);
                             }
                         } catch (err: any) {
-                            setResetSellerMessage(` ${err.response?.data?.error || err.message}`);
+                            setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`);
                         } finally {
                             setResettingSellers(false);
                         }
@@ -330,38 +324,95 @@ export const AdminDashboard = () => {
                         cursor: resettingSellers ? 'not-allowed' : 'pointer',
                         fontWeight: 'bold',
                         fontSize: '13px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
                     }}
                 >
-                    {resettingSellers ? ' Resetting...' : ' Reset Seller Trust to 0'}
+                    {resettingSellers ? 'Resetting...' : 'Reset Seller Trust to 0'}
+                </button>
+
+                <button
+                    onClick={async () => {
+                        if (credentials) { setCredentials(null); return; }
+                        try {
+                            const res = await axios.get(`${API_BASE_URL}/admin/seed/credentials`);
+                            setCredentials(res.data.credentials || []);
+                        } catch (err: any) {
+                            alert('Failed to fetch credentials: ' + (err.response?.data?.error || err.message));
+                        }
+                    }}
+                    style={{
+                        padding: '10px 20px',
+                        background: credentials ? '#455A64' : '#607D8B',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        fontSize: '13px',
+                    }}
+                >
+                    {credentials ? 'X Hide Credentials' : 'View Credentials'}
                 </button>
             </div>
 
-            {/* Seeder feedback messages */}
-            {seedBuyerMessage && (
+            {/* Feedback messages */}
+            {actionMessage && (
                 <div style={{
                     padding: '12px 16px',
-                    background: seedBuyerMessage.includes('') ? '#e8f5e9' : '#ffebee',
-                    color: seedBuyerMessage.includes('') ? '#2e7d32' : '#c62828',
+                    background: actionMessage.includes('[OK]') ? '#e8f5e9' : '#ffebee',
+                    color: actionMessage.includes('[OK]') ? '#2e7d32' : '#c62828',
                     borderRadius: '6px',
                     marginBottom: '12px',
                     fontSize: '14px',
                 }}>
-                    {seedBuyerMessage}
+                    {actionMessage}
                 </div>
             )}
-            {resetSellerMessage && (
+
+            {/* Credentials Table */}
+            {credentials && (
                 <div style={{
-                    padding: '12px 16px',
-                    background: resetSellerMessage.includes('') ? '#e8f5e9' : '#ffebee',
-                    color: resetSellerMessage.includes('') ? '#2e7d32' : '#c62828',
-                    borderRadius: '6px',
-                    marginBottom: '12px',
-                    fontSize: '14px',
+                    marginBottom: '20px',
+                    padding: '16px',
+                    background: '#263238',
+                    borderRadius: '8px',
+                    color: '#B0BEC5',
                 }}>
-                    {resetSellerMessage}
+                    <h3 style={{ margin: '0 0 12px 0', color: '#4DD0E1' }}>Stored Credentials ({credentials.length})</h3>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid #455A64' }}>
+                                    <th style={{ padding: '8px', textAlign: 'left', color: '#80CBC4' }}>Role</th>
+                                    <th style={{ padding: '8px', textAlign: 'left', color: '#80CBC4' }}>Name</th>
+                                    <th style={{ padding: '8px', textAlign: 'left', color: '#80CBC4' }}>Email</th>
+                                    <th style={{ padding: '8px', textAlign: 'left', color: '#80CBC4' }}>Password</th>
+                                    <th style={{ padding: '8px', textAlign: 'left', color: '#80CBC4' }}>Source</th>
+                                    <th style={{ padding: '8px', textAlign: 'left', color: '#80CBC4' }}>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {credentials.map((c: any, i: number) => (
+                                    <tr key={i} style={{ borderBottom: '1px solid #37474F' }}>
+                                        <td style={{ padding: '6px 8px' }}>
+                                            <span style={{
+                                                background: c.role === 'admin' ? '#E53935' : c.role === 'buyer' ? '#43A047' : '#FB8C00',
+                                                color: 'white',
+                                                padding: '2px 8px',
+                                                borderRadius: '4px',
+                                                fontSize: '11px',
+                                                textTransform: 'uppercase',
+                                            }}>{c.role}</span>
+                                        </td>
+                                        <td style={{ padding: '6px 8px' }}>{c.name}</td>
+                                        <td style={{ padding: '6px 8px', fontFamily: 'monospace', color: '#81D4FA' }}>{c.email}</td>
+                                        <td style={{ padding: '6px 8px', fontFamily: 'monospace', color: '#FFAB91' }}>{c.password}</td>
+                                        <td style={{ padding: '6px 8px', fontSize: '11px' }}>{c.source}</td>
+                                        <td style={{ padding: '6px 8px', fontSize: '11px' }}>{c.timestamp ? new Date(c.timestamp).toLocaleString() : '--'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
@@ -369,7 +420,77 @@ export const AdminDashboard = () => {
             <div style={{ marginTop: '20px' }}>
                 {activeTab === 'buyers' && (
                     <div>
-                        <h2>All Buyers ({buyers.length})</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                            <h2 style={{ margin: 0 }}>All Buyers ({buyers.length})</h2>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    onClick={async () => {
+                                        if (!window.confirm('Seed demo buyers for Mumbai, Chennai, Hyderabad, Bangalore, Pune & Kochi?\n\nExisting demo buyers will be skipped.')) return;
+                                        setSeedingBuyers(true);
+                                        setActionMessage(null);
+                                        try {
+                                            const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-buyers`);
+                                            if (res.data.success) {
+                                                setActionMessage(`✅ ${res.data.message}`);
+                                                fetchData();
+                                            } else {
+                                                setActionMessage(`❌ ${res.data.error || 'Failed'}`);
+                                            }
+                                        } catch (err: any) {
+                                            setActionMessage(`❌ ${err.response?.data?.error || err.message}`);
+                                        } finally {
+                                            setSeedingBuyers(false);
+                                        }
+                                    }}
+                                    disabled={seedingBuyers}
+                                    style={{
+                                        padding: '8px 16px',
+                                        background: seedingBuyers ? '#B39DDB' : '#7C4DFF',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: seedingBuyers ? 'not-allowed' : 'pointer',
+                                        fontWeight: 'bold',
+                                        fontSize: '13px',
+                                    }}
+                                >
+                                    {seedingBuyers ? '⏳ Seeding...' : '🌱 Seed Demo Buyers'}
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!window.confirm('⚠️ Delete ALL buyers and their leads/matches?\n\nThis cannot be undone.')) return;
+                                        setDeletingBuyers(true);
+                                        setActionMessage(null);
+                                        try {
+                                            const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-buyers`);
+                                            if (res.data.success) {
+                                                setActionMessage(`✅ ${res.data.message}`);
+                                                fetchData();
+                                            } else {
+                                                setActionMessage(`❌ ${res.data.error || 'Failed'}`);
+                                            }
+                                        } catch (err: any) {
+                                            setActionMessage(`❌ ${err.response?.data?.error || err.message}`);
+                                        } finally {
+                                            setDeletingBuyers(false);
+                                        }
+                                    }}
+                                    disabled={deletingBuyers}
+                                    style={{
+                                        padding: '8px 16px',
+                                        background: deletingBuyers ? '#ef9a9a' : '#d32f2f',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: deletingBuyers ? 'not-allowed' : 'pointer',
+                                        fontWeight: 'bold',
+                                        fontSize: '13px',
+                                    }}
+                                >
+                                    {deletingBuyers ? '⏳ Deleting...' : '🗑️ Delete All Buyers'}
+                                </button>
+                            </div>
+                        </div>
                         <div style={{ overflowX: 'auto' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
                                 <thead style={{ background: '#4CAF50', color: 'white' }}>
@@ -436,7 +557,77 @@ export const AdminDashboard = () => {
 
                 {activeTab === 'sellers' && (
                     <div>
-                        <h2>All Sellers ({sellers.length})</h2>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                            <h2 style={{ margin: 0 }}>All Sellers ({sellers.length})</h2>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    onClick={async () => {
+                                        if (!window.confirm('Seed demo sellers with properties for Mumbai, Chennai, Hyderabad, Bangalore, Pune & Kochi?\n\nExisting demo sellers will be skipped.')) return;
+                                        setSeedingSellers(true);
+                                        setActionMessage(null);
+                                        try {
+                                            const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-sellers`);
+                                            if (res.data.success) {
+                                                setActionMessage(`✅ ${res.data.message}`);
+                                                fetchData();
+                                            } else {
+                                                setActionMessage(`❌ ${res.data.error || 'Failed'}`);
+                                            }
+                                        } catch (err: any) {
+                                            setActionMessage(`❌ ${err.response?.data?.error || err.message}`);
+                                        } finally {
+                                            setSeedingSellers(false);
+                                        }
+                                    }}
+                                    disabled={seedingSellers}
+                                    style={{
+                                        padding: '8px 16px',
+                                        background: seedingSellers ? '#B39DDB' : '#7C4DFF',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: seedingSellers ? 'not-allowed' : 'pointer',
+                                        fontWeight: 'bold',
+                                        fontSize: '13px',
+                                    }}
+                                >
+                                    {seedingSellers ? '⏳ Seeding...' : '🌱 Seed Demo Sellers'}
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!window.confirm('⚠️ Delete ALL sellers, their properties, and related leads/matches?\n\nThis cannot be undone.')) return;
+                                        setDeletingSellers(true);
+                                        setActionMessage(null);
+                                        try {
+                                            const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-sellers`);
+                                            if (res.data.success) {
+                                                setActionMessage(`✅ ${res.data.message}`);
+                                                fetchData();
+                                            } else {
+                                                setActionMessage(`❌ ${res.data.error || 'Failed'}`);
+                                            }
+                                        } catch (err: any) {
+                                            setActionMessage(`❌ ${err.response?.data?.error || err.message}`);
+                                        } finally {
+                                            setDeletingSellers(false);
+                                        }
+                                    }}
+                                    disabled={deletingSellers}
+                                    style={{
+                                        padding: '8px 16px',
+                                        background: deletingSellers ? '#ef9a9a' : '#d32f2f',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        cursor: deletingSellers ? 'not-allowed' : 'pointer',
+                                        fontWeight: 'bold',
+                                        fontSize: '13px',
+                                    }}
+                                >
+                                    {deletingSellers ? '⏳ Deleting...' : '🗑️ Delete All Sellers'}
+                                </button>
+                            </div>
+                        </div>
                         <div style={{ overflowX: 'auto' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
                                 <thead style={{ background: '#4CAF50', color: 'white' }}>
@@ -494,7 +685,7 @@ export const AdminDashboard = () => {
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '12px' }}>{formatDate(seller.createdAt)}</td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                                <select 
+                                                <select
                                                     onChange={(e) => {
                                                         if (e.target.value) {
                                                             handleOverrideRating(seller.id, Number(e.target.value));
@@ -815,7 +1006,7 @@ export const AdminDashboard = () => {
                     <div>
                         <h2>️ Manual Scrape</h2>
                         <p style={{ color: '#666', marginBottom: '20px' }}>Trigger a manual scrape for properties in a specific city using a selected scraper.</p>
-                        
+
                         <div style={{
                             background: '#f0f4ff',
                             border: '1px solid #c5d5f7',
@@ -863,8 +1054,8 @@ export const AdminDashboard = () => {
                             <button
                                 onClick={async () => {
                                     if (!manualCity || !manualScraper) {
-                                      alert("Please provide both city and scraper");
-                                      return;
+                                        alert("Please provide both city and scraper");
+                                        return;
                                     }
                                     setManualScraping(true);
                                     setManualScrapeMessage(null);
@@ -1009,7 +1200,7 @@ export const AdminDashboard = () => {
                             >
                                 {fbScraping ? ' Scraping...' : ' Scrape Group'}
                             </button>
-                            
+
                             <button
                                 onClick={async () => {
                                     setFbScraping(true);
@@ -1045,7 +1236,7 @@ export const AdminDashboard = () => {
                                     gap: '8px',
                                 }}
                             >
-                                 Load CSV
+                                Load CSV
                             </button>
                         </div>
 
@@ -1215,6 +1406,159 @@ export const AdminDashboard = () => {
                     <p style={{ fontSize: '32px', margin: 0, color: '#607D8B' }}>{logs.length}</p>
                 </div>
             </div>
-        </div >
+
+            {/* Property Map Tab */}
+            {activeTab === 'property-map' && (
+                <div>
+                    <h2>All Properties Map</h2>
+                    <div style={{ marginBottom: '10px' }}>
+                        <MapSearchBar map={propertyMapInstance.current} placeholder="Search for a location..." />
+                    </div>
+                    <div
+                        ref={propertyMapRef}
+                        style={{ height: '600px', borderRadius: '8px', border: '1px solid #ddd' }}
+                    />
+                    <PropertyMapLoader
+                        mapRef={propertyMapRef}
+                        mapInstance={propertyMapInstance}
+                        activeTab={activeTab}
+                    />
+                </div>
+            )}
+
+            {/* Buyer Map Tab */}
+            {activeTab === 'buyer-map' && (
+                <div>
+                    <h2>Buyer Preferred Localities</h2>
+                    <div style={{ marginBottom: '10px' }}>
+                        <MapSearchBar map={buyerMapInstance.current} placeholder="Search for a location..." />
+                    </div>
+                    <div
+                        ref={buyerMapRef}
+                        style={{ height: '600px', borderRadius: '8px', border: '1px solid #ddd' }}
+                    />
+                    <BuyerMapLoader
+                        mapRef={buyerMapRef}
+                        mapInstance={buyerMapInstance}
+                        activeTab={activeTab}
+                    />
+                </div>
+            )}
+
+        </div>
     );
 };
+
+/* ── Embedded map loaders (rendered inside AdminDashboard) ────────────────── */
+
+function PropertyMapLoader({ mapRef, mapInstance, activeTab }: {
+    mapRef: React.RefObject<HTMLDivElement | null>;
+    mapInstance: React.MutableRefObject<L.Map | null>;
+    activeTab: string;
+}) {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
+    useEffect(() => {
+        if (activeTab !== 'property-map') return;
+        if (!mapRef.current) return;
+
+        // If map already exists, just invalidate its size
+        if (mapInstance.current) {
+            mapInstance.current.invalidateSize();
+            return;
+        }
+
+        const map = L.map(mapRef.current).setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19,
+        }).addTo(map);
+        mapInstance.current = map;
+
+        // Fetch and render properties
+        const token = localStorage.getItem('hublet_auth_token');
+        fetch(`${API_BASE}/properties/map`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((r) => r.json())
+            .then((data: Array<{ id: string; title: string; locality: string; bhk: number; price: number; area: number; propertyType: string; lat: number; lon: number }>) => {
+                const bounds: [number, number][] = [];
+                data.forEach((p) => {
+                    const color = p.propertyType === 'apartment' ? '#4CAF50'
+                        : p.propertyType === 'house' ? '#2196F3'
+                            : p.propertyType === 'villa' ? '#FF9800' : '#9C27B0';
+                    const icon = L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background:${color};width:28px;height:28px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);color:white;font-size:11px;font-weight:bold;">${p.bhk}</span></div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 28],
+                        popupAnchor: [0, -28],
+                    });
+                    const formatP = (price: number) => price >= 10000000 ? `Rs ${(price / 10000000).toFixed(2)} Cr` : price >= 100000 ? `Rs ${(price / 100000).toFixed(1)} L` : `Rs ${price.toLocaleString('en-IN')}`;
+                    L.marker([p.lat, p.lon], { icon })
+                        .bindPopup(`<div style="min-width:200px;"><h4 style="margin:0 0 6px 0;color:#333;">${p.title}</h4><p style="margin:2px 0;font-size:13px;">${p.locality}</p><p style="margin:2px 0;font-size:13px;">${p.bhk} BHK | ${p.area} sqft | ${p.propertyType}</p><p style="margin:4px 0 0 0;font-size:15px;font-weight:bold;color:#2e7d32;">${formatP(p.price)}</p></div>`)
+                        .addTo(map);
+                    bounds.push([p.lat, p.lon]);
+                });
+                if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+            })
+            .catch(console.error);
+
+        return () => { map.remove(); mapInstance.current = null; };
+    }, [activeTab]);
+
+    return null;
+}
+
+function BuyerMapLoader({ mapRef, mapInstance, activeTab }: {
+    mapRef: React.RefObject<HTMLDivElement | null>;
+    mapInstance: React.MutableRefObject<L.Map | null>;
+    activeTab: string;
+}) {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
+    useEffect(() => {
+        if (activeTab !== 'buyer-map') return;
+        if (!mapRef.current) return;
+
+        if (mapInstance.current) {
+            mapInstance.current.invalidateSize();
+            return;
+        }
+
+        const map = L.map(mapRef.current).setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19,
+        }).addTo(map);
+        mapInstance.current = map;
+
+        const token = localStorage.getItem('hublet_auth_token');
+        fetch(`${API_BASE}/buyers/localities-map`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((r) => r.json())
+            .then((data: Array<{ buyerName: string; locality: string; lat: number; lon: number }>) => {
+                const bounds: [number, number][] = [];
+                const icon = L.divIcon({
+                    className: 'buyer-marker',
+                    html: `<div style="background:#1565C0;width:24px;height:24px;border-radius:50%;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><span style="color:white;font-size:11px;font-weight:bold;">B</span></div>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12],
+                    popupAnchor: [0, -12],
+                });
+                data.forEach((p) => {
+                    L.marker([p.lat, p.lon], { icon })
+                        .bindPopup(`<div><strong>${p.locality}</strong><br/><span style="font-size:12px;color:#666;">Interested: ${p.buyerName}</span></div>`)
+                        .addTo(map);
+                    bounds.push([p.lat, p.lon]);
+                });
+                if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+            })
+            .catch(console.error);
+
+        return () => { map.remove(); mapInstance.current = null; };
+    }, [activeTab]);
+
+    return null;
+}

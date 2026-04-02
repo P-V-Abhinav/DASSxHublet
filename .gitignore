@@ -11,3 +11,6 @@ venv/
 # --- OS Specific ---
 .DS_Store
 Thumbs.db
+
+# --- Local documentation output ---
+context/

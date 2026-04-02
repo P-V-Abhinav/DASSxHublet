@@ -52,8 +52,12 @@ export class MatchingService {
         const matches = properties
             .map(property => {
                 // Parse JSON strings for SQLite
+                const buyerMeta = buyer.metadata ? JSON.parse(buyer.metadata) : null;
+                const propMeta = property.metadata ? JSON.parse(property.metadata) : null;
+
                 const buyerIntent: BuyerIntent = {
                     localities: storedLocalities,
+                    localityCoords: buyerMeta?.localityCoords || undefined,
                     areaMin: buyer.areaMin || undefined,
                     areaMax: buyer.areaMax || undefined,
                     bhk: buyer.bhk || undefined,
@@ -64,6 +68,8 @@ export class MatchingService {
 
                 const propertyData: PropertyData = {
                     locality: property.locality,
+                    lat: propMeta?.coordinates?.lat,
+                    lon: propMeta?.coordinates?.lon,
                     area: property.area,
                     bhk: property.bhk,
                     price: property.price,
@@ -193,8 +199,12 @@ export class MatchingService {
         // Score each buyer
         const matches = buyers
             .map(buyer => {
+                const buyerMeta = buyer.metadata ? JSON.parse(buyer.metadata) : null;
+                const propMeta = property.metadata ? JSON.parse(property.metadata) : null;
+
                 const buyerIntent: BuyerIntent = {
                     localities: JSON.parse(buyer.localities),
+                    localityCoords: buyerMeta?.localityCoords || undefined,
                     areaMin: buyer.areaMin || undefined,
                     areaMax: buyer.areaMax || undefined,
                     bhk: buyer.bhk || undefined,
@@ -205,6 +215,8 @@ export class MatchingService {
 
                 const propertyData: PropertyData = {
                     locality: property.locality,
+                    lat: propMeta?.coordinates?.lat,
+                    lon: propMeta?.coordinates?.lon,
                     area: property.area,
                     bhk: property.bhk,
                     price: property.price,

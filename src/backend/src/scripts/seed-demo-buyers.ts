@@ -15,6 +15,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { BuyerService } from '../services/buyer.service';
 
 const SALT_ROUNDS = 10;
 
@@ -151,26 +152,24 @@ export async function seedDemoBuyers(prisma: PrismaClient): Promise<{
 
             const buyerName = `${firstName.charAt(0).toUpperCase() + firstName.slice(1)} (${city})`;
 
-            await prisma.buyer.create({
-                data: {
-                    name: buyerName,
-                    email,
-                    phone,
-                    passwordHash,
-                    localities: JSON.stringify(preferredLocalities),
-                    areaMin,
-                    areaMax,
-                    bhk,
-                    budgetMin,
-                    budgetMax,
-                    amenities: JSON.stringify(preferredAmenities),
-                    rawPreferences: `Looking for ${bhk} BHK in ${preferredLocalities.join(', ')}`,
-                    metadata: JSON.stringify({
-                        source: 'demo-seeder',
-                        city,
-                        password, // store plaintext for demo purposes
-                        seededAt: new Date().toISOString(),
-                    }),
+            await BuyerService.createBuyer({
+                name: buyerName,
+                email,
+                phone,
+                passwordHash,
+                localities: preferredLocalities,
+                areaMin,
+                areaMax,
+                bhk,
+                budgetMin,
+                budgetMax,
+                amenities: preferredAmenities,
+                rawPreferences: `Looking for ${bhk} BHK in ${preferredLocalities.join(', ')}`,
+                metadata: {
+                    source: 'demo-seeder',
+                    city,
+                    password, // store plaintext for demo purposes
+                    seededAt: new Date().toISOString(),
                 },
             });
 

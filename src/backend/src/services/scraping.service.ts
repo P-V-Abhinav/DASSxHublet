@@ -4,6 +4,8 @@ import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { MatchingService } from './matching.service';
 import { LeadService } from './lead.service';
+import { BuyerService } from './buyer.service';
+import { PropertyService } from './property.service';
 
 const prisma = new PrismaClient();
 
@@ -103,23 +105,21 @@ export class ScrapingService {
             const areaMin = Math.floor(property.area * 0.8);
             const areaMax = Math.floor(property.area * 1.2);
 
-            const buyer = await prisma.buyer.create({
-                data: {
-                    name: name,
-                    email: email,
-                    phone: `9${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
-                    localities: JSON.stringify([property.locality, property.city]),
-                    areaMin: areaMin,
-                    areaMax: areaMax,
-                    budgetMin: budgetMin,
-                    budgetMax: budgetMax,
-                    bhk: property.bhk,
-                    amenities: property.amenities,
-                    metadata: JSON.stringify({
-                        source: 'synthetic-scraper',
-                        generatedForPropertyId: property.id,
-                        interest: 'high'
-                    })
+            const buyer = await BuyerService.createBuyer({
+                name: name,
+                email: email,
+                phone: `9${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
+                localities: [property.locality, property.city],
+                areaMin: areaMin,
+                areaMax: areaMax,
+                budgetMin: budgetMin,
+                budgetMax: budgetMax,
+                bhk: property.bhk,
+                amenities: property.amenities,
+                metadata: {
+                    source: 'synthetic-scraper',
+                    generatedForPropertyId: property.id,
+                    interest: 'high'
                 }
             });
             console.log(`[ScrapingService] Created synthetic buyer: ${buyer.name} (Budget: ${budgetMin}-${budgetMax})`);
@@ -235,30 +235,28 @@ export class ScrapingService {
                                 continue;
                             }
 
-                            const newProperty = await prisma.property.create({
-                                data: {
-                                    sellerId: sellerId,
-                                    title: listing.title,
-                                    locality: listing.locality,
-                                    address: listing.locality,
-                                    area: listing.area,
-                                    bhk: listing.bhk,
-                                    price: listing.price,
-                                    amenities: JSON.stringify(listing.amenities),
-                                    propertyType: listing.propertyType,
-                                    description: listing.description,
-                                    metadata: JSON.stringify({
-                                        sourceUrl: listing.sourceUrl,
-                                        externalId: listing.externalId,
-                                        source: listing.source,
-                                        scraper: scraper,
-                                        ownerName: listing.ownerName,
-                                        companyName: listing.companyName,
-                                        imageUrl: listing.imageUrl,
-                                        landmark: listing.landmark,
-                                        postedDate: listing.postedDate,
-                                        scrapedAt: new Date().toISOString()
-                                    })
+                            const newProperty = await PropertyService.createProperty({
+                                sellerId: sellerId,
+                                title: listing.title,
+                                locality: listing.locality,
+                                address: listing.locality,
+                                area: listing.area,
+                                bhk: listing.bhk,
+                                price: listing.price,
+                                amenities: listing.amenities,
+                                propertyType: listing.propertyType,
+                                description: listing.description,
+                                metadata: {
+                                    sourceUrl: listing.sourceUrl,
+                                    externalId: listing.externalId,
+                                    source: listing.source,
+                                    scraper: scraper,
+                                    ownerName: listing.ownerName,
+                                    companyName: listing.companyName,
+                                    imageUrl: listing.imageUrl,
+                                    landmark: listing.landmark,
+                                    postedDate: listing.postedDate,
+                                    scrapedAt: new Date().toISOString()
                                 }
                             });
                             console.log(`[ScrapingService] Successfully added property: ${newProperty.title} (ID: ${newProperty.id})`);

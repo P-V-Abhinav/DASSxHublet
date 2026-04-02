@@ -1,6 +1,6 @@
 #  Users List — Buyers & Sellers
 
-> Auto-generated on 10/3/2026, 5:27:45 pm. Updated after every scrape.
+> Auto-generated on 3/4/2026, 2:21:36 am. Updated after every scrape.
 
 ---
 
@@ -8,85 +8,83 @@
 
 | # | Name | Email | Phone | Type | Rating | Properties |
 |---|------|-------|-------|------|--------|------------|
-| 1 | dixi | `dixi@hublet.scraped` | 0000000000 | owner | 3.0  | 1 |
-| 2 | Vinay kumar | `vinaykumar@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
-| 3 | Shantosh | `shantosh@hublet.scraped` | 0000000000 | owner | 5.0  | 1 |
-| 4 | T R Mahesh | `trmahesh@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
-| 5 | Hanaan Properties | `hanaanproperties@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
-| 6 | Bhaskar Pai | `bhaskarpai@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
-| 7 | Chetan Pichamuthu | `chetanpichamuthu@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
-| 8 | Unknown | `unknown@hublet.scraped` | 0000000000 | agent | 2.0  | 13 |
-| 9 | Srinivasa Realtors | `srinivasarealtors@hublet.fb` | 9100347956 | owner | 3.0  | 1 |
-| 10 | Squarely Design solution | `squarelydesignsolution@hublet.fb` | 91+6364801767 | owner | 3.0  | 1 |
-| 11 | Facebook Group Seller | `facebookgroupseller@hublet.fb` | 7337403583 | owner | 3.0  | 8 |
-| 12 | Mohamed Hanif, M/s. AAFRAA REALTORS | `mohamedhanifmsaafraarealtors@hublet.fb` | 9940581173 | owner | 3.0  | 1 |
+| 1 | Unknown | `unknown@hublet.scraped` | 0000000000 | agent | 4.0  | 5 |
+| 2 | Suja (Kochi) | `suja.kochi@hublet.demo` | +91 8882111759 | agent | — | 1 |
+| 3 | Thomas (Kochi) | `thomas.kochi@hublet.demo` | +91 7171447585 | owner | — | 1 |
+| 4 | Sanjay (Pune) | `sanjay.pune@hublet.demo` | +91 7819667238 | agent | — | 2 |
+| 5 | Lakshmi (Bangalore) | `lakshmi.bangalore@hublet.demo` | +91 8422079387 | owner | — | 1 |
+| 6 | Anil (Bangalore) | `anil.bangalore@hublet.demo` | +91 8629798308 | builder | — | 2 |
+| 7 | Padma (Hyderabad) | `padma.hyderabad@hublet.demo` | +91 9608461435 | owner | — | 1 |
+| 8 | Venkat (Hyderabad) | `venkat.hyderabad@hublet.demo` | +91 7628265778 | agent | — | 2 |
+| 9 | Selvi (Chennai) | `selvi.chennai@hublet.demo` | +91 7668011386 | owner | — | 1 |
+| 10 | Kumar (Chennai) | `kumar.chennai@hublet.demo` | +91 8470172767 | builder | — | 2 |
+| 11 | Meena (Mumbai) | `meena.mumbai@hublet.demo` | +91 8453645441 | agent | — | 1 |
+| 12 | Rajesh (Mumbai) | `rajesh.mumbai@hublet.demo` | +91 7034130238 | owner | — | 3 |
 
 <details><summary> Quick Login Emails (click to expand)</summary>
 
 ```
-dixi@hublet.scraped
-vinaykumar@hublet.scraped
-shantosh@hublet.scraped
-trmahesh@hublet.scraped
-hanaanproperties@hublet.scraped
-bhaskarpai@hublet.scraped
-chetanpichamuthu@hublet.scraped
 unknown@hublet.scraped
-srinivasarealtors@hublet.fb
-squarelydesignsolution@hublet.fb
-facebookgroupseller@hublet.fb
-mohamedhanifmsaafraarealtors@hublet.fb
+suja.kochi@hublet.demo
+thomas.kochi@hublet.demo
+sanjay.pune@hublet.demo
+lakshmi.bangalore@hublet.demo
+anil.bangalore@hublet.demo
+padma.hyderabad@hublet.demo
+venkat.hyderabad@hublet.demo
+selvi.chennai@hublet.demo
+kumar.chennai@hublet.demo
+meena.mumbai@hublet.demo
+rajesh.mumbai@hublet.demo
 ```
 </details>
 
 ---
 
-##  Buyers (42 total)
+##  Buyers (40 total)
 
 | # | Name | Email | Phone | BHK | Budget Range | Area Range | Localities |
 |---|------|-------|-------|-----|--------------|------------|------------|
-| 1 | Sanjay (Kochi) | `sanjay.kochi@hublet.demo` | +91 8754500632 | 1 BHK | ₹50.38 Lac – ₹73.62 Lac | 900 – 1800 sqft | Kaloor, Aluva, Kochi |
-| 2 | Athira (Kochi) | `athira.kochi@hublet.demo` | +91 9477458612 | 3 BHK | ₹74.96 Lac – ₹1.20 Cr | 400 – 800 sqft | Marine Drive, Panampilly Nagar, Kochi |
-| 3 | Manoj (Kochi) | `manoj.kochi@hublet.demo` | +91 7849241277 | 3 BHK | ₹39.86 Lac – ₹53.55 Lac | 600 – 1200 sqft | Aluva, Kaloor, Panampilly Nagar (+2) |
-| 4 | Reshma (Kochi) | `reshma.kochi@hublet.demo` | +91 8396110355 | 1 BHK | ₹56.56 Lac – ₹92.21 Lac | 900 – 1800 sqft | Kaloor, Marine Drive, Fort Kochi (+1) |
-| 5 | Jayesh (Kochi) | `jayesh.kochi@hublet.demo` | +91 7227499421 | 1 BHK | ₹46.18 Lac – ₹73.27 Lac | 600 – 1200 sqft | Marine Drive, Fort Kochi, Kochi |
-| 6 | Lakshmi (Kochi) | `lakshmi.kochi@hublet.demo` | +91 9873939870 | 1 BHK | ₹1.10 Cr – ₹1.80 Cr | 400 – 800 sqft | Kaloor, Marine Drive, Edappally (+1) |
-| 7 | Anoop (Kochi) | `anoop.kochi@hublet.demo` | +91 7755683300 | 2 BHK | ₹2.84 Cr – ₹3.87 Cr | 2500 – 5000 sqft | Edappally, Vyttila, Marine Drive (+2) |
-| 8 | Vishal (Pune) | `vishal.pune@hublet.demo` | +91 8454638042 | 2 BHK | ₹80.02 Lac – ₹1.25 Cr | 400 – 800 sqft | Wakad, Kothrud, Kharadi (+2) |
-| 9 | Sakshi (Pune) | `sakshi.pune@hublet.demo` | +91 7930885667 | 2 BHK | ₹21.23 Lac – ₹29.25 Lac | 2500 – 5000 sqft | Undri, Wakad, Kalyani Nagar (+2) |
-| 10 | Kiran (Pune) | `kiran.pune@hublet.demo` | +91 8544782224 | 4 BHK | ₹87.58 Lac – ₹1.05 Cr | 2500 – 5000 sqft | Undri, Wakad, Kothrud (+1) |
-| 11 | Rutuja (Pune) | `rutuja.pune@hublet.demo` | +91 8049628440 | 4 BHK | ₹37.98 Lac – ₹57.74 Lac | 1800 – 3500 sqft | Hinjewadi, Kalyani Nagar, Kothrud (+1) |
-| 12 | Sagar (Pune) | `sagar.pune@hublet.demo` | +91 9595730444 | 4 BHK | ₹1.21 Cr – ₹1.69 Cr | 600 – 1200 sqft | Kothrud, Undri, Pune |
-| 13 | Gauri (Pune) | `gauri.pune@hublet.demo` | +91 8759895025 | 3 BHK | ₹31.62 Lac – ₹38.45 Lac | 900 – 1800 sqft | Aundh, Baner, Kalyani Nagar (+1) |
-| 14 | Amit (Pune) | `amit.pune@hublet.demo` | +91 9147002548 | 2 BHK | ₹1.57 Cr – ₹2.56 Cr | 600 – 1200 sqft | Magarpatta, Wakad, Kalyani Nagar (+2) |
-| 15 | Varun (Bangalore) | `varun.bangalore@hublet.demo` | +91 9156416095 | 2 BHK | ₹3.62 Cr – ₹5.73 Cr | 1800 – 3500 sqft | Whitefield, Electronic City, Rajajinagar (+1) |
-| 16 | Shreya (Bangalore) | `shreya.bangalore@hublet.demo` | +91 7705835553 | 1 BHK | ₹1.22 Cr – ₹1.78 Cr | 600 – 1200 sqft | Jayanagar, Electronic City, Yelahanka (+1) |
-| 17 | Manish (Bangalore) | `manish.bangalore@hublet.demo` | +91 8784405149 | 4 BHK | ₹1.47 Cr – ₹1.96 Cr | 400 – 800 sqft | HSR Layout, Yelahanka, Rajajinagar (+1) |
-| 18 | Pooja (Bangalore) | `pooja.bangalore@hublet.demo` | +91 9632036163 | 3 BHK | ₹21.81 Lac – ₹30.10 Lac | 1200 – 2500 sqft | Koramangala, Indiranagar, Bangalore |
-| 19 | Suresh (Bangalore) | `suresh.bangalore@hublet.demo` | +91 8253994062 | 1 BHK | ₹1.07 Cr – ₹1.32 Cr | 1800 – 3500 sqft | Indiranagar, JP Nagar, Jayanagar (+2) |
-| 20 | Deepa (Bangalore) | `deepa.bangalore@hublet.demo` | +91 9850835014 | 1 BHK | ₹86.31 Lac – ₹1.50 Cr | 900 – 1800 sqft | Jayanagar, Marathahalli, Yelahanka (+2) |
-| 21 | Akash (Bangalore) | `akash.bangalore@hublet.demo` | +91 9857962285 | 1 BHK | ₹1.54 Cr – ₹1.95 Cr | 2500 – 5000 sqft | Jayanagar, Koramangala, Bangalore |
-| 22 | Kavya (Hyderabad) | `kavya.hyderabad@hublet.demo` | +91 8496368202 | 4 BHK | ₹4.05 Cr – ₹5.78 Cr | 2500 – 5000 sqft | Begumpet, Banjara Hills, Hyderabad |
-| 23 | Sriram (Hyderabad) | `sriram.hyderabad@hublet.demo` | +91 9218116832 | 3 BHK | ₹1.41 Cr – ₹1.66 Cr | 900 – 1800 sqft | Manikonda, Hitech City, Hyderabad |
-| 24 | Lavanya (Hyderabad) | `lavanya.hyderabad@hublet.demo` | +91 7256984786 | 4 BHK | ₹1.35 Cr – ₹1.87 Cr | 400 – 800 sqft | Manikonda, Hitech City, Gachibowli (+1) |
-| 25 | Aditya (Hyderabad) | `aditya.hyderabad@hublet.demo` | +91 7741969361 | 1 BHK | ₹3.37 Cr – ₹5.38 Cr | 400 – 800 sqft | Jubilee Hills, Kukatpally, Hitech City (+2) |
-| 26 | Swathi (Hyderabad) | `swathi.hyderabad@hublet.demo` | +91 8102383629 | 4 BHK | ₹50.16 Lac – ₹97.99 Lac | 1200 – 2500 sqft | Kondapur, Miyapur, Jubilee Hills (+1) |
-| 27 | Rahul (Hyderabad) | `rahul.hyderabad@hublet.demo` | +91 9131257377 | 4 BHK | ₹39.98 Lac – ₹52.29 Lac | 400 – 800 sqft | Secunderabad, Manikonda, Hyderabad |
-| 28 | Meera (Chennai) | `meera.chennai@hublet.demo` | +91 8583787723 | 2 BHK | ₹1.34 Cr – ₹2.09 Cr | 400 – 800 sqft | OMR, Besant Nagar, Chennai |
-| 29 | Prasad (Chennai) | `prasad.chennai@hublet.demo` | +91 9436448030 | 4 BHK | ₹71.62 Lac – ₹1.13 Cr | 400 – 800 sqft | Guindy, OMR, Chennai |
-| 30 | Anitha (Chennai) | `anitha.chennai@hublet.demo` | +91 9094163502 | 4 BHK | ₹1.33 Cr – ₹1.60 Cr | 1200 – 2500 sqft | Mylapore, Adyar, Chromepet (+1) |
-| 31 | Surya (Chennai) | `surya.chennai@hublet.demo` | +91 9511664254 | 4 BHK | ₹1.02 Cr – ₹1.61 Cr | 2500 – 5000 sqft | Thoraipakkam, Adyar, Porur (+1) |
-| 32 | Divya (Chennai) | `divya.chennai@hublet.demo` | +91 9509702623 | 4 BHK | ₹39.45 Lac – ₹55.62 Lac | 600 – 1200 sqft | Adyar, Nungambakkam, Chennai |
-| 33 | Karthik (Chennai) | `karthik.chennai@hublet.demo` | +91 8374484128 | 3 BHK | ₹3.30 Cr – ₹4.75 Cr | 1800 – 3500 sqft | Anna Nagar, Chromepet, Adyar (+2) |
-| 34 | Vikram (Mumbai) | `vikram.mumbai@hublet.demo` | +91 9892410692 | 2 BHK | ₹85.84 Lac – ₹1.08 Cr | 2500 – 5000 sqft | Borivali West, Juhu, Mumbai |
-| 35 | Neha (Mumbai) | `neha.mumbai@hublet.demo` | +91 9768123101 | 4 BHK | ₹29.76 Lac – ₹38.15 Lac | 900 – 1800 sqft | Mulund East, Goregaon East, Lower Parel (+1) |
-| 36 | Rohan (Mumbai) | `rohan.mumbai@hublet.demo` | +91 7819872742 | 1 BHK | ₹54.33 Lac – ₹79.84 Lac | 900 – 1800 sqft | Dadar, Borivali West, Worli (+1) |
-| 37 | Sneha (Mumbai) | `sneha.mumbai@hublet.demo` | +91 9840262015 | 2 BHK | ₹84.74 Lac – ₹1.42 Cr | 400 – 800 sqft | Vikhroli, Juhu, Andheri East (+1) |
-| 38 | Arjun (Mumbai) | `arjun.mumbai@hublet.demo` | +91 7781855447 | 1 BHK | ₹2.52 Cr – ₹3.25 Cr | 400 – 800 sqft | Malad West, Juhu, Mumbai |
-| 39 | Priya (Mumbai) | `priya.mumbai@hublet.demo` | +91 7721422010 | 2 BHK | ₹38.07 Lac – ₹59.86 Lac | 2500 – 5000 sqft | Chembur, Borivali West, Mumbai |
-| 40 | Aarav (Mumbai) | `aarav.mumbai@hublet.demo` | +91 9901158583 | 3 BHK | ₹36.66 Lac – ₹47.82 Lac | 1800 – 3500 sqft | Goregaon East, Dadar, Powai (+1) |
-| 41 | Rachit | `rachit.mehta@students.iiit.ac.in` | 1111111111 | 2 BHK | — – ₹2.00 Cr | — | thane |
-| 42 | Abhinav | `meow@gmail.com` | 7715006399 | 2 BHK | — | — | thane |
+| 1 | Sanjay (Kochi) | `sanjay.kochi@hublet.demo` | +91 7705966982 | 1 BHK | ₹3.20 Cr – ₹5.52 Cr | 900 – 1800 sqft | Vyttila, Marine Drive, Aluva (+1) |
+| 2 | Athira (Kochi) | `athira.kochi@hublet.demo` | +91 7317297325 | 2 BHK | ₹35.06 Lac – ₹46.55 Lac | 900 – 1800 sqft | Fort Kochi, Aluva, Panampilly Nagar (+1) |
+| 3 | Manoj (Kochi) | `manoj.kochi@hublet.demo` | +91 9586850097 | 4 BHK | ₹32.93 Lac – ₹41.74 Lac | 2500 – 5000 sqft | Panampilly Nagar, Kakkanad, Vyttila (+1) |
+| 4 | Reshma (Kochi) | `reshma.kochi@hublet.demo` | +91 9755215188 | 1 BHK | ₹43.29 Lac – ₹64.09 Lac | 1200 – 2500 sqft | Thrippunithura, Fort Kochi, Vyttila (+1) |
+| 5 | Jayesh (Kochi) | `jayesh.kochi@hublet.demo` | +91 7498805194 | 1 BHK | ₹86.93 Lac – ₹1.40 Cr | 600 – 1200 sqft | Kakkanad, Vyttila, Palarivattom (+1) |
+| 6 | Lakshmi (Kochi) | `lakshmi.kochi@hublet.demo` | +91 9125827201 | 4 BHK | ₹1.42 Cr – ₹2.12 Cr | 2500 – 5000 sqft | Panampilly Nagar, Palarivattom, Aluva (+2) |
+| 7 | Anoop (Kochi) | `anoop.kochi@hublet.demo` | +91 7969977936 | 1 BHK | ₹1.06 Cr – ₹2.00 Cr | 900 – 1800 sqft | Kakkanad, Edappally, Panampilly Nagar (+2) |
+| 8 | Vishal (Pune) | `vishal.pune@hublet.demo` | +91 7460610944 | 1 BHK | ₹2.33 Cr – ₹3.08 Cr | 900 – 1800 sqft | Kalyani Nagar, Wakad, Baner (+1) |
+| 9 | Sakshi (Pune) | `sakshi.pune@hublet.demo` | +91 8033590752 | 2 BHK | ₹35.65 Lac – ₹51.27 Lac | 400 – 800 sqft | Undri, Kharadi, Kalyani Nagar (+2) |
+| 10 | Kiran (Pune) | `kiran.pune@hublet.demo` | +91 8680276069 | 1 BHK | ₹1.63 Cr – ₹2.74 Cr | 400 – 800 sqft | Kharadi, Undri, Kothrud (+2) |
+| 11 | Rutuja (Pune) | `rutuja.pune@hublet.demo` | +91 9973499520 | 4 BHK | ₹2.26 Cr – ₹3.36 Cr | 400 – 800 sqft | Aundh, Wakad, Hadapsar (+1) |
+| 12 | Sagar (Pune) | `sagar.pune@hublet.demo` | +91 7076216759 | 3 BHK | ₹1.33 Cr – ₹1.68 Cr | 900 – 1800 sqft | Kothrud, Hinjewadi, Baner (+1) |
+| 13 | Gauri (Pune) | `gauri.pune@hublet.demo` | +91 8649488491 | 2 BHK | ₹4.57 Cr – ₹5.63 Cr | 2500 – 5000 sqft | Wakad, Kalyani Nagar, Aundh (+1) |
+| 14 | Amit (Pune) | `amit.pune@hublet.demo` | +91 7532156583 | 3 BHK | ₹39.90 Lac – ₹61.84 Lac | 1800 – 3500 sqft | Wakad, Undri, Kothrud (+1) |
+| 15 | Varun (Bangalore) | `varun.bangalore@hublet.demo` | +91 9323155869 | 2 BHK | ₹93.00 Lac – ₹1.34 Cr | 2500 – 5000 sqft | Indiranagar, Koramangala, Marathahalli (+2) |
+| 16 | Shreya (Bangalore) | `shreya.bangalore@hublet.demo` | +91 8581457087 | 1 BHK | ₹2.24 Cr – ₹3.17 Cr | 1200 – 2500 sqft | Whitefield, HSR Layout, Yelahanka (+2) |
+| 17 | Manish (Bangalore) | `manish.bangalore@hublet.demo` | +91 8624896172 | 2 BHK | ₹75.19 Lac – ₹1.13 Cr | 1200 – 2500 sqft | Koramangala, Whitefield, Bangalore |
+| 18 | Pooja (Bangalore) | `pooja.bangalore@hublet.demo` | +91 7674426104 | 3 BHK | ₹1.18 Cr – ₹1.70 Cr | 900 – 1800 sqft | HSR Layout, Rajajinagar, Bangalore |
+| 19 | Suresh (Bangalore) | `suresh.bangalore@hublet.demo` | +91 9680254991 | 4 BHK | ₹3.81 Cr – ₹5.24 Cr | 400 – 800 sqft | Whitefield, Yelahanka, Indiranagar (+1) |
+| 20 | Deepa (Bangalore) | `deepa.bangalore@hublet.demo` | +91 9719373861 | 1 BHK | ₹90.24 Lac – ₹1.35 Cr | 1200 – 2500 sqft | HSR Layout, Whitefield, Marathahalli (+1) |
+| 21 | Akash (Bangalore) | `akash.bangalore@hublet.demo` | +91 8749705103 | 2 BHK | ₹57.17 Lac – ₹75.86 Lac | 2500 – 5000 sqft | Rajajinagar, Jayanagar, Marathahalli (+1) |
+| 22 | Kavya (Hyderabad) | `kavya.hyderabad@hublet.demo` | +91 8300533239 | 3 BHK | ₹2.23 Cr – ₹2.78 Cr | 2500 – 5000 sqft | Jubilee Hills, Manikonda, Miyapur (+2) |
+| 23 | Sriram (Hyderabad) | `sriram.hyderabad@hublet.demo` | +91 9366774344 | 4 BHK | ₹36.63 Lac – ₹59.73 Lac | 900 – 1800 sqft | LB Nagar, Madhapur, Jubilee Hills (+2) |
+| 24 | Lavanya (Hyderabad) | `lavanya.hyderabad@hublet.demo` | +91 8753759498 | 2 BHK | ₹3.02 Cr – ₹4.08 Cr | 900 – 1800 sqft | Begumpet, Hitech City, Miyapur (+2) |
+| 25 | Aditya (Hyderabad) | `aditya.hyderabad@hublet.demo` | +91 9100143711 | 4 BHK | ₹1.98 Cr – ₹2.51 Cr | 2500 – 5000 sqft | Banjara Hills, Gachibowli, Hyderabad |
+| 26 | Swathi (Hyderabad) | `swathi.hyderabad@hublet.demo` | +91 9294132690 | 4 BHK | ₹2.37 Cr – ₹3.96 Cr | 400 – 800 sqft | Jubilee Hills, Manikonda, LB Nagar (+1) |
+| 27 | Rahul (Hyderabad) | `rahul.hyderabad@hublet.demo` | +91 7209470792 | 4 BHK | ₹1.19 Cr – ₹1.51 Cr | 1200 – 2500 sqft | Hitech City, Miyapur, Jubilee Hills (+2) |
+| 28 | Ganesh (Chennai) | `ganesh.chennai@hublet.demo` | +91 8965655886 | 3 BHK | ₹84.82 Lac – ₹1.40 Cr | 400 – 800 sqft | Adyar, Guindy, T. Nagar (+1) |
+| 29 | Meera (Chennai) | `meera.chennai@hublet.demo` | +91 8180768071 | 3 BHK | ₹1.11 Cr – ₹2.14 Cr | 400 – 800 sqft | Guindy, Tambaram, Adyar (+1) |
+| 30 | Prasad (Chennai) | `prasad.chennai@hublet.demo` | +91 9705174726 | 3 BHK | ₹1.20 Cr – ₹1.52 Cr | 1200 – 2500 sqft | Velachery, Guindy, Chromepet (+1) |
+| 31 | Anitha (Chennai) | `anitha.chennai@hublet.demo` | +91 7596636965 | 3 BHK | ₹39.73 Lac – ₹55.92 Lac | 1200 – 2500 sqft | OMR, Anna Nagar, Nungambakkam (+2) |
+| 32 | Surya (Chennai) | `surya.chennai@hublet.demo` | +91 7580114047 | 2 BHK | ₹36.25 Lac – ₹51.62 Lac | 1800 – 3500 sqft | Anna Nagar, OMR, Chennai |
+| 33 | Divya (Chennai) | `divya.chennai@hublet.demo` | +91 9324114275 | 1 BHK | ₹57.39 Lac – ₹77.37 Lac | 900 – 1800 sqft | Adyar, Tambaram, T. Nagar (+1) |
+| 34 | Karthik (Chennai) | `karthik.chennai@hublet.demo` | +91 9335499652 | 1 BHK | ₹31.74 Lac – ₹40.79 Lac | 1800 – 3500 sqft | Thoraipakkam, Tambaram, Chennai |
+| 35 | Neha (Mumbai) | `neha.mumbai@hublet.demo` | +91 9587267965 | 2 BHK | ₹1.82 Cr – ₹3.05 Cr | 600 – 1200 sqft | Juhu, Goregaon East, Powai (+1) |
+| 36 | Rohan (Mumbai) | `rohan.mumbai@hublet.demo` | +91 7125076041 | 3 BHK | ₹35.27 Lac – ₹47.58 Lac | 400 – 800 sqft | Worli, Goregaon East, Chembur (+1) |
+| 37 | Sneha (Mumbai) | `sneha.mumbai@hublet.demo` | +91 7673990251 | 1 BHK | ₹1.84 Cr – ₹2.15 Cr | 2500 – 5000 sqft | Powai, Borivali West, Worli (+1) |
+| 38 | Arjun (Mumbai) | `arjun.mumbai@hublet.demo` | +91 9001394280 | 3 BHK | ₹1.80 Cr – ₹2.77 Cr | 600 – 1200 sqft | Lower Parel, Bandra West, Juhu (+2) |
+| 39 | Priya (Mumbai) | `priya.mumbai@hublet.demo` | +91 9140290803 | 2 BHK | ₹3.96 Cr – ₹5.01 Cr | 400 – 800 sqft | Thane West, Worli, Juhu (+2) |
+| 40 | Aarav (Mumbai) | `aarav.mumbai@hublet.demo` | +91 8255480750 | 3 BHK | ₹1.13 Cr – ₹1.90 Cr | 1800 – 3500 sqft | Lower Parel, Thane West, Worli (+2) |
 
 <details><summary> Quick Login Emails (click to expand)</summary>
 
@@ -118,21 +116,19 @@ lavanya.hyderabad@hublet.demo
 aditya.hyderabad@hublet.demo
 swathi.hyderabad@hublet.demo
 rahul.hyderabad@hublet.demo
+ganesh.chennai@hublet.demo
 meera.chennai@hublet.demo
 prasad.chennai@hublet.demo
 anitha.chennai@hublet.demo
 surya.chennai@hublet.demo
 divya.chennai@hublet.demo
 karthik.chennai@hublet.demo
-vikram.mumbai@hublet.demo
 neha.mumbai@hublet.demo
 rohan.mumbai@hublet.demo
 sneha.mumbai@hublet.demo
 arjun.mumbai@hublet.demo
 priya.mumbai@hublet.demo
 aarav.mumbai@hublet.demo
-rachit.mehta@students.iiit.ac.in
-meow@gmail.com
 ```
 </details>
 
@@ -141,6 +137,6 @@ meow@gmail.com
 ##  Summary
 
 - **Total Sellers**: 12
-- **Total Buyers**: 42
-- **Total Properties**: 31
-- **Last Updated**: 10/3/2026, 5:27:45 pm
+- **Total Buyers**: 40
+- **Total Properties**: 22
+- **Last Updated**: 3/4/2026, 2:21:36 am
