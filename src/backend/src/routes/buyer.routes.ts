@@ -17,9 +17,9 @@ router.get('/localities-map', requireRoles('admin'), async (_req: Request, res: 
             select: { id: true, name: true, localities: true, metadata: true },
         });
 
-        // Collect unique localities
-        const localitySet = new Set<string>();
-        const buyerLocalities: Array<{ buyerName: string; locality: string }> = [];
+        // Collect points prioritizing metadata geocoding
+        const points: Array<{ buyerName: string; locality: string; lat: number; lon: number }> = [];
+        const localitiesToGeocode = new Set<string>();
 
         for (const b of buyers) {
             let locs: string[] = [];
@@ -29,15 +29,25 @@ router.get('/localities-map', requireRoles('admin'), async (_req: Request, res: 
             let meta: any = {};
             try { meta = b.metadata ? JSON.parse(b.metadata) : {}; } catch { }
 
-            for (const loc of locs) {
-                buyerLocalities.push({ buyerName: b.name, locality: loc });
-                localitySet.add(loc);
+            if (locs.length > 0) {
+                const primaryLocality = locs[0];
+                if (meta.coordinates && meta.coordinates.lat && meta.coordinates.lon) {
+                    points.push({
+                        buyerName: b.name,
+                        locality: primaryLocality,
+                        lat: meta.coordinates.lat,
+                        lon: meta.coordinates.lon,
+                    });
+                } else {
+                    localitiesToGeocode.add(primaryLocality);
+                    points.push({ buyerName: b.name, locality: primaryLocality, lat: 0, lon: 0 }); // Placeholder
+                }
             }
         }
 
-        // Geocode unique localities
+        // Live Geocode unique localities failing metadata fallback
         const geocoded: Record<string, { lat: number; lon: number }> = {};
-        for (const loc of localitySet) {
+        for (const loc of localitiesToGeocode) {
             try {
                 const result = await geocodeLocality(loc);
                 if (result) geocoded[loc] = result;
@@ -45,17 +55,16 @@ router.get('/localities-map', requireRoles('admin'), async (_req: Request, res: 
             } catch { }
         }
 
-        // Build response
-        const points = buyerLocalities
-            .filter((bl) => geocoded[bl.locality])
-            .map((bl) => ({
-                buyerName: bl.buyerName,
-                locality: bl.locality,
-                lat: geocoded[bl.locality].lat,
-                lon: geocoded[bl.locality].lon,
-            }));
+        // Merge live geocoded with placeholders
+        const finalPoints = points.map(p => {
+            if (p.lat !== 0) return p;
+            if (geocoded[p.locality]) {
+                return { ...p, lat: geocoded[p.locality].lat, lon: geocoded[p.locality].lon };
+            }
+            return null;
+        }).filter(p => p !== null);
 
-        res.json(points);
+        res.json(finalPoints);
     } catch (err: any) {
         res.status(500).json({ error: err.message });
     }

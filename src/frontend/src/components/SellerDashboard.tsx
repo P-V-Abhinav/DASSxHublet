@@ -19,6 +19,7 @@ interface Property {
     amenities: string[];
     isActive: boolean;
     createdAt: string;
+    metadata?: any;
 }
 
 interface Match {
@@ -148,7 +149,7 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
 
     return (
         <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <h1> Seller Dashboard - {sellerName}</h1>
+            <h1>Seller Dashboard — {sellerName}</h1>
 
             <button
                 onClick={() => setShowAddForm(!showAddForm)}
@@ -204,8 +205,8 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                             }}
                         >
                             <h3>{property.title}</h3>
-                            <p> {property.locality}</p>
-                            <p> {property.bhk} BHK | {property.area} sq ft</p>
+                            <p>{property.locality}</p>
+                            <p>{property.bhk} BHK | {property.area} sq ft</p>
                             <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#4CAF50' }}>
                                 ₹{(property.price / 100000).toFixed(2)} Lakhs
                             </p>
@@ -213,8 +214,18 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                 color: property.isActive ? 'green' : 'red',
                                 fontWeight: 'bold',
                             }}>
-                                {property.isActive ? '✓ Active' : '✗ Inactive'}
+                                {property.isActive ? 'Active' : 'Inactive'}
                             </p>
+                            {property.metadata?.coordinates?.lat && property.metadata?.coordinates?.lon && (
+                                <a
+                                    href={`https://www.openstreetmap.org/?mlat=${property.metadata.coordinates.lat}&mlon=${property.metadata.coordinates.lon}#map=16/${property.metadata.coordinates.lat}/${property.metadata.coordinates.lon}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: '#2196F3', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '10px' }}
+                                >
+                                    View on Map
+                                </a>
+                            )}
                             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                                 <button
                                     onClick={() => fetchMatchesForProperty(property.id)}

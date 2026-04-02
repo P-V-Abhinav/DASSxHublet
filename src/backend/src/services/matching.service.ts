@@ -20,7 +20,7 @@ export class MatchingService {
         minScore?: number;
         limit?: number;
     }) {
-        const minScore = options?.minScore || 50; // Default minimum score
+        const minScore = options?.minScore || 40; // Default minimum score
         const limit = options?.limit || 50;
 
         // Get buyer with intent
@@ -180,7 +180,7 @@ export class MatchingService {
         minScore?: number;
         limit?: number;
     }) {
-        const minScore = options?.minScore || 50;
+        const minScore = options?.minScore || 40;
         const limit = options?.limit || 50;
 
         // Get property

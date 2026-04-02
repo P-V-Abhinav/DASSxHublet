@@ -4,7 +4,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BuyerDashboard } from './components/BuyerDashboard';
 import { SellerDashboard } from './components/SellerDashboard';
 import { AuthPage } from './components/AuthPage';
-import PropertyExplorer from './components/PropertyExplorer';
+
 import { clearAuthSession, getAuthSession } from './api/client';
 
 function HomePage() {
@@ -30,7 +30,7 @@ function HomePage() {
                     width: '100%',
                 }}
             >
-                <h1 style={{ textAlign: 'center', marginBottom: '10px' }}> Hublet</h1>
+                <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>Hublet</h1>
                 <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
                     Real Estate Lead Matching Platform
                 </p>
@@ -85,25 +85,6 @@ function HomePage() {
                         Seller Login / Signup
                     </button>
 
-                    <div style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '5px' }}>
-                        <button
-                            onClick={() => navigate('/explore')}
-                            style={{
-                                width: '100%',
-                                padding: '14px 24px',
-                                background: 'linear-gradient(135deg, #00b4d8 0%, #0077b6 100%)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                fontSize: '15px',
-                                fontWeight: 'bold',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                            }}
-                        >
-                            🗺️ Explore Properties on Map
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -161,7 +142,7 @@ function AdminDashboardWrapper() {
                 }}
             >
                 <div>
-                    <h2 style={{ margin: 0 }}> Hublet</h2>
+                    <h2 style={{ margin: 0 }}>Hublet</h2>
                     <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
                         Logged in as: <strong>{user.email}</strong>
                     </p>
@@ -306,7 +287,7 @@ function App() {
         <Router>
             <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/explore" element={<PropertyExplorer />} />
+                <Route path="/explore" element={<Navigate to="/" replace />} />
                 <Route path="/auth/:userType" element={<AuthPageWrapper />} />
                 <Route path="/admin" element={<AdminDashboardWrapper />} />
                 <Route path="/buyer/:userId" element={<BuyerDashboardWrapper />} />

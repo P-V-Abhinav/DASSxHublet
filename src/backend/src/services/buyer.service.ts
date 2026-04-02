@@ -24,15 +24,41 @@ export class BuyerService {
     }) {
         let metadata = data.metadata || {};
 
-        // Geocode the first locality if coordinates not provided
-        if (!metadata.coordinates && data.localities && data.localities.length > 0) {
-            const geoResult = await forwardGeocode(data.localities[0]);
-            if (geoResult) {
-                metadata.coordinates = {
-                    lat: geoResult.lat,
-                    lon: geoResult.lon,
-                    displayName: geoResult.displayName,
-                };
+        // Geocode each locality and build localityCoords array (used by the matcher for
+        // distance-based scoring) as well as coordinates (the primary GPS pin for the map).
+        if (data.localities && data.localities.length > 0) {
+            const localityCoords: Array<{ name: string; lat: number; lon: number }> = [];
+
+            for (const loc of data.localities) {
+                // Skip if we already have a coord for this name
+                if (metadata.localityCoords?.some((c: any) => c.name === loc)) continue;
+                try {
+                    const geoResult = await forwardGeocode(loc);
+                    if (geoResult) {
+                        localityCoords.push({ name: loc, lat: geoResult.lat, lon: geoResult.lon });
+                    }
+                    // Nominatim rate-limit: 1 req/sec. Caller may also add delays between
+                    // buyers, but we guard here too.
+                    await new Promise(r => setTimeout(r, 1100));
+                } catch {
+                    // non-blocking – skip bad geocodes
+                }
+            }
+
+            if (localityCoords.length > 0) {
+                // localityCoords — array used by RuleBasedMatcher.scoreLocation()
+                metadata.localityCoords = [
+                    ...(metadata.localityCoords || []),
+                    ...localityCoords,
+                ];
+                // coordinates — single point used for map display (first result)
+                if (!metadata.coordinates) {
+                    metadata.coordinates = {
+                        lat: localityCoords[0].lat,
+                        lon: localityCoords[0].lon,
+                        displayName: localityCoords[0].name,
+                    };
+                }
             }
         }
 
@@ -54,6 +80,7 @@ export class BuyerService {
             },
         });
     }
+
 
     /**
      * Get buyer by ID

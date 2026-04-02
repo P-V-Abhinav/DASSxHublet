@@ -29,6 +29,7 @@ interface Buyer {
     areaMin?: number;
     areaMax?: number;
     amenities: string[];
+    metadata?: any;
     createdAt: string;
 }
 
@@ -42,6 +43,7 @@ interface Seller {
     ratingCount: number;
     completedDeals: number;
     trustScore: number;
+    metadata?: any;
     createdAt: string;
 }
 
@@ -70,6 +72,8 @@ interface Property {
         postedDate?: string;
         scrapedAt?: string;
         groupUrl?: string;
+        coordinates?: { lat: number; lon: number };
+        city?: string;
     };
     createdAt: string;
     seller: Seller;
@@ -304,7 +308,7 @@ export const AdminDashboard = () => {
                             const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`);
                             if (res.data.success) {
                                 setActionMessage(`[OK] ${res.data.message}`);
-                                if (activeTab === 'sellers') fetchData();
+                                fetchData();
                             } else {
                                 setActionMessage(`[ERR] ${res.data.error || 'Failed'}`);
                             }
@@ -350,7 +354,7 @@ export const AdminDashboard = () => {
                         fontSize: '13px',
                     }}
                 >
-                    {credentials ? 'X Hide Credentials' : 'View Credentials'}
+                    {credentials ? 'Hide Credentials' : 'View Credentials'}
                 </button>
             </div>
 
@@ -431,13 +435,13 @@ export const AdminDashboard = () => {
                                         try {
                                             const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-buyers`);
                                             if (res.data.success) {
-                                                setActionMessage(`✅ ${res.data.message}`);
+                                                setActionMessage(`[OK] ${res.data.message}`);
                                                 fetchData();
                                             } else {
-                                                setActionMessage(`❌ ${res.data.error || 'Failed'}`);
+                                                setActionMessage(`[ERR] ${res.data.error || 'Failed'}`);
                                             }
                                         } catch (err: any) {
-                                            setActionMessage(`❌ ${err.response?.data?.error || err.message}`);
+                                            setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`);
                                         } finally {
                                             setSeedingBuyers(false);
                                         }
@@ -454,23 +458,23 @@ export const AdminDashboard = () => {
                                         fontSize: '13px',
                                     }}
                                 >
-                                    {seedingBuyers ? '⏳ Seeding...' : '🌱 Seed Demo Buyers'}
+                                    {seedingBuyers ? 'Seeding...' : 'Seed Demo Buyers'}
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        if (!window.confirm('⚠️ Delete ALL buyers and their leads/matches?\n\nThis cannot be undone.')) return;
+                                        if (!window.confirm('Delete ALL buyers and their leads/matches?\n\nThis cannot be undone.')) return;
                                         setDeletingBuyers(true);
                                         setActionMessage(null);
                                         try {
                                             const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-buyers`);
                                             if (res.data.success) {
-                                                setActionMessage(`✅ ${res.data.message}`);
+                                                setActionMessage(`[OK] ${res.data.message}`);
                                                 fetchData();
                                             } else {
-                                                setActionMessage(`❌ ${res.data.error || 'Failed'}`);
+                                                setActionMessage(`[ERR] ${res.data.error || 'Failed'}`);
                                             }
                                         } catch (err: any) {
-                                            setActionMessage(`❌ ${err.response?.data?.error || err.message}`);
+                                            setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`);
                                         } finally {
                                             setDeletingBuyers(false);
                                         }
@@ -487,7 +491,7 @@ export const AdminDashboard = () => {
                                         fontSize: '13px',
                                     }}
                                 >
-                                    {deletingBuyers ? '⏳ Deleting...' : '🗑️ Delete All Buyers'}
+                                    {deletingBuyers ? 'Deleting...' : 'Delete All Buyers'}
                                 </button>
                             </div>
                         </div>
@@ -510,7 +514,16 @@ export const AdminDashboard = () => {
                                 <tbody>
                                     {buyers.map((buyer, idx) => (
                                         <tr key={buyer.id} style={{ background: idx % 2 === 0 ? '#f9f9f9' : 'white' }}>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold' }}>{buyer.name}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold' }}>
+                                                {buyer.name}
+                                                {buyer.metadata?.coordinates?.lat && buyer.metadata?.coordinates?.lon && (
+                                                    <div style={{ marginTop: '4px' }}>
+                                                        <a href={`https://www.openstreetmap.org/?mlat=${buyer.metadata.coordinates.lat}&mlon=${buyer.metadata.coordinates.lon}#map=16/${buyer.metadata.coordinates.lat}/${buyer.metadata.coordinates.lon}`} target="_blank" rel="noopener noreferrer" style={{ color: '#2196F3', textDecoration: 'none', fontSize: '12px' }}>
+                                                            Map
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '13px' }}>{buyer.email}</td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>{buyer.phone || 'N/A'}</td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd', maxWidth: '200px' }}>
@@ -568,13 +581,13 @@ export const AdminDashboard = () => {
                                         try {
                                             const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-sellers`);
                                             if (res.data.success) {
-                                                setActionMessage(`✅ ${res.data.message}`);
+                                                setActionMessage(`[OK] ${res.data.message}`);
                                                 fetchData();
                                             } else {
-                                                setActionMessage(`❌ ${res.data.error || 'Failed'}`);
+                                                setActionMessage(`[ERR] ${res.data.error || 'Failed'}`);
                                             }
                                         } catch (err: any) {
-                                            setActionMessage(`❌ ${err.response?.data?.error || err.message}`);
+                                            setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`);
                                         } finally {
                                             setSeedingSellers(false);
                                         }
@@ -591,23 +604,23 @@ export const AdminDashboard = () => {
                                         fontSize: '13px',
                                     }}
                                 >
-                                    {seedingSellers ? '⏳ Seeding...' : '🌱 Seed Demo Sellers'}
+                                    {seedingSellers ? 'Seeding...' : 'Seed Demo Sellers'}
                                 </button>
                                 <button
                                     onClick={async () => {
-                                        if (!window.confirm('⚠️ Delete ALL sellers, their properties, and related leads/matches?\n\nThis cannot be undone.')) return;
+                                        if (!window.confirm('Delete ALL sellers, their properties, and related leads/matches?\n\nThis cannot be undone.')) return;
                                         setDeletingSellers(true);
                                         setActionMessage(null);
                                         try {
                                             const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-sellers`);
                                             if (res.data.success) {
-                                                setActionMessage(`✅ ${res.data.message}`);
+                                                setActionMessage(`[OK] ${res.data.message}`);
                                                 fetchData();
                                             } else {
-                                                setActionMessage(`❌ ${res.data.error || 'Failed'}`);
+                                                setActionMessage(`[ERR] ${res.data.error || 'Failed'}`);
                                             }
                                         } catch (err: any) {
-                                            setActionMessage(`❌ ${err.response?.data?.error || err.message}`);
+                                            setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`);
                                         } finally {
                                             setDeletingSellers(false);
                                         }
@@ -624,7 +637,7 @@ export const AdminDashboard = () => {
                                         fontSize: '13px',
                                     }}
                                 >
-                                    {deletingSellers ? '⏳ Deleting...' : '🗑️ Delete All Sellers'}
+                                    {deletingSellers ? 'Deleting...' : 'Delete All Sellers'}
                                 </button>
                             </div>
                         </div>
@@ -647,7 +660,25 @@ export const AdminDashboard = () => {
                                 <tbody>
                                     {sellers.map((seller: any, idx: number) => (
                                         <tr key={seller.id} style={{ background: idx % 2 === 0 ? '#f9f9f9' : 'white' }}>
-                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold' }}>{seller.name}</td>
+                                            <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold' }}>
+                                                {seller.name}
+                                                {(() => {
+                                                    // Try property coords first, fall back to OSM city search
+                                                    const firstPropCoords = seller.properties?.[0]?.metadata?.coordinates;
+                                                    const city = seller.metadata?.city;
+                                                    const href = firstPropCoords
+                                                        ? `https://www.openstreetmap.org/?mlat=${firstPropCoords.lat}&mlon=${firstPropCoords.lon}#map=14/${firstPropCoords.lat}/${firstPropCoords.lon}`
+                                                        : city
+                                                            ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(city + ', India')}`
+                                                            : null;
+                                                    return href ? (
+                                                        <div style={{ marginTop: '4px' }}>
+                                                            <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#2196F3', textDecoration: 'none', fontSize: '12px' }}>Map</a>
+                                                        </div>
+                                                    ) : null;
+                                                })()
+                                                }
+                                            </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '13px' }}>{seller.email}</td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>{seller.phone || 'N/A'}</td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
@@ -735,7 +766,8 @@ export const AdminDashboard = () => {
                             <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
                                 <thead style={{ background: '#4CAF50', color: 'white' }}>
                                     <tr>
-                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}></th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Img</th>
+                                        <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Map</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Title</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Locality</th>
                                         <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Type</th>
@@ -759,6 +791,17 @@ export const AdminDashboard = () => {
                                                 ) : (
                                                     <div style={{ width: '48px', height: '48px', background: '#eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}></div>
                                                 )}
+                                            </td>
+                                            <td style={{ padding: '6px', border: '1px solid #ddd', width: '36px' }}>
+                                                {property.metadata?.coordinates?.lat && property.metadata?.coordinates?.lon ? (
+                                                    <a
+                                                        href={`https://www.openstreetmap.org/?mlat=${property.metadata.coordinates.lat}&mlon=${property.metadata.coordinates.lon}#map=16/${property.metadata.coordinates.lat}/${property.metadata.coordinates.lon}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{ color: '#1976D2', fontSize: '13px', textDecoration: 'none', fontWeight: 'bold' }}
+                                                        title="View on OpenStreetMap"
+                                                    >Map</a>
+                                                ) : <span style={{ color: '#ccc', fontSize: '12px' }}>—</span>}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd', maxWidth: '250px' }}>
                                                 <strong>{property.title}</strong>

@@ -1,7 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import BuyerForm from './BuyerForm';
-import PropertyExplorer from './PropertyExplorer';
+import MapSearchBar from './MapSearchBar';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
@@ -26,6 +35,7 @@ interface Match {
         price: number;
         amenities: string[];
         propertyType: string;
+        metadata?: any;
         seller: {
             id: string;
             name: string;
@@ -61,6 +71,11 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
     const [showForm, setShowForm] = useState(true);
     const [buyerPrefs, setBuyerPrefs] = useState<BuyerPrefs | null>(null);
     const [activeTab, setActiveTab] = useState<'matches' | 'map'>('matches');
+    const [allProperties, setAllProperties] = useState<any[]>([]);
+
+    // Map refs
+    const buyerMapRef = useRef<HTMLDivElement>(null);
+    const buyerMapInstance = useRef<L.Map | null>(null);
 
     const fetchBuyerPrefs = async () => {
         try {
@@ -88,6 +103,79 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
         fetchMatches();
         fetchBuyerPrefs();
     }, [buyerId]);
+
+    // Fetch all properties when map tab is opened
+    useEffect(() => {
+        if (activeTab === 'map' && allProperties.length === 0) {
+            axios.get(`${API_BASE_URL}/properties`).then(res => {
+                setAllProperties(res.data || []);
+            }).catch(() => { });
+        }
+    }, [activeTab]);
+
+    // Build and update the colour-coded map whenever tab is active and data is ready
+    useEffect(() => {
+        if (activeTab !== 'map') return;
+
+        const el = buyerMapRef.current;
+        if (!el) return;
+
+        const matchedIds = new Set(matches.map(m => m.property.id));
+
+        // Destroy previous instance if data changed
+        if (buyerMapInstance.current) {
+            buyerMapInstance.current.remove();
+            buyerMapInstance.current = null;
+        }
+
+        const map = L.map(el).setView([20.5937, 78.9629], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19,
+        }).addTo(map);
+        buyerMapInstance.current = map;
+
+        const bounds: [number, number][] = [];
+
+        const propsWithCoords = allProperties.filter((p: any) => {
+            const meta = typeof p.metadata === 'string' ? JSON.parse(p.metadata || '{}') : (p.metadata || {});
+            return meta?.coordinates?.lat && meta?.coordinates?.lon;
+        });
+
+        propsWithCoords.forEach((p: any) => {
+            const meta = typeof p.metadata === 'string' ? JSON.parse(p.metadata || '{}') : (p.metadata || {});
+            const lat = meta.coordinates.lat;
+            const lon = meta.coordinates.lon;
+            const isMatch = matchedIds.has(p.id);
+
+            const color = isMatch ? '#1565C0' : '#9E9E9E';
+            const label = isMatch ? 'M' : 'P';
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="background:${color};width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);color:white;font-size:10px;font-weight:bold;">${label}</span></div>`,
+                iconSize: [26, 26],
+                iconAnchor: [13, 26],
+                popupAnchor: [0, -28],
+            });
+
+            const priceStr = p.price >= 10000000
+                ? `Rs ${(p.price / 10000000).toFixed(2)} Cr`
+                : p.price >= 100000
+                    ? `Rs ${(p.price / 100000).toFixed(1)} L`
+                    : `Rs ${p.price?.toLocaleString('en-IN')}`;
+
+            const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`;
+
+            L.marker([lat, lon], { icon })
+                .bindPopup(`<div style="min-width:190px;"><h4 style="margin:0 0 4px;color:#333;">${p.title}</h4><p style="margin:2px 0;font-size:12px;color:#555;">${p.locality}</p><p style="margin:2px 0;font-size:12px;">${p.bhk} BHK | ${p.area} sqft</p><p style="margin:4px 0;font-size:14px;font-weight:bold;color:#2e7d32;">${priceStr}</p>${isMatch ? '<span style="background:#1565C0;color:white;font-size:10px;padding:2px 7px;border-radius:10px;">Matched</span>' : ''}<br/><a href="${osmUrl}" target="_blank" rel="noopener" style="color:#1976D2;font-size:12px;">View on OSM</a></div>`)
+                .addTo(map);
+            bounds.push([lat, lon]);
+        });
+
+        if (bounds.length > 0) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+
+        return () => { map.remove(); buyerMapInstance.current = null; };
+    }, [activeTab, allProperties, matches]);
 
     const fetchMatches = async () => {
         setLoading(true);
@@ -324,10 +412,21 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                         {match.property.locality}
                                     </p>
 
+                                    {match.property.metadata?.coordinates?.lat && match.property.metadata?.coordinates?.lon && (
+                                        <a
+                                            href={`https://www.openstreetmap.org/?mlat=${match.property.metadata.coordinates.lat}&mlon=${match.property.metadata.coordinates.lon}#map=16/${match.property.metadata.coordinates.lat}/${match.property.metadata.coordinates.lon}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{ color: '#2196F3', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '10px' }}
+                                        >
+                                            View on Map
+                                        </a>
+                                    )}
+
                                     <div style={{ display: 'flex', gap: '15px', margin: '12px 0' }}>
-                                        <span style={{ fontSize: '14px' }}> {match.property.bhk} BHK</span>
-                                        <span style={{ fontSize: '14px' }}> {match.property.area} sq.ft</span>
-                                        <span style={{ fontSize: '14px' }}> {match.property.propertyType}</span>
+                                        <span style={{ fontSize: '14px' }}>{match.property.bhk} BHK</span>
+                                        <span style={{ fontSize: '14px' }}>{match.property.area} sq.ft</span>
+                                        <span style={{ fontSize: '14px' }}>{match.property.propertyType}</span>
                                     </div>
 
                                     <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#4CAF50', margin: '12px 0' }}>
@@ -365,7 +464,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                             {match.locationScore !== undefined && (
                                                 <div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}> Location</span>
+                                                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>Location</span>
                                                         <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.locationScore >= 75 ? '#16a34a' : match.locationScore >= 40 ? '#d97706' : '#dc2626' }}>
                                                             {match.locationScore}%
                                                         </span>
@@ -407,7 +506,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                                 return (
                                                     <div>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                                            <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}> Budget</span>
+                                                            <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>Budget</span>
                                                             <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.budgetScore >= 75 ? '#16a34a' : match.budgetScore >= 40 ? '#d97706' : '#dc2626' }}>
                                                                 {match.budgetScore}%
                                                             </span>
@@ -458,7 +557,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                                 return (
                                                     <div>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                                            <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}> Size</span>
+                                                            <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>Size</span>
                                                             <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.sizeScore >= 75 ? '#16a34a' : match.sizeScore >= 40 ? '#d97706' : '#dc2626' }}>
                                                                 {match.sizeScore}%
                                                             </span>
@@ -514,7 +613,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                             {match.amenitiesScore !== undefined && (
                                                 <div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}> Amenities</span>
+                                                        <span style={{ fontSize: '12px', color: '#555', fontWeight: '600' }}>Amenities</span>
                                                         <span style={{ fontSize: '12px', fontWeight: 'bold', color: match.amenitiesScore >= 75 ? '#16a34a' : match.amenitiesScore >= 40 ? '#d97706' : '#dc2626' }}>
                                                             {match.amenitiesScore}%
                                                         </span>
@@ -598,8 +697,15 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
             )}
 
             {activeTab === 'map' && (
-                <div style={{ marginTop: '20px' }}>
-                    <PropertyExplorer />
+                <div style={{ marginTop: '10px' }}>
+                    <div style={{ marginBottom: '10px' }}>
+                        <MapSearchBar map={buyerMapInstance.current} placeholder="Search for a location on the map..." />
+                    </div>
+                    <div style={{ display: 'flex', gap: '18px', marginBottom: '10px', fontSize: '13px', background: 'white', padding: '8px 14px', borderRadius: '6px', border: '1px solid #e0e0e0', width: 'fit-content' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ background: '#1565C0', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>M</span> Matched Properties</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ background: '#9E9E9E', color: 'white', borderRadius: '50%', width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 'bold' }}>P</span> Other Properties</span>
+                    </div>
+                    <div ref={buyerMapRef} style={{ height: '560px', borderRadius: '8px', border: '1px solid #ddd' }} />
                 </div>
             )}
         </div>
