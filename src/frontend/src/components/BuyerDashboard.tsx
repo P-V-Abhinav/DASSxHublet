@@ -423,6 +423,27 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                         </a>
                                     )}
 
+                                    {match.property.metadata?.nearbyPlaces && (
+                                        <div style={{ background: '#f0f7ff', border: '1px solid #c5ddf8', borderRadius: '6px', padding: '8px 12px', marginBottom: '10px', fontSize: '12px' }}>
+                                            <div style={{ fontWeight: 'bold', color: '#1565C0', marginBottom: '4px' }}>Nearby Places</div>
+                                            {(['airport', 'busStation', 'trainStation', 'hospital'] as const).map(key => {
+                                                const labels: Record<string, string> = { airport: 'Airport', busStation: 'Bus Station', trainStation: 'Train / Metro', hospital: 'Hospital' };
+                                                const poi = (match.property.metadata.nearbyPlaces as any)[key];
+                                                if (!poi) return null;
+                                                return (
+                                                    <div key={key} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                                        <span><strong>{labels[key]}:</strong> {poi.name}</span>
+                                                        <span style={{ color: '#666', marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                                                            {poi.distanceKm} km{' '}
+                                                            <a href={poi.osmUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2196F3', textDecoration: 'none' }}>Map</a>
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+
                                     <div style={{ display: 'flex', gap: '15px', margin: '12px 0' }}>
                                         <span style={{ fontSize: '14px' }}>{match.property.bhk} BHK</span>
                                         <span style={{ fontSize: '14px' }}>{match.property.area} sq.ft</span>

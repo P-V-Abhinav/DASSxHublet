@@ -1,6 +1,7 @@
 import prisma from '../db/prisma';
 import { Prisma } from '@prisma/client';
 import { forwardGeocode } from '../utils/geocoder';
+import { fetchNearbyPlaces } from '../utils/nearby-places';
 
 export class PropertyService {
     /**
@@ -34,6 +35,31 @@ export class PropertyService {
                 }
             } catch (err) {
                 console.error('[PropertyService] Geocoding failed (non-blocking):', err);
+            }
+        }
+
+        // After we have coordinates, fetch nearby POIs via Overpass API (non-blocking).
+        // Skip if already fetched (e.g. coordinates came from metadata directly).
+        if (mergedMetadata.coordinates && !mergedMetadata.nearbyPlaces) {
+            try {
+                const { lat, lon } = mergedMetadata.coordinates;
+                mergedMetadata.nearbyPlaces = await fetchNearbyPlaces(lat, lon);
+                console.log(
+                    `[PropertyService] Nearby POIs fetched for (${lat}, ${lon}):`,
+                    [
+                        mergedMetadata.nearbyPlaces.airport
+                            ? `Airport: ${mergedMetadata.nearbyPlaces.airport.name} (${mergedMetadata.nearbyPlaces.airport.distanceKm} km)`
+                            : 'No airport found',
+                        mergedMetadata.nearbyPlaces.busStation
+                            ? `Bus: ${mergedMetadata.nearbyPlaces.busStation.name} (${mergedMetadata.nearbyPlaces.busStation.distanceKm} km)`
+                            : 'No bus station found',
+                        mergedMetadata.nearbyPlaces.trainStation
+                            ? `Train: ${mergedMetadata.nearbyPlaces.trainStation.name} (${mergedMetadata.nearbyPlaces.trainStation.distanceKm} km)`
+                            : 'No train station found',
+                    ].join(' | '),
+                );
+            } catch (err) {
+                console.error('[PropertyService] Nearby places lookup failed (non-blocking):', err);
             }
         }
 

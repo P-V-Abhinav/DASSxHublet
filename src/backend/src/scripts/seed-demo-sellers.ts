@@ -5,11 +5,15 @@
  * Each seller gets realistic properties and credentials.
  *
  * Password convention: first name (lowercase) — same as buyer seeder.
+ *
+ * Properties are created via PropertyService.createProperty which automatically:
+ *   1. Forward-geocodes the address to lat/lon (Nominatim)
+ *   2. Fetches nearby POIs (airport, bus stop, train station) via Overpass API
  */
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { forwardGeocode } from '../utils/geocoder';
+import { PropertyService } from '../services/property.service';
 
 const SALT_ROUNDS = 10;
 
@@ -168,41 +172,32 @@ export async function seedDemoSellers(prisma: PrismaClient): Promise<{
                 },
             });
 
-            // Create properties for this seller
+            // Create properties via PropertyService so geocoding + Overpass POI lookup runs automatically.
+            // PropertyService.createProperty will:
+            //   1. Forward-geocode the address via Nominatim → stores metadata.coordinates
+            //   2. Query Overpass API for nearest airport/bus/train → stores metadata.nearbyPlaces
             for (const prop of def.properties) {
-                // Geocode the address to get coordinates
-                let coordinates: { lat: number; lon: number } | null = null;
                 try {
-                    const geoResult = await forwardGeocode(prop.address);
-                    if (geoResult) {
-                        coordinates = { lat: geoResult.lat, lon: geoResult.lon };
-                    }
-                    // Rate limit: 1 req/sec for Nominatim
-                    await new Promise((resolve) => setTimeout(resolve, 1100));
-                } catch (err) {
-                    console.error(`[SeedSellers] Geocoding failed for ${prop.address}:`, err);
-                }
-
-                await prisma.property.create({
-                    data: {
+                    await PropertyService.createProperty({
+                        sellerId: createdSeller.id,
                         title: prop.title,
                         locality: prop.locality,
                         address: prop.address,
                         bhk: prop.bhk,
                         area: prop.area,
                         price: prop.price,
+                        amenities: prop.amenities,
                         propertyType: prop.propertyType,
-                        amenities: JSON.stringify(prop.amenities),
-                        sellerId: createdSeller.id,
-                        isActive: true,
-                        metadata: JSON.stringify({
+                        metadata: {
                             source: 'demo-seeder',
                             city,
                             seededAt: new Date().toISOString(),
-                            ...(coordinates ? { coordinates } : {}),
-                        }),
-                    },
-                });
+                        },
+                    });
+                    console.log(`[SeedSellers] Created property with geocoding + POI: ${prop.title}`);
+                } catch (err) {
+                    console.error(`[SeedSellers] Failed to create property "${prop.title}":`, err);
+                }
             }
 
             created++;

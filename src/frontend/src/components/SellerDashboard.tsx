@@ -226,6 +226,32 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                     View on Map
                                 </a>
                             )}
+                            {property.metadata?.nearbyPlaces && (
+                                <div style={{ background: '#f9f9f9', border: '1px solid #eee', borderRadius: '6px', padding: '10px', marginBottom: '10px', fontSize: '13px' }}>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '6px', color: '#555' }}>Nearby Places</div>
+                                    {[
+                                        { key: 'airport', label: 'Airport', data: property.metadata.nearbyPlaces.airport },
+                                        { key: 'busStation', label: 'Bus Station', data: property.metadata.nearbyPlaces.busStation },
+                                        { key: 'trainStation', label: 'Train / Metro', data: property.metadata.nearbyPlaces.trainStation },
+                                        { key: 'hospital', label: 'Hospital', data: (property.metadata.nearbyPlaces as any).hospital },
+                                    ].map(({ key, label, data }) =>
+                                        data ? (
+                                            <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                                <span style={{ color: '#333' }}>
+                                                    <strong>{label}:</strong> {data.name}
+                                                </span>
+                                                <span style={{ marginLeft: '8px', whiteSpace: 'nowrap', color: '#777' }}>
+                                                    {data.distanceKm} km
+                                                    {' '}
+                                                    <a href={data.osmUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2196F3', textDecoration: 'none' }}>Map</a>
+                                                </span>
+                                            </div>
+                                        ) : null
+                                    )}
+                                </div>
+                            )}
+
+
                             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                                 <button
                                     onClick={() => fetchMatchesForProperty(property.id)}

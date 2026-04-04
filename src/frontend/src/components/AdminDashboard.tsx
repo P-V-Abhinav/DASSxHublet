@@ -74,6 +74,13 @@ interface Property {
         groupUrl?: string;
         coordinates?: { lat: number; lon: number };
         city?: string;
+        nearbyPlaces?: {
+            fetchedAt?: string;
+            airport?: { name: string; distanceKm: number; lat: number; lon: number; osmUrl: string };
+            busStation?: { name: string; distanceKm: number; lat: number; lon: number; osmUrl: string };
+            trainStation?: { name: string; distanceKm: number; lat: number; lon: number; osmUrl: string };
+            hospital?: { name: string; distanceKm: number; lat: number; lon: number; osmUrl: string };
+        };
     };
     createdAt: string;
     seller: Seller;
@@ -820,7 +827,49 @@ export const AdminDashboard = () => {
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {property.locality}
                                                 {property.metadata?.landmark && <div style={{ fontSize: '11px', color: '#666' }}> {property.metadata.landmark}</div>}
+                                                {property.metadata?.nearbyPlaces && (
+                                                    <div style={{ marginTop: '5px', fontSize: '11px', color: '#555', lineHeight: '1.7' }}>
+                                                        {property.metadata.nearbyPlaces.airport && (
+                                                            <div>
+                                                                <span style={{ fontWeight: 'bold' }}>Airport:</span>{' '}
+                                                                <a href={property.metadata.nearbyPlaces.airport.osmUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#1976D2', textDecoration: 'none' }}>
+                                                                    {property.metadata.nearbyPlaces.airport.name}
+                                                                </a>{' '}
+                                                                <span style={{ color: '#999' }}>({property.metadata.nearbyPlaces.airport.distanceKm} km)</span>
+                                                            </div>
+                                                        )}
+                                                        {property.metadata.nearbyPlaces.busStation && (
+                                                            <div>
+                                                                <span style={{ fontWeight: 'bold' }}>Bus:</span>{' '}
+                                                                <a href={property.metadata.nearbyPlaces.busStation.osmUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#1976D2', textDecoration: 'none' }}>
+                                                                    {property.metadata.nearbyPlaces.busStation.name}
+                                                                </a>{' '}
+                                                                <span style={{ color: '#999' }}>({property.metadata.nearbyPlaces.busStation.distanceKm} km)</span>
+                                                            </div>
+                                                        )}
+                                                        {property.metadata.nearbyPlaces.trainStation && (
+                                                            <div>
+                                                                <span style={{ fontWeight: 'bold' }}>Train:</span>{' '}
+                                                                <a href={property.metadata.nearbyPlaces.trainStation.osmUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#1976D2', textDecoration: 'none' }}>
+                                                                    {property.metadata.nearbyPlaces.trainStation.name}
+                                                                </a>{' '}
+                                                                <span style={{ color: '#999' }}>({property.metadata.nearbyPlaces.trainStation.distanceKm} km)</span>
+                                                            </div>
+                                                        )}
+                                                        {property.metadata.nearbyPlaces.hospital && (
+                                                            <div>
+                                                                <span style={{ fontWeight: 'bold' }}>Hospital:</span>{' '}
+                                                                <a href={property.metadata.nearbyPlaces.hospital.osmUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#1976D2', textDecoration: 'none' }}>
+                                                                    {property.metadata.nearbyPlaces.hospital.name}
+                                                                </a>{' '}
+                                                                <span style={{ color: '#999' }}>({property.metadata.nearbyPlaces.hospital.distanceKm} km)</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
                                             </td>
+
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <span style={{ background: '#E3F2FD', color: '#1565C0', padding: '3px 8px', borderRadius: '4px', fontSize: '12px', textTransform: 'capitalize' }}>{property.propertyType}</span>
                                             </td>

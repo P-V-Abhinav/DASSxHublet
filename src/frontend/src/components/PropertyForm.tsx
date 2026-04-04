@@ -1,6 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { propertyApi, sellerApi } from '../api/client';
 import LocationPicker, { PickedLocation } from './LocationPicker';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
+interface NearbyPlace {
+    name: string;
+    distanceKm: number;
+    lat: number;
+    lon: number;
+    osmUrl: string;
+}
+
+interface NearbyPlaces {
+    airport?: NearbyPlace;
+    busStation?: NearbyPlace;
+    trainStation?: NearbyPlace;
+    hospital?: NearbyPlace;
+    fetchedAt?: string;
+}
 
 interface PropertyFormProps {
     onSuccess?: () => void;
@@ -8,6 +27,13 @@ interface PropertyFormProps {
     initialData?: any;
     isEditing?: boolean;
 }
+
+const POI_ROWS: Array<{ key: keyof NearbyPlaces; label: string; icon: string }> = [
+    { key: 'airport', label: 'Nearest Airport', icon: '✈' },
+    { key: 'busStation', label: 'Nearest Bus Station', icon: '🚌' },
+    { key: 'trainStation', label: 'Nearest Train / Metro', icon: '🚉' },
+    { key: 'hospital', label: 'Nearest Hospital', icon: '🏥' },
+];
 
 function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: PropertyFormProps = {}) {
     const [sellers, setSellers] = useState<any[]>([]);
@@ -30,24 +56,24 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
     const [showMap, setShowMap] = useState(false);
     const [pickedLocation, setPickedLocation] = useState<PickedLocation | null>(null);
 
+    // POI state — pre-seeded from initialData so edit mode shows existing POIs
+    const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlaces | null>(
+        initialData?.metadata?.nearbyPlaces || null,
+    );
+    const [poiLoading, setPoiLoading] = useState(false);
+    const poiFetchRef = useRef<AbortController | null>(null);
+
     useEffect(() => {
         if (fixedSellerId) {
-            setFormData((prev) => ({ ...prev, sellerId: fixedSellerId }));
+            setFormData(prev => ({ ...prev, sellerId: fixedSellerId }));
             return;
         }
-
-        // Load sellers for dropdown
-        const fetchSellers = async () => {
-            try {
-                const response = await sellerApi.getAll();
-                setSellers(response.data);
-            } catch (err) {
-                console.error('Failed to fetch sellers:', err);
-            }
-        };
-        fetchSellers();
+        sellerApi.getAll()
+            .then(r => setSellers(r.data))
+            .catch(err => console.error('Failed to fetch sellers:', err));
     }, [fixedSellerId]);
 
+    // ── submit ────────────────────────────────────────────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -57,14 +83,12 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
         try {
             const amenitiesArray = formData.amenities
                 .split(',')
-                .map((a) => a.trim())
-                .filter((a) => a.length > 0);
+                .map((a: string) => a.trim())
+                .filter((a: string) => a.length > 0);
 
-            // Build metadata with coordinates if map was used
             const metadata: any = {};
-            if (pickedLocation) {
-                metadata.coordinates = { lat: pickedLocation.lat, lon: pickedLocation.lon };
-            }
+            if (pickedLocation) metadata.coordinates = { lat: pickedLocation.lat, lon: pickedLocation.lon };
+            if (nearbyPlaces) metadata.nearbyPlaces = nearbyPlaces;
 
             const payload = {
                 ...formData,
@@ -75,9 +99,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
 
             let response;
             if (isEditing && initialData?.id) {
-                // Ensure existing metadata is preserved and merged
-                const mergedMetadata = { ...(initialData.metadata || {}), ...payload.metadata };
-                payload.metadata = mergedMetadata;
+                payload.metadata = { ...(initialData.metadata || {}), ...payload.metadata };
                 response = await propertyApi.update(initialData.id, payload);
                 setMessage('Property updated successfully!');
             } else {
@@ -85,25 +107,15 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                 setMessage(`Property created successfully! ID: ${response.data.id}`);
             }
 
-            // Call onSuccess callback if provided
-            if (onSuccess) {
-                onSuccess();
-            }
+            if (onSuccess) onSuccess();
 
             setFormData({
                 sellerId: fixedSellerId || formData.sellerId,
-                title: '',
-                description: '',
-                locality: '',
-                address: '',
-                area: 0,
-                bhk: 2,
-                price: 0,
-                amenities: '',
-                propertyType: 'apartment',
-                contact: '',
+                title: '', description: '', locality: '', address: '',
+                area: 0, bhk: 2, price: 0, amenities: '', propertyType: 'apartment', contact: '',
             });
             setPickedLocation(null);
+            setNearbyPlaces(null);
         } catch (err: any) {
             setError(err.response?.data?.error || 'Failed to create property');
         } finally {
@@ -111,24 +123,54 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
         }
     };
 
-    const handleLocationChange = (locations: PickedLocation[]) => {
-        if (locations.length > 0) {
-            const loc = locations[0]; // single mode, take first
-            setPickedLocation(loc);
-            setFormData((prev) => ({
-                ...prev,
-                locality: loc.name,
-                address: loc.address || prev.address,
-            }));
-        } else {
+    // ── map location change → fetch POIs ─────────────────────────────────────
+    const handleLocationChange = async (locations: PickedLocation[]) => {
+        if (locations.length === 0) {
             setPickedLocation(null);
+            setNearbyPlaces(null);
+            return;
+        }
+
+        const loc = locations[0];
+        setPickedLocation(loc);
+        setFormData(prev => ({
+            ...prev,
+            locality: loc.name,
+            address: loc.address || prev.address,
+        }));
+
+        // Abort in-flight fetch
+        if (poiFetchRef.current) poiFetchRef.current.abort();
+        poiFetchRef.current = new AbortController();
+
+        setPoiLoading(true);
+        setNearbyPlaces(null);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await axios.get(
+                `${API_BASE_URL}/properties/nearby-places?lat=${loc.lat}&lon=${loc.lon}`,
+                {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                    signal: poiFetchRef.current.signal,
+                },
+            );
+            setNearbyPlaces(res.data);
+        } catch (err: any) {
+            if (err?.name !== 'CanceledError' && err?.code !== 'ERR_CANCELED') {
+                console.error('[PropertyForm] POI fetch failed:', err);
+            }
+        } finally {
+            setPoiLoading(false);
         }
     };
 
+    // ── render ────────────────────────────────────────────────────────────────
     return (
         <div className="card">
-            <h2>Add Property Listing</h2>
+            <h2>{isEditing ? 'Edit Property' : 'Add Property Listing'}</h2>
             <form onSubmit={handleSubmit}>
+
+                {/* Seller selector */}
                 {fixedSellerId ? (
                     <div className="form-group">
                         <label>Seller *</label>
@@ -140,19 +182,15 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                         <select
                             required
                             value={formData.sellerId}
-                            onChange={(e) => setFormData({ ...formData, sellerId: e.target.value })}
+                            onChange={e => setFormData({ ...formData, sellerId: e.target.value })}
                         >
                             <option value="">Select a seller</option>
-                            {sellers.map((seller) => (
-                                <option key={seller.id} value={seller.id}>
-                                    {seller.name} ({seller.email})
-                                </option>
+                            {sellers.map(s => (
+                                <option key={s.id} value={s.id}>{s.name} ({s.email})</option>
                             ))}
                         </select>
                         {sellers.length === 0 && (
-                            <small style={{ color: '#ef4444' }}>
-                                No sellers found. Please create a seller first.
-                            </small>
+                            <small style={{ color: '#ef4444' }}>No sellers found. Please create a seller first.</small>
                         )}
                     </div>
                 )}
@@ -160,10 +198,9 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                 <div className="form-group">
                     <label>Title *</label>
                     <input
-                        type="text"
-                        required
+                        type="text" required
                         value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onChange={e => setFormData({ ...formData, title: e.target.value })}
                         placeholder="e.g., Spacious 2BHK in Indiranagar"
                     />
                 </div>
@@ -172,24 +209,18 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                     <label>Description</label>
                     <textarea
                         value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        onChange={e => setFormData({ ...formData, description: e.target.value })}
                         placeholder="Detailed property description..."
                     />
                 </div>
 
-                {/* Map-based Location Picker */}
-                <div style={{
-                    marginBottom: '15px',
-                    padding: '12px',
-                    background: '#f0fff4',
-                    borderRadius: '8px',
-                    border: '1px solid #c6f6d5'
-                }}>
+                {/* ── Map-based Location Picker ──────────────────────────────── */}
+                <div style={{ marginBottom: '15px', padding: '12px', background: '#f0fff4', borderRadius: '8px', border: '1px solid #c6f6d5' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                         <div>
-                            <label style={{ fontWeight: 'bold', margin: 0 }}>📍 Property Location</label>
+                            <label style={{ fontWeight: 'bold', margin: 0 }}>Property Location</label>
                             <p style={{ fontSize: '12px', color: '#666', margin: '2px 0 0 0' }}>
-                                Pick on the map for auto-fill, or type manually below
+                                Pin on map to auto-fill locality and nearby places, or type manually below
                             </p>
                         </div>
                         <button
@@ -198,15 +229,11 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                             style={{
                                 padding: '8px 16px',
                                 background: showMap ? '#e53e3e' : '#38a169',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: 'bold',
+                                color: 'white', border: 'none', borderRadius: '6px',
+                                cursor: 'pointer', fontSize: '13px', fontWeight: 'bold',
                             }}
                         >
-                            {showMap ? '✕ Hide Map' : '🗺️ Pick on Map'}
+                            {showMap ? 'Hide Map' : 'Pick on Map'}
                         </button>
                     </div>
 
@@ -225,19 +252,17 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                         <div className="form-group" style={{ margin: 0 }}>
                             <label>Locality *</label>
                             <input
-                                type="text"
-                                required
+                                type="text" required
                                 value={formData.locality}
-                                onChange={(e) => setFormData({ ...formData, locality: e.target.value })}
+                                onChange={e => setFormData({ ...formData, locality: e.target.value })}
                                 placeholder="e.g., Indiranagar"
                             />
                         </div>
-
                         <div className="form-group" style={{ margin: 0 }}>
                             <label>Property Type</label>
                             <select
                                 value={formData.propertyType}
-                                onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
+                                onChange={e => setFormData({ ...formData, propertyType: e.target.value })}
                             >
                                 <option value="apartment">Apartment</option>
                                 <option value="house">House</option>
@@ -248,12 +273,84 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                     </div>
                 </div>
 
+                {/* ── Nearby Places — always-visible read-only fields ──────── */}
+                <div style={{ marginBottom: '16px' }}>
+                    <div style={{
+                        fontWeight: 'bold', fontSize: '13px', color: '#1a3a5c',
+                        marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px',
+                    }}>
+                        Nearby Places
+                        {poiLoading && (
+                            <span style={{ fontWeight: 'normal', color: '#888', fontSize: '12px' }}>
+                                — searching OpenStreetMap…
+                            </span>
+                        )}
+                        {!pickedLocation && !poiLoading && (
+                            <span style={{ fontWeight: 'normal', color: '#aaa', fontSize: '12px' }}>
+                                — pin a location on the map above to auto-fill
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="form-row">
+                        {POI_ROWS.map(({ key, label, icon }) => {
+                            const poi = nearbyPlaces?.[key] as NearbyPlace | undefined;
+                            const isReady = !!poi;
+                            const isSearching = poiLoading && !poi;
+
+                            return (
+                                <div className="form-group" key={key} style={{ margin: '0 0 12px 0', position: 'relative' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <span>{icon}</span> {label}
+                                    </label>
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={isReady ? `${poi!.name}  (${poi!.distanceKm} km)` : ''}
+                                            placeholder={
+                                                isSearching ? 'Searching…' :
+                                                    !pickedLocation ? 'Auto-filled when map location is picked' :
+                                                        'Not found nearby'
+                                            }
+                                            style={{
+                                                background: isReady ? '#f0f7ff' : '#fafafa',
+                                                color: isReady ? '#1a3a5c' : '#aaa',
+                                                fontWeight: isReady ? '600' : 'normal',
+                                                cursor: isReady ? 'pointer' : 'default',
+                                                paddingRight: isReady ? '36px' : undefined,
+                                                border: isReady ? '1px solid #90cdf4' : '1px solid #e2e8f0',
+                                            }}
+                                            onClick={() => isReady && window.open(poi!.osmUrl, '_blank', 'noopener,noreferrer')}
+                                            title={isReady ? `Open ${poi!.name} on OpenStreetMap` : undefined}
+                                        />
+                                        {isSearching && (
+                                            <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: '#aaa' }}>
+                                                ⏳
+                                            </span>
+                                        )}
+                                        {isReady && (
+                                            <span
+                                                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: '#3182ce', cursor: 'pointer', fontWeight: 'bold' }}
+                                                onClick={() => window.open(poi!.osmUrl, '_blank', 'noopener,noreferrer')}
+                                                title="Open on OpenStreetMap"
+                                            >
+                                                ↗
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 <div className="form-group">
                     <label>Address</label>
                     <input
                         type="text"
                         value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        onChange={e => setFormData({ ...formData, address: e.target.value })}
                         placeholder="Full address"
                     />
                 </div>
@@ -262,24 +359,18 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                     <div className="form-group">
                         <label>Area (sq ft) *</label>
                         <input
-                            type="number"
-                            required
-                            min="0"
+                            type="number" required min="0"
                             value={formData.area}
-                            onChange={(e) => setFormData({ ...formData, area: parseInt(e.target.value) })}
+                            onChange={e => setFormData({ ...formData, area: parseInt(e.target.value) })}
                             placeholder="e.g., 1200"
                         />
                     </div>
-
                     <div className="form-group">
                         <label>BHK *</label>
                         <input
-                            type="number"
-                            required
-                            min="1"
-                            max="10"
+                            type="number" required min="1" max="10"
                             value={formData.bhk}
-                            onChange={(e) => setFormData({ ...formData, bhk: parseInt(e.target.value) })}
+                            onChange={e => setFormData({ ...formData, bhk: parseInt(e.target.value) })}
                         />
                     </div>
                 </div>
@@ -287,11 +378,9 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                 <div className="form-group">
                     <label>Price (₹) *</label>
                     <input
-                        type="number"
-                        required
-                        min="0"
+                        type="number" required min="0"
                         value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                        onChange={e => setFormData({ ...formData, price: parseFloat(e.target.value) })}
                         placeholder="e.g., 5000000 (50 lakhs)"
                     />
                 </div>
@@ -301,7 +390,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                     <input
                         type="text"
                         value={formData.amenities}
-                        onChange={(e) => setFormData({ ...formData, amenities: e.target.value })}
+                        onChange={e => setFormData({ ...formData, amenities: e.target.value })}
                         placeholder="e.g., parking, gym, swimming pool, garden"
                     />
                 </div>
@@ -311,7 +400,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                     <input
                         type="text"
                         value={formData.contact}
-                        onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                        onChange={e => setFormData({ ...formData, contact: e.target.value })}
                         placeholder="e.g., 9876543210 or John Doe"
                     />
                 </div>
@@ -321,10 +410,16 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                     <button type="submit" className="button" style={{ flex: 1 }} disabled={loading}>
-                        {loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Property' : 'Add Property')}
+                        {loading
+                            ? (isEditing ? 'Updating…' : 'Creating…')
+                            : (isEditing ? 'Update Property' : 'Add Property')}
                     </button>
                     {isEditing && (
-                        <button type="button" onClick={() => { if (onSuccess) onSuccess(); }} style={{ flex: 1, padding: '10px', background: '#ccc', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                        <button
+                            type="button"
+                            onClick={() => onSuccess && onSuccess()}
+                            style={{ flex: 1, padding: '10px', background: '#ccc', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
                             Cancel
                         </button>
                     )}

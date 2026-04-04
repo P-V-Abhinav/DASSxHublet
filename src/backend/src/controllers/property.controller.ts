@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PropertyService } from '../services/property.service';
 import { reverseGeocode as reverseGeocodeUtil } from '../utils/geocoder';
+import { fetchNearbyPlaces } from '../utils/nearby-places';
 
 export class PropertyController {
     /**
@@ -132,6 +133,23 @@ export class PropertyController {
                 return res.status(404).json({ error: 'Could not reverse geocode the given coordinates' });
             }
 
+            res.json(result);
+        } catch (error: any) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    /**
+     * Get nearby places (airport, bus, train, hospital) for given coordinates.
+     * GET /api/properties/nearby-places?lat=&lon=
+     */
+    static async getNearbyPlaces(req: Request, res: Response) {
+        try {
+            const { lat, lon } = req.query;
+            if (!lat || !lon) {
+                return res.status(400).json({ error: 'lat and lon query parameters are required' });
+            }
+            const result = await fetchNearbyPlaces(parseFloat(lat as string), parseFloat(lon as string));
             res.json(result);
         } catch (error: any) {
             res.status(500).json({ error: error.message });
