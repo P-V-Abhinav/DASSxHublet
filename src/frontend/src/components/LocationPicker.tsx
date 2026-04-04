@@ -90,26 +90,7 @@ export default function LocationPicker({
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
-            if (!res.ok) {
-                // Fallback: use Nominatim directly
-                const nomRes = await fetch(
-                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`,
-                    { headers: { 'User-Agent': 'Hublet-RealEstate/1.0' } }
-                );
-                if (!nomRes.ok) throw new Error('Reverse geocode failed');
-                const nomData = await nomRes.json();
-                const addr = nomData.address;
-                const locality =
-                    addr?.suburb || addr?.neighbourhood || addr?.city_district || addr?.city || addr?.town || addr?.village || 'Unknown';
-                const newLoc: PickedLocation = {
-                    name: locality,
-                    lat,
-                    lon,
-                    address: nomData.display_name,
-                };
-                handleAddLocation(newLoc, map);
-                return;
-            }
+            if (!res.ok) throw new Error('Reverse geocode failed');
 
             const data = await res.json();
             const newLoc: PickedLocation = {
@@ -194,26 +175,22 @@ export default function LocationPicker({
         if (!searchQuery.trim()) return;
         setLoading(true);
         try {
+            const token = localStorage.getItem('hublet_auth_token');
             const res = await fetch(
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}, India&format=json&addressdetails=1&limit=1`,
-                { headers: { 'User-Agent': 'Hublet-RealEstate/1.0' } }
+                `${API_BASE_URL}/properties/geocode?query=${encodeURIComponent(searchQuery)}`,
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            const results = await res.json();
-            if (results.length > 0) {
-                const r = results[0];
-                const addr = r.address;
-                const locality =
-                    addr?.suburb || addr?.neighbourhood || addr?.city_district || addr?.city || addr?.town || addr?.village || searchQuery;
-                const newLoc: PickedLocation = {
-                    name: locality,
-                    lat: parseFloat(r.lat),
-                    lon: parseFloat(r.lon),
-                    address: r.display_name,
-                };
-                if (mapRef.current) {
-                    mapRef.current.setView([newLoc.lat, newLoc.lon], 14);
-                    handleAddLocation(newLoc, mapRef.current);
-                }
+            if (!res.ok) throw new Error('Search failed');
+            const r = await res.json();
+            const newLoc: PickedLocation = {
+                name: r.locality || searchQuery,
+                lat: r.lat,
+                lon: r.lon,
+                address: r.displayName || r.address,
+            };
+            if (mapRef.current) {
+                mapRef.current.setView([newLoc.lat, newLoc.lon], 14);
+                handleAddLocation(newLoc, mapRef.current);
             }
         } catch (err) {
             console.error('Search error:', err);

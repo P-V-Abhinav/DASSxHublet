@@ -104,6 +104,8 @@ export const propertyApi = {
     getForMap: (params?: any) => api.get('/properties/map', { params }),
     reverseGeocode: (lat: number, lon: number) =>
         api.get('/properties/reverse-geocode', { params: { lat, lon } }),
+    getNearbyPlaces: (lat: number, lon: number, signal?: AbortSignal) =>
+        api.get('/properties/nearby-places', { params: { lat, lon }, signal }),
 };
 
 // Matching

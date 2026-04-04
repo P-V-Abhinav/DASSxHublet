@@ -10,6 +10,7 @@ const router = Router();
 
 router.post('/', requireRoles('admin', 'seller'), requirePropertyCreateAccess, PropertyController.createProperty);
 router.get('/map', requireRoles('admin', 'buyer', 'seller'), PropertyController.getPropertiesForMap);
+router.get('/geocode', requireRoles('admin', 'buyer', 'seller'), PropertyController.geocode);
 router.get('/reverse-geocode', requireRoles('admin', 'buyer', 'seller'), PropertyController.reverseGeocode);
 router.get('/nearby-places', requireRoles('admin', 'buyer', 'seller'), PropertyController.getNearbyPlaces);
 

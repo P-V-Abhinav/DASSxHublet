@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { PropertyService } from '../services/property.service';
-import { reverseGeocode as reverseGeocodeUtil } from '../utils/geocoder';
+import { forwardGeocode, reverseGeocode as reverseGeocodeUtil } from '../utils/geocoder';
 import { fetchNearbyPlaces } from '../utils/nearby-places';
 
 export class PropertyController {
@@ -140,6 +140,28 @@ export class PropertyController {
     }
 
     /**
+     * Forward geocode: query string → coordinates + address/locality
+     * GET /api/properties/geocode?query=
+     */
+    static async geocode(req: Request, res: Response) {
+        try {
+            const { query } = req.query;
+            if (!query) {
+                return res.status(400).json({ error: 'query parameter is required' });
+            }
+
+            const result = await forwardGeocode(query as string);
+            if (!result) {
+                return res.status(404).json({ error: 'Could not geocode the given query' });
+            }
+
+            res.json(result);
+        } catch (error: any) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    /**
      * Get nearby places (airport, bus, train, hospital) for given coordinates.
      * GET /api/properties/nearby-places?lat=&lon=
      */
@@ -152,7 +174,8 @@ export class PropertyController {
             const result = await fetchNearbyPlaces(parseFloat(lat as string), parseFloat(lon as string));
             res.json(result);
         } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            const message = error?.message || 'Nearby places lookup failed';
+            res.status(200).json({ fetchedAt: new Date().toISOString(), stale: true, error: message });
         }
     }
 

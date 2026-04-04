@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { propertyApi, sellerApi } from '../api/client';
 import LocationPicker, { PickedLocation } from './LocationPicker';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 interface NearbyPlace {
     name: string;
@@ -61,6 +58,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
         initialData?.metadata?.nearbyPlaces || null,
     );
     const [poiLoading, setPoiLoading] = useState(false);
+    const [poiError, setPoiError] = useState('');
     const poiFetchRef = useRef<AbortController | null>(null);
 
     useEffect(() => {
@@ -128,6 +126,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
         if (locations.length === 0) {
             setPickedLocation(null);
             setNearbyPlaces(null);
+            setPoiError('');
             return;
         }
 
@@ -145,23 +144,27 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
 
         setPoiLoading(true);
         setNearbyPlaces(null);
+        setPoiError('');
         try {
-            const token = localStorage.getItem('token');
-            const res = await axios.get(
-                `${API_BASE_URL}/properties/nearby-places?lat=${loc.lat}&lon=${loc.lon}`,
-                {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                    signal: poiFetchRef.current.signal,
-                },
+            const res = await propertyApi.getNearbyPlaces(
+                loc.lat,
+                loc.lon,
+                poiFetchRef.current.signal,
             );
             setNearbyPlaces(res.data);
         } catch (err: any) {
             if (err?.name !== 'CanceledError' && err?.code !== 'ERR_CANCELED') {
                 console.error('[PropertyForm] POI fetch failed:', err);
+                setPoiError('Could not load nearby places. Please try again in a moment.');
             }
         } finally {
             setPoiLoading(false);
         }
+    };
+
+    const handleRetryPoi = () => {
+        if (!pickedLocation) return;
+        handleLocationChange([pickedLocation]);
     };
 
     // ── render ────────────────────────────────────────────────────────────────
@@ -285,6 +288,30 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                                 — searching OpenStreetMap…
                             </span>
                         )}
+                        {!poiLoading && poiError && (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontWeight: 'normal', color: '#c53030', fontSize: '12px' }}>
+                                    — {poiError}
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleRetryPoi}
+                                    disabled={poiLoading}
+                                    style={{
+                                        padding: '2px 6px',
+                                        fontSize: '11px',
+                                        borderRadius: '4px',
+                                        border: '1px solid #feb2b2',
+                                        background: '#fff5f5',
+                                        color: '#c53030',
+                                        cursor: poiLoading ? 'not-allowed' : 'pointer',
+                                        opacity: poiLoading ? 0.7 : 1,
+                                    }}
+                                >
+                                    {poiLoading ? 'Retrying…' : 'Retry'}
+                                </button>
+                            </span>
+                        )}
                         {!pickedLocation && !poiLoading && (
                             <span style={{ fontWeight: 'normal', color: '#aaa', fontSize: '12px' }}>
                                 — pin a location on the map above to auto-fill
@@ -311,7 +338,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                                             placeholder={
                                                 isSearching ? 'Searching…' :
                                                     !pickedLocation ? 'Auto-filled when map location is picked' :
-                                                        'Not found nearby'
+                                                        (poiError ? 'Temporarily unavailable' : 'Not found nearby')
                                             }
                                             style={{
                                                 background: isReady ? '#f0f7ff' : '#fafafa',

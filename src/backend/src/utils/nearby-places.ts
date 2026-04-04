@@ -1,15 +1,19 @@
 /**
  * nearby-places.ts
  *
- * Queries the OpenStreetMap Overpass API to find the nearest points of interest
- * for a given lat/lon. Uses multi-strategy fallback queries to ensure results are
- * found even in smaller cities.
+ * Finds the nearest points of interest for a given lat/lon.
  *
- * POI categories:
- *   - Nearest airport (searched within 200 km via aerodrome tag)
- *   - Nearest bus station / major bus stop (within 30 km, with fallbacks)
- *   - Nearest railway / metro station (within 50 km, with fallbacks)
- *   - Nearest hospital (within 25 km, with fallbacks)
+ * Strategy (Rewritten 2026-04):
+ * To bypass rate limits (429/504) and ensure speed, we execute ONE single combined
+ * Overpass API query using the `around:` operator.
+ * 
+ * We search:
+ * - Airports within 80km
+ * - Train/Metro stations within 5km
+ * - Bus stations within 5km
+ * - Hospitals within 5km
+ * 
+ * We then parse the bulk results and find the closest of each type locally.
  */
 
 import { haversineDistance } from './haversine';
@@ -29,227 +33,191 @@ export interface NearbyPlaces {
     trainStation?: NearbyPlace;
     hospital?: NearbyPlace;
     fetchedAt: string;
+    source?: string;
+    stale?: boolean;
 }
 
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
-const USER_AGENT = 'Hublet-RealEstate/1.0 (contact@hublet.demo)';
+const UA = 'Hublet-RealEstate/1.0 (contact@hublet.demo)';
+const OVERPASS_ENDPOINTS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
+];
 
-interface OverpassElement {
-    type: 'node' | 'way' | 'relation';
-    id: number;
-    lat?: number;
-    lon?: number;
-    center?: { lat: number; lon: number };
-    tags?: Record<string, string>;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const nearbyCache = new Map<string, { data: NearbyPlaces; fetchedAt: number }>();
+const nearbyInFlight = new Map<string, Promise<NearbyPlaces>>();
+
+let overpassQueue: Promise<unknown> = Promise.resolve();
+let lastOverpassAt = 0;
+
+function cacheKey(lat: number, lon: number) {
+    return `${lat.toFixed(3)},${lon.toFixed(3)}`;
 }
 
-interface OverpassResponse {
-    elements: OverpassElement[];
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Run one Overpass API query and return parsed response.
- */
-async function runOverpassQuery(query: string): Promise<OverpassResponse | null> {
-    try {
-        const response = await fetch(OVERPASS_URL, {
+async function rateLimited<T>(fn: () => Promise<T>): Promise<T> {
+    const run = async () => {
+        const wait = Math.max(0, 1000 - (Date.now() - lastOverpassAt));
+        if (wait > 0) await sleep(wait);
+        const result = await fn();
+        lastOverpassAt = Date.now();
+        return result;
+    };
+
+    const next = overpassQueue.then(run, run);
+    overpassQueue = next.catch(() => undefined);
+    return next;
+}
+
+async function fetchOverpassOnce(endpoint: string, ql: string) {
+    return rateLimited(async () => {
+        const r = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'User-Agent': USER_AGENT,
-            },
-            body: `data=${encodeURIComponent(query)}`,
-            signal: AbortSignal.timeout(25_000),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA },
+            body: `data=${encodeURIComponent(ql)}`,
+            // @ts-ignore (Node 17+ AbortSignal)
+            signal: AbortSignal.timeout(20_000),
         });
 
-        if (!response.ok) {
-            const text = await response.text().catch(() => '');
-            console.error(`[NearbyPlaces] Overpass ${response.status}: ${text.slice(0, 200)}`);
-            return null;
+        if (!r.ok) {
+            const body = await r.text();
+            throw new Error(`Overpass HTTP ${r.status} at ${endpoint}: ${body}`);
         }
 
-        return (await response.json()) as OverpassResponse;
-    } catch (err: any) {
-        if (err?.name === 'TimeoutError') {
-            console.error('[NearbyPlaces] Overpass timeout');
-        } else {
-            console.error('[NearbyPlaces] Overpass request failed:', err);
-        }
-        return null;
-    }
+        return (await r.json()) as { elements: any[] };
+    });
 }
 
-/**
- * Find the nearest element from Overpass results to the reference point.
- * Prefers elements with actual names over generic refs.
- */
-function findNearest(
-    elements: OverpassElement[],
-    refLat: number,
-    refLon: number,
-    category?: string,
-): NearbyPlace | undefined {
-    let best: NearbyPlace | undefined;
-    let bestDist = Infinity;
-
-    for (const el of elements) {
-        const elLat = el.lat ?? el.center?.lat;
-        const elLon = el.lon ?? el.center?.lon;
-        if (elLat === undefined || elLon === undefined) continue;
-
-        const name =
-            el.tags?.['name:en'] ||
-            el.tags?.name ||
-            el.tags?.['official_name'] ||
-            el.tags?.['old_name'] ||
-            el.tags?.['iata'] ||
-            el.tags?.ref ||
-            'Unknown';
-
-        const dist = haversineDistance(refLat, refLon, elLat, elLon);
-
-        // Prefer named results: assign a small penalty to unknown names so a
-        // slightly-farther named result wins over an unnamed one at the same dist.
-        const effectiveDist = name === 'Unknown' ? dist + 0.5 : dist;
-
-        if (effectiveDist < bestDist) {
-            bestDist = effectiveDist;
-            best = {
-                name,
-                distanceKm: Math.round(dist * 10) / 10,
-                lat: elLat,
-                lon: elLon,
-                osmUrl: `https://www.openstreetmap.org/${el.type}/${el.id}`,
-                type: category,
-            };
-        }
-    }
-
-    return best;
-}
-
-/**
- * Build an Overpass QL union query for multiple filters at once.
- * Returns up to `limit` results with centre coordinates.
- */
-function buildUnionQuery(lat: number, lon: number, radiusM: number, filters: string[], limit = 20): string {
-    const parts = filters.flatMap(f => [
-        `node${f}(around:${radiusM},${lat},${lon});`,
-        `way${f}(around:${radiusM},${lat},${lon});`,
-        `relation${f}(around:${radiusM},${lat},${lon});`,
-    ]);
-    return `[out:json][timeout:25];\n(\n  ${parts.join('\n  ')}\n);\nout center ${limit};`;
-}
-
-/**
- * Try multiple query strategies for one POI category.
- * Stops as soon as at least one result is returned.
- */
-async function findNearestPOI(
-    lat: number,
-    lon: number,
-    strategies: Array<{ radiusM: number; filters: string[]; limit?: number }>,
-    category: string,
-): Promise<NearbyPlace | undefined> {
-    for (const strategy of strategies) {
-        const query = buildUnionQuery(lat, lon, strategy.radiusM, strategy.filters, strategy.limit ?? 20);
-        const data = await runOverpassQuery(query);
-        if (data?.elements?.length) {
-            const result = findNearest(data.elements, lat, lon, category);
-            if (result) {
-                console.log(`[NearbyPlaces] ${category}: ${result.name} @ ${result.distanceKm} km (radius ${strategy.radiusM / 1000} km)`);
-                return result;
-            }
-        }
-        // Small delay between fallback attempts
-        await new Promise(r => setTimeout(r, 300));
-    }
-    console.warn(`[NearbyPlaces] ${category}: no result found for (${lat}, ${lon})`);
-    return undefined;
-}
-
-/**
- * Fetch all nearby POIs for the given coordinates.
- * Makes 4 sequential POI lookups, each with multi-strategy fallback.
- * Total time: typically 4–12 seconds depending on Overpass load.
- */
 export async function fetchNearbyPlaces(lat: number, lon: number): Promise<NearbyPlaces> {
+    const now = Date.now();
+    const key = cacheKey(lat, lon);
+    const cached = nearbyCache.get(key);
+    if (cached && now - cached.fetchedAt <= CACHE_TTL_MS) {
+        console.log('[NearbyPlaces] cache hit', key);
+        return { ...cached.data, fetchedAt: new Date(cached.fetchedAt).toISOString() };
+    }
+
+    if (nearbyInFlight.has(key)) {
+        console.log('[NearbyPlaces] in-flight dedupe', key);
+        return nearbyInFlight.get(key)!;
+    }
+
     const result: NearbyPlaces = { fetchedAt: new Date().toISOString() };
 
-    // ── 1. Airport ────────────────────────────────────────────────────────────
-    result.airport = await findNearestPOI(lat, lon, [
-        {
-            radiusM: 80_000,
-            filters: ['["aeroway"="aerodrome"]["name"]'],
-        },
-        {
-            radiusM: 200_000,
-            filters: ['["aeroway"="aerodrome"]'],
-        },
-    ], 'airport');
+    const ql = `[out:json][timeout:25];
+(
+  // Airport (large radius - 80km)
+  node["aeroway"="aerodrome"](around:80000,${lat},${lon});
+  way["aeroway"="aerodrome"](around:80000,${lat},${lon});
+  
+  // Train/Metro (5km)
+  node["railway"="station"](around:5000,${lat},${lon});
+  node["railway"="halt"](around:5000,${lat},${lon});
+  node["station"="subway"](around:5000,${lat},${lon});
+  
+  // Bus (5km)
+  node["amenity"="bus_station"](around:5000,${lat},${lon});
+  way["amenity"="bus_station"](around:5000,${lat},${lon});
+  
+  // Hospital (5km)
+  node["amenity"="hospital"](around:5000,${lat},${lon});
+  way["amenity"="hospital"](around:5000,${lat},${lon});
+);
+out center;`;
 
-    await new Promise(r => setTimeout(r, 400));
+    const promise = (async () => {
+        try {
+            let data: { elements: any[] } | null = null;
+            let usedEndpoint: string | undefined;
 
-    // ── 2. Bus Station / Stop ────────────────────────────────────────────────
-    // Strategy: major bus_station first → bus_stop with name → any bus_stop → public_transport=stop_position
-    result.busStation = await findNearestPOI(lat, lon, [
-        {
-            radiusM: 10_000,
-            filters: ['["amenity"="bus_station"]["name"]'],
-        },
-        {
-            radiusM: 30_000,
-            filters: ['["amenity"="bus_station"]'],
-        },
-        {
-            radiusM: 5_000,
-            filters: ['["highway"="bus_stop"]["name"]', '["amenity"="bus_stop"]["name"]'],
-        },
-        {
-            radiusM: 15_000,
-            filters: ['["highway"="bus_stop"]', '["amenity"="bus_stop"]'],
-        },
-    ], 'bus');
+            for (let attempt = 0; attempt < 3 && !data; attempt++) {
+                for (const endpoint of OVERPASS_ENDPOINTS) {
+                    try {
+                        data = await fetchOverpassOnce(endpoint, ql);
+                        usedEndpoint = endpoint;
+                        break;
+                    } catch (err: any) {
+                        console.warn('[NearbyPlaces] Overpass failed', err.message);
+                    }
+                }
 
-    await new Promise(r => setTimeout(r, 400));
+                if (!data) {
+                    const delay = 1000 * Math.pow(2, attempt);
+                    await sleep(delay);
+                }
+            }
 
-    // ── 3. Railway / Metro Station ───────────────────────────────────────────
-    result.trainStation = await findNearestPOI(lat, lon, [
-        {
-            radiusM: 10_000,
-            filters: ['["railway"="station"]["name"]'],
-        },
-        {
-            radiusM: 50_000,
-            filters: ['["railway"="station"]'],
-        },
-        {
-            radiusM: 20_000,
-            filters: ['["railway"="halt"]["name"]', '["railway"="tram_stop"]["name"]', '["station"="subway"]["name"]'],
-        },
-        {
-            radiusM: 50_000,
-            filters: ['["railway"~"station|halt|tram_stop"]', '["station"="subway"]'],
-        },
-    ], 'train');
+            if (!data || !data.elements) {
+                console.warn('[NearbyPlaces] Overpass failed after retries', key);
+                if (cached) {
+                    return {
+                        ...cached.data,
+                        fetchedAt: new Date(cached.fetchedAt).toISOString(),
+                        stale: true,
+                    };
+                }
+                return { ...result, stale: true };
+            }
 
-    await new Promise(r => setTimeout(r, 400));
+        let bestAirportDist = Infinity, bestBusDist = Infinity;
+        let bestTrainDist = Infinity, bestHospDist = Infinity;
 
-    // ── 4. Hospital ──────────────────────────────────────────────────────────
-    result.hospital = await findNearestPOI(lat, lon, [
-        {
-            radiusM: 10_000,
-            filters: ['["amenity"="hospital"]["name"]'],
-        },
-        {
-            radiusM: 25_000,
-            filters: ['["amenity"="hospital"]'],
-        },
-        {
-            radiusM: 15_000,
-            filters: ['["amenity"~"hospital|clinic"]["name"]'],
-        },
-    ], 'hospital');
+        for (const el of data.elements) {
+            const eLat = el.lat ?? el.center?.lat;
+            const eLon = el.lon ?? el.center?.lon;
+            if (!eLat || !eLon) continue;
 
-    return result;
+            const name = el.tags?.name || el.tags?.['name:en'] || el.tags?.ref || '';
+            if (!name) continue; // Skip unnamed nodes
+
+            const dist = haversineDistance(lat, lon, eLat, eLon);
+            const distanceKm = Math.round(dist * 10) / 10;
+            const osmKind = el.type === 'way' ? 'way' : 'node';
+            const osmUrl = `https://www.openstreetmap.org/${osmKind}/${el.id}`;
+
+            const tags = el.tags || {};
+
+            // Categorize
+            if (tags.aeroway === 'aerodrome' && dist < bestAirportDist) {
+                bestAirportDist = dist;
+                result.airport = { name, distanceKm, lat: eLat, lon: eLon, osmUrl, type: 'airport' };
+            }
+            else if (tags.amenity === 'bus_station' && dist < bestBusDist) {
+                bestBusDist = dist;
+                result.busStation = { name, distanceKm, lat: eLat, lon: eLon, osmUrl, type: 'bus' };
+            }
+            else if ((tags.railway === 'station' || tags.railway === 'halt' || tags.station === 'subway') && dist < bestTrainDist) {
+                bestTrainDist = dist;
+                result.trainStation = { name, distanceKm, lat: eLat, lon: eLon, osmUrl, type: 'train' };
+            }
+            else if (tags.amenity === 'hospital' && dist < bestHospDist) {
+                bestHospDist = dist;
+                result.hospital = { name, distanceKm, lat: eLat, lon: eLon, osmUrl, type: 'hospital' };
+            }
+        }
+
+            result.source = usedEndpoint;
+            nearbyCache.set(key, { data: result, fetchedAt: now });
+            console.log('[NearbyPlaces] cache miss', key, 'stored');
+            return result;
+        } catch (err: any) {
+            console.error('[NearbyPlaces] Overpass error', err.message);
+            if (cached) {
+                return {
+                    ...cached.data,
+                    fetchedAt: new Date(cached.fetchedAt).toISOString(),
+                    stale: true,
+                };
+            }
+            return { ...result, stale: true };
+        } finally {
+            nearbyInFlight.delete(key);
+        }
+    })();
+
+    nearbyInFlight.set(key, promise);
+    return promise;
 }
