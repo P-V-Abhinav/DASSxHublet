@@ -25,16 +25,69 @@ interface Match { id: string; matchScore: number; locationScore?: number; budget
 interface WorkflowEvent { id: string; eventType: string; fromState?: string; toState?: string; description?: string; createdAt: string; }
 interface FbScrapedRow { TITLE: string; LOCALITY: string; TYPE: string; BHK: string; AREA: string; PRICE: string; AMENITIES: string; SELLER: string; STATUS: string; CREATED_AT: string; CONTACT: string; GROUP_URL: string; }
 
-type TabType = 'buyers' | 'sellers' | 'properties' | 'leads' | 'matches' | 'logs' | 'fb-scrape' | 'manual-scrape' | 'property-map' | 'buyer-map';
+type TabType = 'buyers' | 'sellers' | 'properties' | 'leads' | 'matches' | 'logs' | 'fb-scrape' | 'manual-scrape' | 'property-map' | 'buyer-map' | 'settings-profile' | 'settings-theme';
+
+const TAB_ICONS: Record<TabType, string> = {
+    buyers: '⊕', sellers: '⊗', properties: '⌂', leads: '⇌',
+    matches: '⊞', logs: '≡', 'property-map': '◎', 'buyer-map': '◉',
+    'manual-scrape': '⚙', 'fb-scrape': 'ƒ', 'settings-profile': '○', 'settings-theme': '◐',
+};
 
 const TAB_LABELS: Record<TabType, string> = {
     buyers: 'Buyers', sellers: 'Sellers', properties: 'Properties', leads: 'Leads',
-    matches: 'Matches', logs: 'Logs', 'property-map': 'Property Map', 'buyer-map': 'Buyer Map',
+    matches: 'Matches', logs: 'Event Logs', 'property-map': 'Property Map', 'buyer-map': 'Buyer Map',
     'manual-scrape': 'Manual Scrape', 'fb-scrape': 'FB Scrape',
+    'settings-profile': 'Profile', 'settings-theme': 'Theme',
 };
 
-export const AdminDashboard = () => {
+interface SidebarCategory { label: string; icon: string; tabs: TabType[]; }
+
+const SIDEBAR_CATEGORIES: SidebarCategory[] = [
+    { label: 'Data', icon: '', tabs: ['buyers', 'sellers', 'properties', 'leads', 'matches'] },
+    { label: 'Scrapers', icon: '', tabs: ['manual-scrape', 'fb-scrape'] },
+    { label: 'Maps', icon: '', tabs: ['property-map', 'buyer-map'] },
+    { label: 'Logs', icon: '', tabs: ['logs'] },
+    { label: 'Settings', icon: '', tabs: ['settings-profile', 'settings-theme'] },
+];
+
+interface SavedFbLink { label: string; url: string; }
+
+const SAVED_FB_LINKS_KEY = 'hublet_saved_fb_links';
+const THEME_KEY = 'hublet_theme';
+
+const loadSavedFbLinks = (): SavedFbLink[] => {
+    try { return JSON.parse(localStorage.getItem(SAVED_FB_LINKS_KEY) || '[]'); } catch { return []; }
+};
+const persistFbLinks = (links: SavedFbLink[]) => localStorage.setItem(SAVED_FB_LINKS_KEY, JSON.stringify(links));
+
+const loadTheme = (): 'light' | 'dark' => {
+    const t = localStorage.getItem(THEME_KEY);
+    if (t === 'dark' || t === 'light') return t;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+const getScoreClass = (score: number | undefined | null): string => {
+    if (score == null) return '';
+    if (score > 70) return 'm3-score-high';
+    if (score >= 30) return 'm3-score-mid';
+    return 'm3-score-low';
+};
+
+const getSellerRoleChipClass = (role?: string): string => {
+    switch (role?.toLowerCase()) {
+        case 'owner': return 'm3-chip m3-chip-role-owner';
+        case 'agent': return 'm3-chip m3-chip-role-agent';
+        case 'builder': return 'm3-chip m3-chip-role-builder';
+        default: return 'm3-chip m3-chip-role-individual';
+    }
+};
+
+export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onLogout: () => void }) => {
     const [activeTab, setActiveTab] = useState<TabType>('buyers');
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [theme, setTheme] = useState<'light' | 'dark'>(loadTheme);
+    const [savedFbLinks, setSavedFbLinks] = useState<SavedFbLink[]>(loadSavedFbLinks);
     const [buyers, setBuyers] = useState<Buyer[]>([]);
     const [sellers, setSellers] = useState<Seller[]>([]);
     const [properties, setProperties] = useState<Property[]>([]);
@@ -70,6 +123,28 @@ export const AdminDashboard = () => {
     const propertyMapInstance = useRef<L.Map | null>(null);
     const buyerMapRef = useRef<HTMLDivElement>(null);
     const buyerMapInstance = useRef<L.Map | null>(null);
+
+    // Theme effect
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem(THEME_KEY, theme);
+    }, [theme]);
+
+    // Saved FB links helpers
+    const addFbLink = (url: string, label: string) => {
+        const next = [...savedFbLinks, { url, label }];
+        setSavedFbLinks(next); persistFbLinks(next);
+    };
+    const removeFbLink = (idx: number) => {
+        const next = savedFbLinks.filter((_, i) => i !== idx);
+        setSavedFbLinks(next); persistFbLinks(next);
+    };
+
+    // Sidebar tab switch
+    const handleTabSwitch = (tab: TabType) => {
+        setActiveTab(tab);
+        setMobileOpen(false);
+    };
 
     useEffect(() => { fetchData(); if (activeTab === 'manual-scrape') fetchScrapers(); }, [activeTab]);
 
@@ -115,81 +190,121 @@ export const AdminDashboard = () => {
     };
 
     return (
-        <div className="m3-container">
-            {/* Tabs */}
-            <div className="m3-tabs" style={{ marginBottom: 20 }}>
-                {(Object.keys(TAB_LABELS) as TabType[]).map(tab => (
-                    <button key={tab} onClick={() => setActiveTab(tab)} className={`m3-tab ${activeTab === tab ? 'active' : ''}`}>
-                        {TAB_LABELS[tab]}
+        <div className="m3-dashboard-layout">
+            {/* Mobile top bar */}
+            <div className="m3-dashboard-mobile-bar">
+                <button className="m3-sidebar__toggle" onClick={() => setMobileOpen(true)}>☰</button>
+                <span className="md-title-medium" style={{ color: 'var(--md-sys-color-primary)' }}>Hublet</span>
+            </div>
+
+            {/* Sidebar scrim (mobile) */}
+            {mobileOpen && <div className="m3-sidebar-scrim" onClick={() => setMobileOpen(false)} />}
+
+            {/* Left sidebar */}
+            <aside className={`m3-sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileOpen ? 'open-mobile' : ''}`}>
+                <div className="m3-sidebar__header">
+                    <div className="m3-sidebar__brand">
+                        <span className="m3-sidebar__brand-icon">H</span>
+                        <span className="m3-sidebar__brand-text">Hublet</span>
+                    </div>
+                    <button className="m3-sidebar__toggle" onClick={() => setSidebarCollapsed(!sidebarCollapsed)}>
+                        {sidebarCollapsed ? '→' : '←'}
                     </button>
-                ))}
-            </div>
-
-            {loading && <p className="m3-loading">Loading...</p>}
-            {error && <div className="m3-alert m3-alert-error">Error: {error}</div>}
-
-            {/* Admin Tools Bar */}
-            <div className="m3-surface-container m3-flex m3-gap-sm m3-flex-wrap" style={{ alignItems: 'center', marginBottom: 20 }}>
-                <span className="md-label-large m3-text-primary" style={{ marginRight: 8 }}>Admin Tools:</span>
-                <button
-                    onClick={async () => {
-                        if (!window.confirm('Reset ALL seller trust scores, ratings, and deals to 0?\n\nThis cannot be undone.')) return;
-                        setResettingSellers(true); setActionMessage(null);
-                        try { const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error || 'Failed'}`); fetchData(); }
-                        catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); }
-                        finally { setResettingSellers(false); }
-                    }}
-                    disabled={resettingSellers}
-                    className="m3-btn m3-btn-error m3-btn-sm"
-                >{resettingSellers ? 'Resetting...' : 'Reset Seller Trust to 0'}</button>
-
-                <button
-                    onClick={async () => {
-                        if (credentials) { setCredentials(null); return; }
-                        try { const res = await axios.get(`${API_BASE_URL}/admin/seed/credentials`); setCredentials(res.data.credentials || []); }
-                        catch (err: any) { alert('Failed to fetch credentials: ' + (err.response?.data?.error || err.message)); }
-                    }}
-                    className="m3-btn m3-btn-tonal m3-btn-sm"
-                >{credentials ? 'Hide Credentials' : 'View Credentials'}</button>
-            </div>
-
-            {actionMessage && (
-                <div className={`m3-alert ${actionMessage.includes('[OK]') ? 'm3-alert-success' : 'm3-alert-error'}`}>
-                    {actionMessage}
                 </div>
-            )}
-
-            {/* Credentials */}
-            {credentials && (
-                <div className="m3-card m3-card-filled" style={{ background: 'var(--md-sys-color-inverse-surface)', color: 'var(--md-sys-color-inverse-on-surface)', marginBottom: 20, padding: 16 }}>
-                    <h3 className="md-title-medium" style={{ color: 'var(--md-sys-color-inverse-primary)', marginBottom: 12 }}>Stored Credentials ({credentials.length})</h3>
-                    <div className="m3-table-container" style={{ border: 'none' }}>
-                        <table className="m3-table" style={{ fontSize: 13 }}>
-                            <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-                                <th style={{ color: 'var(--md-sys-color-inverse-primary)' }}>Role</th>
-                                <th style={{ color: 'var(--md-sys-color-inverse-primary)' }}>Name</th>
-                                <th style={{ color: 'var(--md-sys-color-inverse-primary)' }}>Email</th>
-                                <th style={{ color: 'var(--md-sys-color-inverse-primary)' }}>Password</th>
-                                <th style={{ color: 'var(--md-sys-color-inverse-primary)' }}>Source</th>
-                                <th style={{ color: 'var(--md-sys-color-inverse-primary)' }}>Timestamp</th>
-                            </tr></thead>
-                            <tbody>{credentials.map((c: any, i: number) => (
-                                <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                                    <td><span className={`m3-chip ${c.role === 'admin' ? 'm3-chip-error' : c.role === 'buyer' ? 'm3-chip-success' : 'm3-chip-warning'}`} style={{ textTransform: 'uppercase', fontSize: 11 }}>{c.role}</span></td>
-                                    <td>{c.name}</td>
-                                    <td style={{ fontFamily: 'monospace' }}>{c.email}</td>
-                                    <td style={{ fontFamily: 'monospace' }}>{c.password}</td>
-                                    <td className="md-body-small">{c.source}</td>
-                                    <td className="md-body-small">{c.timestamp ? new Date(c.timestamp).toLocaleString() : '--'}</td>
-                                </tr>
-                            ))}</tbody>
-                        </table>
+                <nav className="m3-sidebar__nav">
+                    {SIDEBAR_CATEGORIES.map(cat => (
+                        <div key={cat.label} className="m3-sidebar__group">
+                            <div className="m3-sidebar__group-label">{cat.label}</div>
+                            {cat.tabs.map(tab => (
+                                <button
+                                    key={tab}
+                                    className={`m3-sidebar__item ${activeTab === tab ? 'active' : ''}`}
+                                    onClick={() => handleTabSwitch(tab)}
+                                >
+                                    <span className="m3-sidebar__item-icon">{TAB_ICONS[tab]}</span>
+                                    <span className="m3-sidebar__item-label">{TAB_LABELS[tab]}</span>
+                                </button>
+                            ))}
+                        </div>
+                    ))}
+                </nav>
+                <div className="m3-sidebar__footer">
+                    <div className="m3-sidebar__user">
+                        <div className="m3-sidebar__user-avatar">{userEmail.charAt(0).toUpperCase()}</div>
+                        <div className="m3-sidebar__user-info">
+                            <div className="md-label-medium" style={{ color: 'var(--md-sys-color-on-surface)' }}>{userEmail}</div>
+                            <div className="md-body-small m3-text-secondary">Admin</div>
+                        </div>
                     </div>
                 </div>
-            )}
+            </aside>
 
-            {/* ═════════════════════════════ TAB CONTENT ═════════════════════════════ */}
-            <div style={{ marginTop: 20 }}>
+            {/* Main content */}
+            <main className="m3-dashboard-main">
+              <div className="m3-container">
+                {loading && <p className="m3-loading">Loading...</p>}
+                {error && <div className="m3-alert m3-alert-error">Error: {error}</div>}
+
+                {/* Admin Tools (always visible except settings tabs) */}
+                {!activeTab.startsWith('settings-') && (
+                    <div className="m3-surface-container m3-flex m3-gap-sm m3-flex-wrap" style={{ alignItems: 'center', marginBottom: 20 }}>
+                        <span className="md-label-large m3-text-primary" style={{ marginRight: 8 }}>Admin Tools:</span>
+                        {activeTab === 'sellers' && (
+                            <button
+                                onClick={async () => {
+                                    if (!window.confirm('Reset ALL seller trust scores, ratings, and deals to 0?\n\nThis cannot be undone.')) return;
+                                    setResettingSellers(true); setActionMessage(null);
+                                    try { const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error || 'Failed'}`); fetchData(); }
+                                    catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); }
+                                    finally { setResettingSellers(false); }
+                                }}
+                                disabled={resettingSellers}
+                                className="m3-btn m3-btn-error m3-btn-sm"
+                            >{resettingSellers ? 'Resetting...' : 'Reset Seller Trust to 0'}</button>
+                        )}
+                        <button
+                            onClick={async () => {
+                                if (credentials) { setCredentials(null); return; }
+                                try { const res = await axios.get(`${API_BASE_URL}/admin/seed/credentials`); setCredentials(res.data.credentials || []); }
+                                catch (err: any) { alert('Failed to fetch credentials: ' + (err.response?.data?.error || err.message)); }
+                            }}
+                            className="m3-btn m3-btn-tonal m3-btn-sm"
+                        >{credentials ? 'Hide Credentials' : 'View Credentials'}</button>
+                    </div>
+                )}
+
+                {actionMessage && (
+                    <div className={`m3-alert ${actionMessage.includes('[OK]') ? 'm3-alert-success' : 'm3-alert-error'}`}>
+                        {actionMessage}
+                    </div>
+                )}
+
+                {/* Credentials — fixed white-on-white */}
+                {credentials && (
+                    <div className="m3-credential-card">
+                        <h3 className="md-title-medium" style={{ color: 'var(--md-sys-color-inverse-primary)', marginBottom: 12 }}>Stored Credentials ({credentials.length})</h3>
+                        <div className="m3-table-container">
+                            <table className="m3-table" style={{ fontSize: 13 }}>
+                                <thead><tr>
+                                    <th>Role</th><th>Name</th><th>Email</th><th>Password</th><th>Source</th><th>Timestamp</th>
+                                </tr></thead>
+                                <tbody>{credentials.map((c: any, i: number) => (
+                                    <tr key={i}>
+                                        <td><span className={`m3-chip ${c.role === 'admin' ? 'm3-chip-error' : c.role === 'buyer' ? 'm3-chip-success' : 'm3-chip-warning'}`} style={{ textTransform: 'uppercase', fontSize: 11 }}>{c.role}</span></td>
+                                        <td>{c.name}</td>
+                                        <td style={{ fontFamily: 'monospace' }}>{c.email}</td>
+                                        <td style={{ fontFamily: 'monospace' }}>{c.password}</td>
+                                        <td className="md-body-small">{c.source}</td>
+                                        <td className="md-body-small">{c.timestamp ? new Date(c.timestamp).toLocaleString() : '--'}</td>
+                                    </tr>
+                                ))}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* ═══════════════════ TAB CONTENT ═══════════════════ */}
+                <div className="m3-fade-in" key={activeTab}>
 
                 {/* ── BUYERS ────────────────────────── */}
                 {activeTab === 'buyers' && (
@@ -327,7 +442,7 @@ export const AdminDashboard = () => {
                                 <tbody>{leads.map((l: any) => (
                                     <tr key={l.id}>
                                         <td><strong>{l.buyer.name}</strong><br /><span className="md-body-small m3-text-secondary">{l.buyer.email}</span>{l.buyer.phone && <div className="md-body-small m3-text-secondary">📞 {l.buyer.phone}</div>}</td>
-                                        <td><strong>{l.property?.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{l.property?.seller?.email || ''}</span>{l.property?.seller?.sellerType && <div className="md-body-small m3-text-secondary" style={{ textTransform: 'capitalize' }}>{l.property.seller.sellerType}</div>}</td>
+                                        <td><strong>{l.property?.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{l.property?.seller?.email || ''}</span>{l.property?.seller?.sellerType && <div style={{ marginTop: 4 }}><span className={getSellerRoleChipClass(l.property.seller.sellerType)}>{l.property.seller.sellerType}</span></div>}</td>
                                         <td>{l.property.title}<br /><span className="md-body-small m3-text-secondary">{l.property.locality}</span>{l.property.bhk && <span className="md-body-small m3-text-secondary"> · {l.property.bhk} BHK</span>}{l.property.area && <span className="md-body-small m3-text-secondary"> · {l.property.area} sqft</span>}</td>
                                         <td style={{ fontWeight: 600 }} className="m3-text-success">{l.property.price ? fmtPrice(l.property.price) : '—'}</td>
                                         <td><span className={`m3-chip ${getStateChipClass(l.state)}`}>{l.state}</span></td>
@@ -353,13 +468,13 @@ export const AdminDashboard = () => {
                                 <tbody>{matches.map(m => (
                                     <tr key={m.id}>
                                         <td><strong>{m.buyer.name}</strong><br /><span className="md-body-small m3-text-secondary">{m.buyer.email}</span></td>
-                                        <td><strong>{m.property.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{m.property.seller?.email || ''}</span>{m.property.seller?.sellerType && <div className="md-body-small m3-text-secondary" style={{ textTransform: 'capitalize' }}>{m.property.seller.sellerType}</div>}</td>
+                                        <td><strong>{m.property.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{m.property.seller?.email || ''}</span>{m.property.seller?.sellerType && <div style={{ marginTop: 4 }}><span className={getSellerRoleChipClass(m.property.seller.sellerType)}>{m.property.seller.sellerType}</span></div>}</td>
                                         <td>{m.property.title}<br /><span className="md-body-small m3-text-secondary">{m.property.locality}</span></td>
                                         <td><strong style={{ color: getScoreColor(m.matchScore) }}>{m.matchScore.toFixed(1)}%</strong></td>
-                                        <td>{m.locationScore?.toFixed(1) || 'N/A'}%</td>
-                                        <td>{m.budgetScore?.toFixed(1) || 'N/A'}%</td>
-                                        <td>{m.sizeScore?.toFixed(1) || 'N/A'}%</td>
-                                        <td>{m.amenitiesScore?.toFixed(1) || 'N/A'}%</td>
+                                        <td><span className={getScoreClass(m.locationScore)}>{m.locationScore?.toFixed(1) || 'N/A'}%</span></td>
+                                        <td><span className={getScoreClass(m.budgetScore)}>{m.budgetScore?.toFixed(1) || 'N/A'}%</span></td>
+                                        <td><span className={getScoreClass(m.sizeScore)}>{m.sizeScore?.toFixed(1) || 'N/A'}%</span></td>
+                                        <td><span className={getScoreClass(m.amenitiesScore)}>{m.amenitiesScore?.toFixed(1) || 'N/A'}%</span></td>
                                         <td className="md-body-small">{fmt(m.createdAt)}</td>
                                     </tr>
                                 ))}</tbody>
@@ -433,6 +548,38 @@ export const AdminDashboard = () => {
                             <button onClick={async () => { setFbScraping(true); setFbError(null); setFbMessage(null); setFbResults([]); try { const res = await axios.get(`${API_BASE_URL}/admin/fb-load-csv`); if (res.data.success && Array.isArray(res.data.data)) { setFbResults(res.data.data); setFbMessage(`✓ Loaded ${res.data.data.length} listing(s) from CSV`); } else { setFbError('Unexpected response'); } } catch (err: any) { setFbError(err.response?.data?.error || err.message); } finally { setFbScraping(false); } }} disabled={fbScraping} className="m3-btn m3-btn-tonal">Load CSV</button>
                         </div>
 
+                        {/* Saved Links */}
+                        <div className="m3-surface-container-low" style={{ marginBottom: 16, padding: '12px 16px' }}>
+                            <div className="m3-flex-between" style={{ marginBottom: 8 }}>
+                                <span className="md-label-medium m3-text-secondary">💾 Saved Links</span>
+                                <button
+                                    onClick={() => {
+                                        if (!fbGroupUrl.trim()) return;
+                                        const label = prompt('Label for this link:', new URL(fbGroupUrl).pathname.split('/').pop() || 'Group');
+                                        if (label) addFbLink(fbGroupUrl.trim(), label);
+                                    }}
+                                    className="m3-btn m3-btn-tonal m3-btn-sm"
+                                    disabled={!fbGroupUrl.trim()}
+                                >Save Current URL</button>
+                            </div>
+                            {savedFbLinks.length === 0 ? (
+                                <span className="md-body-small m3-text-secondary">No saved links yet. Enter a URL above and click "Save Current URL".</span>
+                            ) : (
+                                <div className="m3-saved-links">
+                                    {savedFbLinks.map((link, idx) => (
+                                        <button key={idx} className="m3-saved-link-chip" onClick={() => setFbGroupUrl(link.url)} title={link.url}>
+                                            📘 {link.label}
+                                            <span
+                                                className="m3-saved-link-chip__delete"
+                                                onClick={(e) => { e.stopPropagation(); removeFbLink(idx); }}
+                                                title="Remove"
+                                            >✕</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
                         {fbError && <div className="m3-alert m3-alert-error">{fbError}</div>}
                         {fbMessage && <div className="m3-alert m3-alert-success">{fbMessage}</div>}
 
@@ -483,44 +630,103 @@ export const AdminDashboard = () => {
                         )}
                     </div>
                 )}
-            </div>
 
-            {/* Summary Stats */}
-            <div className="m3-surface-container" style={{ marginTop: 30, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, textAlign: 'center' }}>
-                {[
-                    { label: 'Buyers', count: buyers.length, color: 'var(--md-sys-color-primary)' },
-                    { label: 'Sellers', count: sellers.length, color: 'var(--md-sys-color-tertiary)' },
-                    { label: 'Properties', count: properties.length, color: 'var(--md-sys-color-warning)' },
-                    { label: 'Leads', count: leads.length, color: 'var(--md-sys-color-secondary)' },
-                    { label: 'Matches', count: matches.length, color: 'var(--md-sys-color-error)' },
-                    { label: 'Event Logs', count: logs.length, color: 'var(--md-sys-color-outline)' },
-                ].map(s => (
-                    <div key={s.label}>
-                        <h3 className="md-label-medium m3-text-secondary" style={{ marginBottom: 10 }}>{s.label}</h3>
-                        <p className="md-display-small" style={{ color: s.color }}>{s.count}</p>
+                {/* ── SETTINGS - PROFILE ──────────── */}
+                {activeTab === 'settings-profile' && (
+                    <div>
+                        <h2 className="md-title-large" style={{ marginBottom: 16 }}>Profile</h2>
+                        <div className="m3-settings-section">
+                            <div className="m3-card m3-card-outlined" style={{ padding: 24 }}>
+                                <div className="m3-flex m3-gap-md" style={{ alignItems: 'center', marginBottom: 20 }}>
+                                    <div className="m3-sidebar__user-avatar" style={{ width: 56, height: 56, fontSize: 24 }}>
+                                        {userEmail.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div className="md-title-medium">{userEmail}</div>
+                                        <div className="md-body-small m3-text-secondary">Administrator</div>
+                                    </div>
+                                </div>
+                                <div className="m3-settings-row">
+                                    <div><div className="md-label-large">Email</div><div className="md-body-medium m3-text-secondary">{userEmail}</div></div>
+                                </div>
+                                <div className="m3-settings-row">
+                                    <div><div className="md-label-large">Role</div><div className="md-body-medium m3-text-secondary">Admin</div></div>
+                                </div>
+                                <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--md-sys-color-outline-variant)' }}>
+                                    <button onClick={onLogout} className="m3-btn m3-btn-error-tonal" style={{ width: '100%' }}>Logout</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                ))}
-            </div>
+                )}
 
-            {/* Property Map Tab */}
-            {activeTab === 'property-map' && (
-                <div>
-                    <h2 className="md-title-large" style={{ marginBottom: 12 }}>All Properties Map</h2>
-                    <div style={{ marginBottom: 10 }}><MapSearchBar map={propertyMapInstance.current} placeholder="Search for a location..." /></div>
-                    <div ref={propertyMapRef} className="m3-map-container" style={{ height: 600 }} />
-                    <PropertyMapLoader mapRef={propertyMapRef} mapInstance={propertyMapInstance} activeTab={activeTab} />
-                </div>
-            )}
+                {/* ── SETTINGS - THEME ────────────── */}
+                {activeTab === 'settings-theme' && (
+                    <div>
+                        <h2 className="md-title-large" style={{ marginBottom: 16 }}>Theme</h2>
+                        <div className="m3-settings-section">
+                            <div className="m3-card m3-card-outlined" style={{ padding: 24 }}>
+                                <div className="m3-settings-row">
+                                    <div>
+                                        <div className="md-label-large">Dark Mode</div>
+                                        <div className="md-body-small m3-text-secondary">Toggle between light and dark theme</div>
+                                    </div>
+                                    <label className="m3-switch">
+                                        <input type="checkbox" checked={theme === 'dark'} onChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
+                                        <span className="m3-switch__track" />
+                                    </label>
+                                </div>
+                                <div className="m3-settings-row">
+                                    <div>
+                                        <div className="md-label-large">Current Theme</div>
+                                        <div className="md-body-small m3-text-secondary">{theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-            {/* Buyer Map Tab */}
-            {activeTab === 'buyer-map' && (
-                <div>
-                    <h2 className="md-title-large" style={{ marginBottom: 12 }}>Buyer Preferred Localities</h2>
-                    <div style={{ marginBottom: 10 }}><MapSearchBar map={buyerMapInstance.current} placeholder="Search for a location..." /></div>
-                    <div ref={buyerMapRef} className="m3-map-container" style={{ height: 600 }} />
-                    <BuyerMapLoader mapRef={buyerMapRef} mapInstance={buyerMapInstance} activeTab={activeTab} />
+                </div>{/* close m3-fade-in */}
+
+                {/* Summary Stats */}
+                <div className="m3-surface-container" style={{ marginTop: 30, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, textAlign: 'center' }}>
+                    {[
+                        { label: 'Buyers', count: buyers.length, color: 'var(--md-sys-color-primary)' },
+                        { label: 'Sellers', count: sellers.length, color: 'var(--md-sys-color-tertiary)' },
+                        { label: 'Properties', count: properties.length, color: 'var(--md-sys-color-warning)' },
+                        { label: 'Leads', count: leads.length, color: 'var(--md-sys-color-secondary)' },
+                        { label: 'Matches', count: matches.length, color: 'var(--md-sys-color-error)' },
+                        { label: 'Event Logs', count: logs.length, color: 'var(--md-sys-color-outline)' },
+                    ].map(s => (
+                        <div key={s.label}>
+                            <h3 className="md-label-medium m3-text-secondary" style={{ marginBottom: 10 }}>{s.label}</h3>
+                            <p className="md-display-small" style={{ color: s.color }}>{s.count}</p>
+                        </div>
+                    ))}
                 </div>
-            )}
+
+                {/* Property Map Tab */}
+                {activeTab === 'property-map' && (
+                    <div>
+                        <h2 className="md-title-large" style={{ marginBottom: 12 }}>All Properties Map</h2>
+                        <div style={{ marginBottom: 10 }}><MapSearchBar map={propertyMapInstance.current} placeholder="Search for a location..." /></div>
+                        <div ref={propertyMapRef} className="m3-map-container" style={{ height: 600 }} />
+                        <PropertyMapLoader mapRef={propertyMapRef} mapInstance={propertyMapInstance} activeTab={activeTab} />
+                    </div>
+                )}
+
+                {/* Buyer Map Tab */}
+                {activeTab === 'buyer-map' && (
+                    <div>
+                        <h2 className="md-title-large" style={{ marginBottom: 12 }}>Buyer Preferred Localities</h2>
+                        <div style={{ marginBottom: 10 }}><MapSearchBar map={buyerMapInstance.current} placeholder="Search for a location..." /></div>
+                        <div ref={buyerMapRef} className="m3-map-container" style={{ height: 600 }} />
+                        <BuyerMapLoader mapRef={buyerMapRef} mapInstance={buyerMapInstance} activeTab={activeTab} />
+                    </div>
+                )}
+              </div>{/* close m3-container */}
+            </main>
         </div>
     );
 };

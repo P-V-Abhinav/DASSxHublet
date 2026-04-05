@@ -62,10 +62,13 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
     const fetchProperties = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/properties`);
-            // Filter properties by seller
-            const sellerProps = response.data.filter((p: any) => p.sellerId === sellerId);
-            setProperties(sellerProps);
+            const [activeRes, soldRes] = await Promise.all([
+                axios.get(`${API_BASE_URL}/properties?isActive=true`),
+                axios.get(`${API_BASE_URL}/properties?isActive=false`),
+            ]);
+            const active = (activeRes.data || []).filter((p: any) => p.sellerId === sellerId);
+            const sold = (soldRes.data || []).filter((p: any) => p.sellerId === sellerId);
+            setProperties([...active, ...sold]);
         } catch (err) {
             console.error('Failed to fetch properties:', err);
         } finally {
@@ -136,6 +139,13 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
     const getScoreText = (score?: number | null) =>
         score !== null && score !== undefined ? `${score.toFixed(1)}%` : 'N/A';
 
+    const getScoreColor = (s: number) => s >= 70 ? 'var(--md-sys-color-success)' : s >= 40 ? 'var(--md-sys-color-warning)' : 'var(--md-sys-color-error)';
+
+    const [soldMessage, setSoldMessage] = useState<string | null>(null);
+
+    const activeProperties = properties.filter(p => p.isActive);
+    const soldProperties = properties.filter(p => !p.isActive);
+
     const selectedPropertyData = selectedProperty
         ? properties.find((property) => property.id === selectedProperty) || null
         : null;
@@ -168,12 +178,14 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                 </div>
             )}
 
-            <h2 className="md-title-large" style={{ marginBottom: 16 }}>Your Properties ({properties.length})</h2>
+            {soldMessage && <div className="m3-alert m3-alert-success" style={{ marginBottom: 16 }}>{soldMessage}</div>}
+
+            <h2 className="md-title-large" style={{ marginBottom: 16 }}>Active Properties ({activeProperties.length})</h2>
 
             {loading && <p className="m3-loading">Loading...</p>}
 
             <div className="m3-grid-cards">
-                {properties.map((property) => (
+                {activeProperties.map((property) => (
                     editingProperty === property.id ? (
                         <div key={property.id} className="m3-card m3-card-outlined" style={{ borderColor: 'var(--md-sys-color-primary)' }}>
                             <h3 className="md-title-medium" style={{ marginBottom: 16 }}>Edit Property</h3>
@@ -240,26 +252,50 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                 <button onClick={() => setEditingProperty(property.id)} className="m3-btn m3-btn-tonal m3-btn-sm" style={{ flex: 1 }}>
                                     Edit
                                 </button>
-                                {property.isActive && (
-                                    <button
-                                        onClick={async () => {
-                                            if (window.confirm('Are you sure you want to mark this property as sold and remove it from active listings?')) {
-                                                await axios.put(`${API_BASE_URL}/properties/${property.id}/mark-sold`, {}, {
-                                                    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-                                                });
-                                                fetchProperties();
-                                            }
-                                        }}
-                                        className="m3-btn m3-btn-error m3-btn-sm"
-                                        style={{ flex: 1 }}
-                                    >
-                                        Mark as Sold
-                                    </button>
-                                )}
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            await axios.put(`${API_BASE_URL}/properties/${property.id}/mark-sold`, {}, {
+                                                headers: { Authorization: `Bearer ${localStorage.getItem('hublet_auth_token') || localStorage.getItem('token')}` }
+                                            });
+                                            setSoldMessage(`✓ "${property.title}" marked as sold`);
+                                            setTimeout(() => setSoldMessage(null), 4000);
+                                            fetchProperties();
+                                        } catch { setSoldMessage(null); }
+                                    }}
+                                    className="m3-btn m3-btn-error m3-btn-sm"
+                                    style={{ flex: 1 }}
+                                >
+                                    Mark as Sold
+                                </button>
                             </div>
                         </div>
                     )
                 ))}
+            </div>
+
+            {/* Sold Properties */}
+            <div style={{ marginTop: 32 }}>
+                <h2 className="md-title-large" style={{ marginBottom: 16 }}>Sold Properties ({soldProperties.length})</h2>
+                {soldProperties.length === 0 ? (
+                    <div className="m3-empty-state">
+                        <p>No sold properties yet. When you mark a property as sold, it will appear here.</p>
+                    </div>
+                ) : (
+                    <div className="m3-grid-cards">
+                        {soldProperties.map(property => (
+                            <div key={property.id} className="m3-card m3-card-outlined m3-card-sold">
+                                <h3 className="md-title-medium">{property.title}</h3>
+                                <p className="md-body-medium m3-text-secondary" style={{ marginTop: 4 }}>{property.locality}</p>
+                                <p className="md-body-medium" style={{ marginTop: 4, color: 'var(--md-sys-color-on-surface-variant)' }}>{property.bhk} BHK | {property.area} sq ft</p>
+                                <p className="md-title-medium" style={{ marginTop: 8, fontWeight: 700, color: 'var(--md-sys-color-on-surface-variant)' }}>
+                                    ₹{(property.price / 100000).toFixed(2)} Lakhs
+                                </p>
+                                <span className="m3-chip m3-chip-error" style={{ marginTop: 8 }}>Sold</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {selectedProperty && matches.length > 0 && (
@@ -331,19 +367,19 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                 <tbody>
                                     <tr>
                                         <td style={{ fontWeight: 600 }}>Location</td>
-                                        <td>{getScoreText(selectedMatchForBreakdown.locationScore)}</td>
+                                        <td><span style={{ color: selectedMatchForBreakdown.locationScore != null ? getScoreColor(selectedMatchForBreakdown.locationScore) : undefined, fontWeight: 600 }}>{getScoreText(selectedMatchForBreakdown.locationScore)}</span></td>
                                         <td>{buyerLocalities.length > 0 ? buyerLocalities.join(', ') : 'No location preference'}</td>
                                         <td>{selectedPropertyData.locality}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 600 }}>Budget</td>
-                                        <td>{getScoreText(selectedMatchForBreakdown.budgetScore)}</td>
+                                        <td><span style={{ color: selectedMatchForBreakdown.budgetScore != null ? getScoreColor(selectedMatchForBreakdown.budgetScore) : undefined, fontWeight: 600 }}>{getScoreText(selectedMatchForBreakdown.budgetScore)}</span></td>
                                         <td>{formatBudgetRange(selectedMatchForBreakdown.buyer.budgetMin, selectedMatchForBreakdown.buyer.budgetMax)}</td>
                                         <td>{formatPrice(selectedPropertyData.price)}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 600 }}>Size</td>
-                                        <td>{getScoreText(selectedMatchForBreakdown.sizeScore)}</td>
+                                        <td><span style={{ color: selectedMatchForBreakdown.sizeScore != null ? getScoreColor(selectedMatchForBreakdown.sizeScore) : undefined, fontWeight: 600 }}>{getScoreText(selectedMatchForBreakdown.sizeScore)}</span></td>
                                         <td>
                                             BHK: {selectedMatchForBreakdown.buyer.bhk || 'Any'}
                                             <br />
@@ -357,7 +393,7 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 600 }}>Amenities</td>
-                                        <td>{getScoreText(selectedMatchForBreakdown.amenitiesScore)}</td>
+                                        <td><span style={{ color: selectedMatchForBreakdown.amenitiesScore != null ? getScoreColor(selectedMatchForBreakdown.amenitiesScore) : undefined, fontWeight: 600 }}>{getScoreText(selectedMatchForBreakdown.amenitiesScore)}</span></td>
                                         <td>{buyerAmenities.length > 0 ? buyerAmenities.join(', ') : 'No amenities preference'}</td>
                                         <td>{propertyAmenities.length > 0 ? propertyAmenities.join(', ') : 'No amenities listed'}</td>
                                     </tr>

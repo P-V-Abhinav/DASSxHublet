@@ -176,12 +176,12 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                 {/* Seller selector */}
                 {fixedSellerId ? (
                     <div className="m3-input-group">
-                        <label className="m3-input-label">Seller *</label>
+                        <label className="m3-input-label m3-input-label-required">Seller</label>
                         <input type="text" value="Current logged-in seller" disabled className="m3-input" />
                     </div>
                 ) : (
                     <div className="m3-input-group">
-                        <label className="m3-input-label">Seller *</label>
+                        <label className="m3-input-label m3-input-label-required">Seller</label>
                         <select
                             required
                             value={formData.sellerId}
@@ -200,7 +200,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                 )}
 
                 <div className="m3-input-group">
-                    <label className="m3-input-label">Title *</label>
+                    <label className="m3-input-label m3-input-label-required">Title</label>
                     <input
                         type="text" required
                         value={formData.title}
@@ -251,7 +251,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
 
                     <div className="m3-form-row">
                         <div className="m3-input-group" style={{ margin: 0 }}>
-                            <label className="m3-input-label">Locality *</label>
+                            <label className="m3-input-label m3-input-label-required">Locality</label>
                             <input
                                 type="text" required
                                 value={formData.locality}
@@ -368,7 +368,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
 
                 <div className="m3-form-row">
                     <div className="m3-input-group">
-                        <label className="m3-input-label">Area (sq ft) *</label>
+                        <label className="m3-input-label m3-input-label-required">Area (sq ft)</label>
                         <input
                             type="number" required min="0"
                             value={formData.area}
@@ -378,7 +378,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                         />
                     </div>
                     <div className="m3-input-group">
-                        <label className="m3-input-label">BHK *</label>
+                        <label className="m3-input-label m3-input-label-required">BHK</label>
                         <input
                             type="number" required min="1" max="10"
                             value={formData.bhk}
@@ -389,7 +389,7 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                 </div>
 
                 <div className="m3-input-group">
-                    <label className="m3-input-label">Price (₹) *</label>
+                    <label className="m3-input-label m3-input-label-required">Price (₹)</label>
                     <input
                         type="number" required min="0"
                         value={formData.price}
