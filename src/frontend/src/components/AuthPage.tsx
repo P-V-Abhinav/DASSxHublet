@@ -106,142 +106,78 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        position: 'relative',
-      }}
-    >
+    <div className="m3-page-centered">
       <button
         onClick={onBack}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          padding: '10px 20px',
-          background: 'white',
-          border: '2px solid #667eea',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          color: '#667eea',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '5px',
-        }}
+        className="m3-btn m3-btn-outlined m3-btn-sm"
+        id="auth-back-btn"
+        style={{ position: 'absolute', top: 20, left: 20 }}
       >
         ← Back to Home
       </button>
 
-      <div
-        style={{
-          background: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-          maxWidth: '500px',
-          width: '100%',
-          padding: '40px',
-        }}
-      >
-        <h1 style={{ textAlign: 'center', marginBottom: '10px', color: '#333' }}>
-          {isAdmin ? ' Admin' : userType === 'buyer' ? ' Buyer' : ' Seller'} {isLogin || isAdmin ? 'Login' : 'Signup'}
+      <div className="m3-auth-card">
+        <h1 className="md-headline-medium" style={{ textAlign: 'center', marginBottom: 4, color: 'var(--md-sys-color-on-surface)' }}>
+          {isAdmin ? 'Admin' : userType === 'buyer' ? 'Buyer' : 'Seller'} {isLogin || isAdmin ? 'Login' : 'Signup'}
         </h1>
-        <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
+        <p className="md-body-medium" style={{ textAlign: 'center', color: 'var(--md-sys-color-on-surface-variant)', marginBottom: 24 }}>
           {isLogin || isAdmin ? 'Welcome back!' : 'Create your account'}
         </p>
 
         <form onSubmit={handleSubmit}>
           {!isLogin && !isAdmin && (
             <>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Full Name *
-                </label>
+              <div className="m3-input-group">
+                <label className="m3-input-label">Full Name *</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                  }}
+                  className="m3-input"
                 />
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Phone Number
-                </label>
+              <div className="m3-input-group">
+                <label className="m3-input-label">Phone Number</label>
                 <input
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="+91 XXXXXXXXXX"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #ddd',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                  }}
+                  className="m3-input"
                 />
               </div>
 
               {userType === 'buyer' && (
-                <div style={{ marginBottom: '20px', background: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#4a5568' }}>
-                     What are you looking for? (AI Powered)
+                <div className="m3-surface-container" style={{ marginBottom: 16 }}>
+                  <label className="m3-input-label" style={{ color: 'var(--md-sys-color-primary)' }}>
+                    What are you looking for? (AI Powered)
                   </label>
                   <textarea
                     name="rawQuery"
                     value={formData.rawQuery}
                     onChange={handleChange}
                     placeholder="e.g. 2bhk in Indiranagar under 60 lakhs with parking"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #cbd5e0',
-                      borderRadius: '6px',
-                      minHeight: '80px',
-                      fontSize: '14px',
-                      marginBottom: '4px',
-                      fontFamily: 'inherit',
-                    }}
+                    className="m3-input"
+                    style={{ minHeight: 80 }}
                   />
-                  <small style={{ display: 'block', color: '#718096', fontSize: '12px' }}>
-                    Describe in your own words - our AI will understand.
+                  <small className="md-body-small" style={{ display: 'block', marginTop: 4, color: 'var(--md-sys-color-on-surface-variant)' }}>
+                    Describe in your own words — our AI will understand.
                   </small>
                 </div>
               )}
 
               {userType === 'seller' && (
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                    Seller Type
-                  </label>
+                <div className="m3-input-group">
+                  <label className="m3-input-label">Seller Type</label>
                   <select
                     name="sellerType"
                     value={formData.sellerType}
                     onChange={handleChange}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #ddd',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                    }}
+                    className="m3-input m3-select"
                   >
                     <option value="individual">Individual</option>
                     <option value="agent">Agent</option>
@@ -252,91 +188,39 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
             </>
           )}
 
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Email *
-            </label>
+          <div className="m3-input-group">
+            <label className="m3-input-label">Email *</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px',
-              }}
+              className="m3-input"
             />
           </div>
 
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Password *
-            </label>
+          <div className="m3-input-group">
+            <label className="m3-input-label">Password *</label>
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               required
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #ddd',
-                borderRadius: '6px',
-                fontSize: '14px',
-              }}
+              className="m3-input"
             />
           </div>
 
-          {message && (
-            <div
-              style={{
-                padding: '10px',
-                background: '#d4edda',
-                color: '#155724',
-                borderRadius: '6px',
-                marginBottom: '15px',
-                fontSize: '14px',
-              }}
-            >
-              {message}
-            </div>
-          )}
-
-          {error && (
-            <div
-              style={{
-                padding: '10px',
-                background: '#f8d7da',
-                color: '#721c24',
-                borderRadius: '6px',
-                marginBottom: '15px',
-                fontSize: '14px',
-              }}
-            >
-              {error}
-            </div>
-          )}
+          {message && <div className="m3-alert m3-alert-success">{message}</div>}
+          {error && <div className="m3-alert m3-alert-error">{error}</div>}
 
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: '100%',
-              padding: '14px',
-              background: loading ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              marginBottom: '15px',
-            }}
+            className="m3-btn m3-btn-filled m3-btn-full"
+            id="auth-submit-btn"
+            style={{ marginBottom: 16 }}
           >
             {loading ? 'Processing...' : (isLogin || isAdmin ? 'Login' : 'Sign Up')}
           </button>
@@ -350,14 +234,8 @@ export const AuthPage = ({ userType, onAuthSuccess, onBack }: AuthPageProps) => 
                   setError('');
                   setMessage('');
                 }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#667eea',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  textDecoration: 'underline',
-                }}
+                className="m3-btn m3-btn-text"
+                id="auth-toggle-btn"
               >
                 {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Login'}
               </button>

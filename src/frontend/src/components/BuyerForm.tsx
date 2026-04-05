@@ -111,32 +111,21 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
     };
 
     return (
-        <div style={{
-            maxWidth: '700px',
-            margin: '0 auto',
-            padding: '30px',
-            background: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-            <h2 style={{ marginBottom: '10px', color: '#333' }}> Update Your Preferences</h2>
-            <p style={{ marginBottom: '25px', color: '#666', fontSize: '14px' }}>
+        <div className="m3-card m3-card-elevated" style={{ maxWidth: 700, margin: '0 auto' }}>
+            <h2 className="md-title-large" style={{ marginBottom: 4, color: 'var(--md-sys-color-on-surface)' }}>
+                Update Your Preferences
+            </h2>
+            <p className="md-body-small" style={{ marginBottom: 24, color: 'var(--md-sys-color-on-surface-variant)' }}>
                 AI Agent will understand your needs and update your profile automatically.
             </p>
 
             <form onSubmit={handleSubmit}>
                 {/* AI Intent Parsing Section */}
-                <div style={{
-                    marginBottom: '30px',
-                    padding: '20px',
-                    background: '#f0f7ff',
-                    borderRadius: '8px',
-                    border: '1px solid #cce5ff'
-                }}>
-                    <h3 style={{ fontSize: '16px', marginBottom: '10px', color: '#0056b3' }}>
+                <div className="m3-surface-container" style={{ marginBottom: 24, border: '1px solid var(--md-sys-color-primary-container)' }}>
+                    <h3 className="md-title-small" style={{ marginBottom: 8, color: 'var(--md-sys-color-primary)' }}>
                         AI / Natural Language Search
                     </h3>
-                    <p style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+                    <p className="md-body-small" style={{ color: 'var(--md-sys-color-on-surface-variant)', marginBottom: 8 }}>
                         Type your requirements naturally, e.g., "Looking for a 2 bhk in Indiranagar under 60 lakhs with parking"
                     </p>
                     <textarea
@@ -144,48 +133,26 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
                         value={formData.rawQuery}
                         onChange={handleChange}
                         placeholder="Describe your dream home here..."
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            border: '2px solid #b8daff',
-                            borderRadius: '6px',
-                            minHeight: '80px',
-                            fontSize: '14px',
-                            fontFamily: 'inherit'
-                        }}
+                        className="m3-input"
+                        style={{ minHeight: 80 }}
                     />
                 </div>
 
                 {/* Map-based Locality Picker */}
-                <div style={{
-                    marginBottom: '20px',
-                    padding: '15px',
-                    background: '#f0fff4',
-                    borderRadius: '8px',
-                    border: '1px solid #c6f6d5'
-                }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div className="m3-surface-container" style={{ marginBottom: 20, border: '1px solid var(--md-sys-color-outline-variant)' }}>
+                    <div className="m3-flex-between" style={{ marginBottom: 12 }}>
                         <div>
-                            <h3 style={{ fontSize: '16px', margin: 0, color: '#276749' }}>
+                            <h3 className="md-title-small" style={{ color: 'var(--md-sys-color-on-surface)' }}>
                                 📍 Preferred Localities
                             </h3>
-                            <p style={{ fontSize: '12px', color: '#666', margin: '4px 0 0 0' }}>
+                            <p className="md-body-small" style={{ color: 'var(--md-sys-color-on-surface-variant)', marginTop: 2 }}>
                                 Type localities below or pick them on the map
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={() => setShowMap(!showMap)}
-                            style={{
-                                padding: '8px 16px',
-                                background: showMap ? '#e53e3e' : '#38a169',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: 'bold',
-                            }}
+                            className={`m3-btn m3-btn-sm ${showMap ? 'm3-btn-error-tonal' : 'm3-btn-tonal'}`}
                         >
                             {showMap ? '✕ Hide Map' : '🗺️ Pick on Map'}
                         </button>
@@ -197,14 +164,8 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
                         value={formData.localities}
                         onChange={handleChange}
                         placeholder="e.g., Thane, Powai, Andheri (comma-separated)"
-                        style={{
-                            width: '100%',
-                            padding: '10px 12px',
-                            border: '1px solid #c6f6d5',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            marginBottom: showMap ? '12px' : 0,
-                        }}
+                        className="m3-input"
+                        style={{ marginBottom: showMap ? 12 : 0 }}
                     />
 
                     {showMap && (
@@ -217,50 +178,16 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
                     )}
                 </div>
 
-                {message && (
-                    <div style={{
-                        padding: '12px',
-                        background: '#d4edda',
-                        color: '#155724',
-                        borderRadius: '6px',
-                        marginBottom: '15px',
-                        border: '1px solid #c3e6cb'
-                    }}>
-                        ✓ {message}
-                    </div>
-                )}
-
-                {error && (
-                    <div style={{
-                        padding: '12px',
-                        background: '#f8d7da',
-                        color: '#721c24',
-                        borderRadius: '6px',
-                        marginBottom: '15px',
-                        border: '1px solid #f5c6cb'
-                    }}>
-                        ✗ {error}
-                    </div>
-                )}
+                {message && <div className="m3-alert m3-alert-success">✓ {message}</div>}
+                {error && <div className="m3-alert m3-alert-error">✗ {error}</div>}
 
                 <button
                     type="submit"
                     disabled={loading}
-                    style={{
-                        width: '100%',
-                        padding: '14px',
-                        background: loading ? '#ccc' : 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        boxShadow: loading ? 'none' : '0 4px 6px rgba(76, 175, 80, 0.3)',
-                        transition: 'all 0.3s'
-                    }}
+                    className="m3-btn m3-btn-filled m3-btn-full"
+                    id="buyer-form-submit"
                 >
-                    {loading ? ' Updating...' : ' Update Preferences & Find Matches'}
+                    {loading ? 'Updating...' : 'Update Preferences & Find Matches'}
                 </button>
             </form>
         </div>

@@ -11,80 +11,37 @@ function HomePage() {
     const navigate = useNavigate();
 
     return (
-        <div
-            style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            }}
-        >
-            <div
-                style={{
-                    background: 'white',
-                    padding: '40px',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-                    maxWidth: '400px',
-                    width: '100%',
-                }}
-            >
-                <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>Hublet</h1>
-                <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
+        <div className="m3-page-centered">
+            <div className="m3-home-card">
+                <h1 className="md-headline-large" style={{ marginBottom: 4, color: 'var(--md-sys-color-on-surface)' }}>
+                    Hublet
+                </h1>
+                <p className="md-body-medium" style={{ color: 'var(--md-sys-color-on-surface-variant)', marginBottom: 32 }}>
                     Real Estate Lead Matching Platform
                 </p>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <div className="m3-flex-col m3-gap-sm">
                     <button
                         onClick={() => navigate('/auth/admin')}
-                        style={{
-                            padding: '16px 24px',
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        }}
+                        className="m3-btn m3-btn-filled m3-btn-full"
+                        id="home-admin-login"
                     >
                         Login as Admin
                     </button>
                     <button
                         onClick={() => navigate('/auth/buyer')}
-                        style={{
-                            padding: '16px 24px',
-                            background: 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        }}
+                        className="m3-btn m3-btn-tonal m3-btn-full"
+                        id="home-buyer-login"
                     >
                         Buyer Login / Signup
                     </button>
                     <button
                         onClick={() => navigate('/auth/seller')}
-                        style={{
-                            padding: '16px 24px',
-                            background: 'linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        }}
+                        className="m3-btn m3-btn-outlined m3-btn-full"
+                        id="home-seller-login"
                     >
                         Seller Login / Signup
                     </button>
-
                 </div>
             </div>
         </div>
@@ -130,41 +87,7 @@ function AdminDashboardWrapper() {
     };
 
     return (
-        <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
-            <div
-                style={{
-                    background: 'white',
-                    padding: '15px 30px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}
-            >
-                <div>
-                    <h2 style={{ margin: 0 }}>Hublet</h2>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
-                        Logged in as: <strong>{user.email}</strong>
-                    </p>
-                </div>
-                <button
-                    onClick={handleLogout}
-                    style={{
-                        padding: '10px 20px',
-                        background: '#f44336',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                    }}
-                >
-                    Logout
-                </button>
-            </div>
-            <AdminDashboard />
-        </div>
+        <AdminDashboard userEmail={user.email || 'admin'} onLogout={handleLogout} />
     );
 }
 
@@ -187,39 +110,18 @@ function BuyerDashboardWrapper() {
     };
 
     return (
-        <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
-            <div
-                style={{
-                    background: 'white',
-                    padding: '15px 30px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}
-            >
+        <div className="m3-page">
+            <header className="m3-top-app-bar">
                 <div>
-                    <h2 style={{ margin: 0 }}> Hublet</h2>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
+                    <div className="m3-top-app-bar__title">Hublet</div>
+                    <div className="m3-top-app-bar__subtitle">
                         Logged in as: <strong>{user.name || user.email}</strong>
-                    </p>
+                    </div>
                 </div>
-                <button
-                    onClick={handleLogout}
-                    style={{
-                        padding: '10px 20px',
-                        background: '#f44336',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                    }}
-                >
+                <button onClick={handleLogout} className="m3-btn m3-btn-error-tonal m3-btn-sm" id="buyer-logout">
                     Logout
                 </button>
-            </div>
+            </header>
             <BuyerDashboard buyerId={userId} buyerName={user.name || 'Buyer'} />
         </div>
     );
@@ -244,39 +146,18 @@ function SellerDashboardWrapper() {
     };
 
     return (
-        <div style={{ minHeight: '100vh', background: '#f5f5f5' }}>
-            <div
-                style={{
-                    background: 'white',
-                    padding: '15px 30px',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}
-            >
+        <div className="m3-page">
+            <header className="m3-top-app-bar">
                 <div>
-                    <h2 style={{ margin: 0 }}> Hublet</h2>
-                    <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#666' }}>
+                    <div className="m3-top-app-bar__title">Hublet</div>
+                    <div className="m3-top-app-bar__subtitle">
                         Logged in as: <strong>{user.name || user.email}</strong>
-                    </p>
+                    </div>
                 </div>
-                <button
-                    onClick={handleLogout}
-                    style={{
-                        padding: '10px 20px',
-                        background: '#f44336',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                    }}
-                >
+                <button onClick={handleLogout} className="m3-btn m3-btn-error-tonal m3-btn-sm" id="seller-logout">
                     Logout
                 </button>
-            </div>
+            </header>
             <SellerDashboard sellerId={userId} sellerName={user.name || 'Seller'} />
         </div>
     );

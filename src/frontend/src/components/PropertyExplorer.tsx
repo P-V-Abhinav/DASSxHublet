@@ -34,6 +34,13 @@ function formatPrice(price: number): string {
     return `₹${price.toLocaleString('en-IN')}`;
 }
 
+const TYPE_COLORS: Record<string, string> = {
+    apartment: '#3949AB',
+    house: '#4B607C',
+    villa: '#E67700',
+    plot: '#7C4DFF',
+};
+
 export default function PropertyExplorer() {
     const mapRef = useRef<L.Map | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -109,17 +116,10 @@ export default function PropertyExplorer() {
         const bounds: [number, number][] = [];
 
         props.forEach((p) => {
-            const color =
-                p.propertyType === 'apartment'
-                    ? '#4CAF50'
-                    : p.propertyType === 'house'
-                        ? '#2196F3'
-                        : p.propertyType === 'villa'
-                            ? '#FF9800'
-                            : '#9C27B0';
+            const color = TYPE_COLORS[p.propertyType] || '#7C4DFF';
 
             const icon = L.divIcon({
-                className: 'custom-marker',
+                className: '',
                 html: `<div style="
           background: ${color};
           width: 28px;
@@ -143,11 +143,11 @@ export default function PropertyExplorer() {
             });
 
             const marker = L.marker([p.lat, p.lon], { icon }).bindPopup(`
-        <div style="min-width: 200px;">
-          <h4 style="margin: 0 0 6px 0; color: #333;">${p.title}</h4>
-          <p style="margin: 2px 0; font-size: 13px;">${p.locality}</p>
-          <p style="margin: 2px 0; font-size: 13px;">${p.bhk} BHK • ${p.area} sqft • ${p.propertyType}</p>
-          <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: bold; color: #2e7d32;">${formatPrice(p.price)}</p>
+        <div style="min-width: 200px; font-family: Inter, sans-serif;">
+          <h4 style="margin: 0 0 6px 0; color: #191C1C;">${p.title}</h4>
+          <p style="margin: 2px 0; font-size: 13px; color: #3F4949;">${p.locality}</p>
+          <p style="margin: 2px 0; font-size: 13px; color: #3F4949;">${p.bhk} BHK • ${p.area} sqft • ${p.propertyType}</p>
+          <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: bold; color: #3949AB;">${formatPrice(p.price)}</p>
         </div>
       `);
 
@@ -171,33 +171,12 @@ export default function PropertyExplorer() {
     };
 
     return (
-        <div
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: '80vh',
-                minHeight: '600px',
-                background: '#f5f5f5',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}
-        >
+        <div className="m3-flex-col" style={{ height: '80vh', minHeight: 600, borderRadius: 'var(--md-sys-shape-corner-md)', overflow: 'hidden', border: '1px solid var(--md-sys-color-outline-variant)' }}>
             {/* Header */}
-            <div
-                style={{
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    padding: '15px 25px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
-                }}
-            >
+            <div className="m3-top-app-bar" style={{ minHeight: 'unset', position: 'relative' }}>
                 <div>
-                    <h2 style={{ margin: 0, fontSize: '20px' }}>Property Explorer</h2>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', opacity: 0.9 }}>
+                    <h2 className="m3-top-app-bar__title">Property Explorer</h2>
+                    <p className="m3-top-app-bar__subtitle">
                         {properties.length} properties on map
                         {loading && ' • Loading...'}
                     </p>
@@ -205,27 +184,13 @@ export default function PropertyExplorer() {
             </div>
 
             {/* Filters */}
-            <div
-                style={{
-                    display: 'flex',
-                    gap: '10px',
-                    padding: '12px 25px',
-                    background: 'white',
-                    borderBottom: '1px solid #e0e0e0',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                }}
-            >
+            <div className="m3-flex m3-gap-sm m3-flex-wrap" style={{ padding: '12px 24px', background: 'var(--md-sys-color-surface-container-low)', borderBottom: '1px solid var(--md-sys-color-outline-variant)', alignItems: 'center' }}>
                 <MapSearchBar map={mapRef.current} placeholder="Search map..." />
                 <select
                     value={filters.bhk}
                     onChange={(e) => setFilters({ ...filters, bhk: e.target.value })}
-                    style={{
-                        padding: '8px 12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        fontSize: '13px',
-                    }}
+                    className="m3-input m3-select m3-input-compact"
+                    style={{ width: 'auto' }}
                 >
                     <option value="">Any BHK</option>
                     <option value="1">1 BHK</option>
@@ -239,13 +204,8 @@ export default function PropertyExplorer() {
                     placeholder="Min Price (₹)"
                     value={filters.minPrice}
                     onChange={(e) => setFilters({ ...filters, minPrice: e.target.value })}
-                    style={{
-                        padding: '8px 12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        fontSize: '13px',
-                        width: '130px',
-                    }}
+                    className="m3-input m3-input-compact"
+                    style={{ width: 130 }}
                 />
 
                 <input
@@ -253,24 +213,15 @@ export default function PropertyExplorer() {
                     placeholder="Max Price (₹)"
                     value={filters.maxPrice}
                     onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
-                    style={{
-                        padding: '8px 12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        fontSize: '13px',
-                        width: '130px',
-                    }}
+                    className="m3-input m3-input-compact"
+                    style={{ width: 130 }}
                 />
 
                 <select
                     value={filters.propertyType}
                     onChange={(e) => setFilters({ ...filters, propertyType: e.target.value })}
-                    style={{
-                        padding: '8px 12px',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        fontSize: '13px',
-                    }}
+                    className="m3-input m3-select m3-input-compact"
+                    style={{ width: 'auto' }}
                 >
                     <option value="">Any Type</option>
                     <option value="apartment">Apartment</option>
@@ -279,70 +230,27 @@ export default function PropertyExplorer() {
                     <option value="plot">Plot</option>
                 </select>
 
-                <button
-                    onClick={handleFilter}
-                    style={{
-                        padding: '8px 20px',
-                        background: '#4CAF50',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                    }}
-                >
+                <button onClick={handleFilter} className="m3-btn m3-btn-filled m3-btn-sm">
                     Apply Filters
                 </button>
 
-                <button
-                    onClick={handleReset}
-                    style={{
-                        padding: '8px 20px',
-                        background: '#f5f5f5',
-                        color: '#666',
-                        border: '1px solid #ddd',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                    }}
-                >
+                <button onClick={handleReset} className="m3-btn m3-btn-outlined m3-btn-sm">
                     Reset
                 </button>
 
                 {error && (
-                    <span style={{ color: '#e53935', fontSize: '13px' }}>⚠️ {error}</span>
+                    <span className="md-body-small m3-text-error">⚠️ {error}</span>
                 )}
             </div>
 
             {/* Map Legend */}
-            <div
-                style={{
-                    display: 'flex',
-                    gap: '15px',
-                    padding: '6px 25px',
-                    background: '#fafafa',
-                    borderBottom: '1px solid #eee',
-                    fontSize: '12px',
-                    color: '#666',
-                }}
-            >
-                <span>
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#4CAF50', marginRight: 4 }} />
-                    Apartment
-                </span>
-                <span>
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#2196F3', marginRight: 4 }} />
-                    House
-                </span>
-                <span>
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#FF9800', marginRight: 4 }} />
-                    Villa
-                </span>
-                <span>
-                    <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: '#9C27B0', marginRight: 4 }} />
-                    Plot
-                </span>
+            <div className="m3-flex m3-gap-md" style={{ padding: '6px 24px', background: 'var(--md-sys-color-surface-container)', borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}>
+                {Object.entries(TYPE_COLORS).map(([type, color]) => (
+                    <span key={type} className="md-label-small m3-flex m3-gap-xs" style={{ alignItems: 'center', textTransform: 'capitalize' }}>
+                        <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: color }} />
+                        {type}
+                    </span>
+                ))}
             </div>
 
             {/* Map container */}

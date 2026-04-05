@@ -36,7 +36,7 @@ function MatchViewer() {
         minScore: 50,
       });
       setMatches(response.data);
-      
+
       if (response.data.length === 0) {
         setError('No matches found for this buyer. Try adjusting preferences or add more properties.');
       }
@@ -55,14 +55,15 @@ function MatchViewer() {
   };
 
   return (
-    <div className="card">
-      <h2>Find Property Matches</h2>
+    <div className="m3-card m3-card-elevated">
+      <h2 className="md-title-large" style={{ marginBottom: 16 }}>Find Property Matches</h2>
 
-      <div className="form-group">
-        <label>Select Buyer</label>
+      <div className="m3-input-group">
+        <label className="m3-input-label">Select Buyer</label>
         <select
           value={selectedBuyerId}
           onChange={(e) => setSelectedBuyerId(e.target.value)}
+          className="m3-input m3-select"
         >
           <option value="">Choose a buyer</option>
           {buyers.map((buyer) => (
@@ -72,7 +73,7 @@ function MatchViewer() {
           ))}
         </select>
         {buyers.length === 0 && (
-          <small style={{ color: '#ef4444' }}>
+          <small className="md-body-small m3-text-error" style={{ display: 'block', marginTop: 4 }}>
             No buyers found. Please create a buyer first.
           </small>
         )}
@@ -80,63 +81,67 @@ function MatchViewer() {
 
       <button
         onClick={handleFindMatches}
-        className="button"
+        className="m3-btn m3-btn-filled"
         disabled={loading || !selectedBuyerId}
       >
         {loading ? 'Finding Matches...' : 'Find Matches'}
       </button>
 
-      {error && <div className="error" style={{ marginTop: '1rem' }}>{error}</div>}
+      {error && <div className="m3-alert m3-alert-error" style={{ marginTop: 16 }}>{error}</div>}
 
       {matches.length > 0 && (
-        <div style={{ marginTop: '2rem' }}>
-          <h3>Matched Properties ({matches.length})</h3>
-          {matches.map((match) => (
-            <div key={match.id} className="match-card">
-              <div className="match-score">
-                Match Score: {match.matchScore.toFixed(1)}%
-              </div>
-              
-              <h4>{match.property.title}</h4>
-              <p style={{ color: '#666', marginBottom: '0.5rem' }}>
-                {match.property.locality} • {match.property.bhk} BHK • {match.property.area} sq ft
-              </p>
-              <p style={{ fontWeight: '600', fontSize: '1.2rem', color: '#667eea' }}>
-                {formatPrice(match.property.price)}
-              </p>
-
-              {match.property.description && (
-                <p style={{ marginTop: '0.5rem', color: '#444' }}>
-                  {match.property.description}
-                </p>
-              )}
-
-              {match.property.amenities && match.property.amenities.length > 0 && (
-                <div style={{ marginTop: '0.5rem' }}>
-                  <strong>Amenities:</strong>{' '}
-                  <span style={{ color: '#666' }}>
-                    {match.property.amenities.join(', ')}
+        <div style={{ marginTop: 24 }}>
+          <h3 className="md-title-medium" style={{ marginBottom: 12 }}>Matched Properties ({matches.length})</h3>
+          <div className="m3-grid-cards">
+            {matches.map((match) => (
+              <div key={match.id} className="m3-card m3-card-outlined">
+                <div className="m3-flex-between" style={{ marginBottom: 8 }}>
+                  <h4 className="md-title-medium">{match.property.title}</h4>
+                  <span className="m3-badge m3-badge-success">
+                    {match.matchScore.toFixed(1)}%
                   </span>
                 </div>
-              )}
 
-              <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#888' }}>
-                <div>
-                  <strong>Score Breakdown:</strong>
+                <p className="md-body-medium m3-text-secondary" style={{ marginBottom: 8 }}>
+                  {match.property.locality} • {match.property.bhk} BHK • {match.property.area} sq ft
+                </p>
+                <p className="md-title-medium m3-text-primary" style={{ fontWeight: 700, marginBottom: 8 }}>
+                  {formatPrice(match.property.price)}
+                </p>
+
+                {match.property.description && (
+                  <p className="md-body-medium" style={{ marginTop: 8, color: 'var(--md-sys-color-on-surface-variant)' }}>
+                    {match.property.description}
+                  </p>
+                )}
+
+                {match.property.amenities && match.property.amenities.length > 0 && (
+                  <div style={{ marginTop: 8 }}>
+                    <strong className="md-label-medium">Amenities:</strong>
+                    <div className="m3-flex m3-flex-wrap m3-gap-xs" style={{ marginTop: 4 }}>
+                      {match.property.amenities.map((a: string, i: number) => (
+                        <span key={i} className="m3-chip m3-chip-primary">{a}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="m3-surface-container" style={{ marginTop: 12 }}>
+                  <strong className="md-label-medium">Score Breakdown:</strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+                    <span className="md-body-small">Location: {match.locationScore?.toFixed(0)}%</span>
+                    <span className="md-body-small">Budget: {match.budgetScore?.toFixed(0)}%</span>
+                    <span className="md-body-small">Size: {match.sizeScore?.toFixed(0)}%</span>
+                    <span className="md-body-small">Amenities: {match.amenitiesScore?.toFixed(0)}%</span>
+                  </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
-                  <div>Location: {match.locationScore?.toFixed(0)}%</div>
-                  <div>Budget: {match.budgetScore?.toFixed(0)}%</div>
-                  <div>Size: {match.sizeScore?.toFixed(0)}%</div>
-                  <div>Amenities: {match.amenitiesScore?.toFixed(0)}%</div>
+
+                <div className="md-body-small m3-text-secondary" style={{ marginTop: 8 }}>
+                  Seller: {match.property.seller.name} (Trust Score: {match.property.seller.trustScore})
                 </div>
               </div>
-
-              <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-                Seller: {match.property.seller.name} (Trust Score: {match.property.seller.trustScore})
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

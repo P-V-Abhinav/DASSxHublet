@@ -10,7 +10,6 @@ const setDefaultLeafletIcon = (() => {
   let configured = false;
   return () => {
     if (configured) return;
-    // Fix missing default marker icons in bundlers
     delete (L.Icon.Default.prototype as { _getIconUrl?: () => string })._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconUrl: markerIcon,
@@ -38,7 +37,7 @@ function LocationMarker({ onSelect }: { onSelect: (selection: MapSelection) => v
   const [address, setAddress] = useState<string>('');
   const [locality, setLocality] = useState<string>('');
 
-  const map = useMapEvents({
+  useMapEvents({
     click: async (event) => {
       setPosition([event.latlng.lat, event.latlng.lng]);
       setLoading(true);
@@ -109,9 +108,9 @@ function LocationMarker({ onSelect }: { onSelect: (selection: MapSelection) => v
           {position && <Marker position={position} />}
         </MapContainer>
       </div>
-      <p style={{ marginTop: '8px', fontSize: '12px', color: '#555' }}>{hint}</p>
+      <p className="md-body-small m3-text-secondary" style={{ marginTop: 8 }}>{hint}</p>
       {locality && (
-        <p style={{ marginTop: '4px', fontSize: '12px', color: '#2563eb' }}>
+        <p className="md-body-small m3-text-primary" style={{ marginTop: 4 }}>
           Locality detected: {locality}
         </p>
       )}
@@ -124,7 +123,7 @@ export function MapPicker({ label, onLocationSelect }: MapPickerProps) {
 
   return (
     <div className="map-panel">
-      {label && <p style={{ marginBottom: '10px', fontWeight: 600 }}>{label}</p>}
+      {label && <p className="md-title-small" style={{ marginBottom: 10 }}>{label}</p>}
       <LocationMarker onSelect={onLocationSelect} />
     </div>
   );

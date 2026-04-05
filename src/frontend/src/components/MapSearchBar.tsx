@@ -75,17 +75,11 @@ export default function MapSearchBar({ map, placeholder = 'Search location...' }
                 onChange={(e) => handleInputChange(e.target.value)}
                 onFocus={() => results.length > 0 && setShowDropdown(true)}
                 placeholder={placeholder}
-                style={{
-                    padding: '8px 12px',
-                    border: '1px solid #ccc',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    width: '260px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                }}
+                className="m3-input m3-input-compact"
+                style={{ width: 260 }}
             />
             {searching && (
-                <span style={{ position: 'absolute', right: '10px', top: '9px', fontSize: '12px', color: '#999' }}>...</span>
+                <span style={{ position: 'absolute', right: 10, top: 9, fontSize: 12, color: 'var(--md-sys-color-outline)' }}>...</span>
             )}
             {showDropdown && results.length > 0 && (
                 <div style={{
@@ -93,26 +87,27 @@ export default function MapSearchBar({ map, placeholder = 'Search location...' }
                     top: '100%',
                     left: 0,
                     right: 0,
-                    background: 'white',
-                    border: '1px solid #ddd',
-                    borderRadius: '0 0 6px 6px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    maxHeight: '200px',
+                    background: 'var(--md-sys-color-surface-container-lowest)',
+                    border: '1px solid var(--md-sys-color-outline-variant)',
+                    borderRadius: '0 0 var(--md-sys-shape-corner-sm) var(--md-sys-shape-corner-sm)',
+                    boxShadow: 'var(--md-sys-elevation-3)',
+                    maxHeight: 200,
                     overflowY: 'auto',
                 }}>
                     {results.map((r, i) => (
                         <div
                             key={i}
                             onClick={() => handleSelect(r)}
+                            className="md-body-small"
                             style={{
                                 padding: '8px 12px',
-                                fontSize: '12px',
                                 cursor: 'pointer',
-                                borderBottom: i < results.length - 1 ? '1px solid #f0f0f0' : 'none',
-                                color: '#333',
+                                borderBottom: i < results.length - 1 ? '1px solid var(--md-sys-color-outline-variant)' : 'none',
+                                color: 'var(--md-sys-color-on-surface)',
+                                transition: 'background var(--md-sys-motion-duration-short1) var(--md-sys-motion-easing-standard)',
                             }}
-                            onMouseEnter={(e) => (e.currentTarget.style.background = '#f5f5f5')}
-                            onMouseLeave={(e) => (e.currentTarget.style.background = 'white')}
+                            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--md-sys-color-surface-container)')}
+                            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                         >
                             {r.display_name}
                         </div>

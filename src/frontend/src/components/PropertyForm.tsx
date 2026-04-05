@@ -169,23 +169,24 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
 
     // ── render ────────────────────────────────────────────────────────────────
     return (
-        <div className="card">
-            <h2>{isEditing ? 'Edit Property' : 'Add Property Listing'}</h2>
+        <div className="m3-card m3-card-elevated">
+            <h2 className="md-title-large" style={{ marginBottom: 20 }}>{isEditing ? 'Edit Property' : 'Add Property Listing'}</h2>
             <form onSubmit={handleSubmit}>
 
                 {/* Seller selector */}
                 {fixedSellerId ? (
-                    <div className="form-group">
-                        <label>Seller *</label>
-                        <input type="text" value="Current logged-in seller" disabled />
+                    <div className="m3-input-group">
+                        <label className="m3-input-label">Seller *</label>
+                        <input type="text" value="Current logged-in seller" disabled className="m3-input" />
                     </div>
                 ) : (
-                    <div className="form-group">
-                        <label>Seller *</label>
+                    <div className="m3-input-group">
+                        <label className="m3-input-label">Seller *</label>
                         <select
                             required
                             value={formData.sellerId}
                             onChange={e => setFormData({ ...formData, sellerId: e.target.value })}
+                            className="m3-input m3-select"
                         >
                             <option value="">Select a seller</option>
                             {sellers.map(s => (
@@ -193,55 +194,52 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                             ))}
                         </select>
                         {sellers.length === 0 && (
-                            <small style={{ color: '#ef4444' }}>No sellers found. Please create a seller first.</small>
+                            <small className="md-body-small m3-text-error" style={{ display: 'block', marginTop: 4 }}>No sellers found. Please create a seller first.</small>
                         )}
                     </div>
                 )}
 
-                <div className="form-group">
-                    <label>Title *</label>
+                <div className="m3-input-group">
+                    <label className="m3-input-label">Title *</label>
                     <input
                         type="text" required
                         value={formData.title}
                         onChange={e => setFormData({ ...formData, title: e.target.value })}
                         placeholder="e.g., Spacious 2BHK in Indiranagar"
+                        className="m3-input"
                     />
                 </div>
 
-                <div className="form-group">
-                    <label>Description</label>
+                <div className="m3-input-group">
+                    <label className="m3-input-label">Description</label>
                     <textarea
                         value={formData.description}
                         onChange={e => setFormData({ ...formData, description: e.target.value })}
                         placeholder="Detailed property description..."
+                        className="m3-input"
                     />
                 </div>
 
                 {/* ── Map-based Location Picker ──────────────────────────────── */}
-                <div style={{ marginBottom: '15px', padding: '12px', background: '#f0fff4', borderRadius: '8px', border: '1px solid #c6f6d5' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div className="m3-surface-container" style={{ marginBottom: 16, border: '1px solid var(--md-sys-color-outline-variant)' }}>
+                    <div className="m3-flex-between" style={{ marginBottom: 10 }}>
                         <div>
-                            <label style={{ fontWeight: 'bold', margin: 0 }}>Property Location</label>
-                            <p style={{ fontSize: '12px', color: '#666', margin: '2px 0 0 0' }}>
+                            <label className="md-title-small" style={{ display: 'block' }}>Property Location</label>
+                            <p className="md-body-small m3-text-secondary" style={{ marginTop: 2 }}>
                                 Pin on map to auto-fill locality and nearby places, or type manually below
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={() => setShowMap(!showMap)}
-                            style={{
-                                padding: '8px 16px',
-                                background: showMap ? '#e53e3e' : '#38a169',
-                                color: 'white', border: 'none', borderRadius: '6px',
-                                cursor: 'pointer', fontSize: '13px', fontWeight: 'bold',
-                            }}
+                            className={`m3-btn m3-btn-sm ${showMap ? 'm3-btn-error-tonal' : 'm3-btn-filled'}`}
                         >
                             {showMap ? 'Hide Map' : 'Pick on Map'}
                         </button>
                     </div>
 
                     {showMap && (
-                        <div style={{ marginBottom: '12px' }}>
+                        <div style={{ marginBottom: 12 }}>
                             <LocationPicker
                                 mode="single"
                                 initialLocations={pickedLocation ? [pickedLocation] : []}
@@ -251,21 +249,23 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                         </div>
                     )}
 
-                    <div className="form-row">
-                        <div className="form-group" style={{ margin: 0 }}>
-                            <label>Locality *</label>
+                    <div className="m3-form-row">
+                        <div className="m3-input-group" style={{ margin: 0 }}>
+                            <label className="m3-input-label">Locality *</label>
                             <input
                                 type="text" required
                                 value={formData.locality}
                                 onChange={e => setFormData({ ...formData, locality: e.target.value })}
                                 placeholder="e.g., Indiranagar"
+                                className="m3-input"
                             />
                         </div>
-                        <div className="form-group" style={{ margin: 0 }}>
-                            <label>Property Type</label>
+                        <div className="m3-input-group" style={{ margin: 0 }}>
+                            <label className="m3-input-label">Property Type</label>
                             <select
                                 value={formData.propertyType}
                                 onChange={e => setFormData({ ...formData, propertyType: e.target.value })}
+                                className="m3-input m3-select"
                             >
                                 <option value="apartment">Apartment</option>
                                 <option value="house">House</option>
@@ -277,57 +277,40 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                 </div>
 
                 {/* ── Nearby Places — always-visible read-only fields ──────── */}
-                <div style={{ marginBottom: '16px' }}>
-                    <div style={{
-                        fontWeight: 'bold', fontSize: '13px', color: '#1a3a5c',
-                        marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px',
-                    }}>
-                        Nearby Places
+                <div style={{ marginBottom: 16 }}>
+                    <div className="m3-flex m3-gap-xs" style={{ alignItems: 'center', marginBottom: 10 }}>
+                        <strong className="md-title-small">Nearby Places</strong>
                         {poiLoading && (
-                            <span style={{ fontWeight: 'normal', color: '#888', fontSize: '12px' }}>
-                                — searching OpenStreetMap…
-                            </span>
+                            <span className="md-body-small m3-text-secondary">— searching OpenStreetMap…</span>
                         )}
                         {!poiLoading && poiError && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                <span style={{ fontWeight: 'normal', color: '#c53030', fontSize: '12px' }}>
-                                    — {poiError}
-                                </span>
+                            <span className="m3-flex m3-gap-xs" style={{ alignItems: 'center' }}>
+                                <span className="md-body-small m3-text-error">— {poiError}</span>
                                 <button
                                     type="button"
                                     onClick={handleRetryPoi}
                                     disabled={poiLoading}
-                                    style={{
-                                        padding: '2px 6px',
-                                        fontSize: '11px',
-                                        borderRadius: '4px',
-                                        border: '1px solid #feb2b2',
-                                        background: '#fff5f5',
-                                        color: '#c53030',
-                                        cursor: poiLoading ? 'not-allowed' : 'pointer',
-                                        opacity: poiLoading ? 0.7 : 1,
-                                    }}
+                                    className="m3-btn m3-btn-error-tonal m3-btn-sm"
+                                    style={{ padding: '2px 8px', minHeight: 'unset', fontSize: 11 }}
                                 >
                                     {poiLoading ? 'Retrying…' : 'Retry'}
                                 </button>
                             </span>
                         )}
                         {!pickedLocation && !poiLoading && (
-                            <span style={{ fontWeight: 'normal', color: '#aaa', fontSize: '12px' }}>
-                                — pin a location on the map above to auto-fill
-                            </span>
+                            <span className="md-body-small m3-text-secondary">— pin a location on the map above to auto-fill</span>
                         )}
                     </div>
 
-                    <div className="form-row">
+                    <div className="m3-form-row">
                         {POI_ROWS.map(({ key, label, icon }) => {
                             const poi = nearbyPlaces?.[key] as NearbyPlace | undefined;
                             const isReady = !!poi;
                             const isSearching = poiLoading && !poi;
 
                             return (
-                                <div className="form-group" key={key} style={{ margin: '0 0 12px 0', position: 'relative' }}>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <div className="m3-input-group" key={key} style={{ margin: '0 0 12px 0', position: 'relative' }}>
+                                    <label className="m3-input-label m3-flex m3-gap-xs" style={{ alignItems: 'center' }}>
                                         <span>{icon}</span> {label}
                                     </label>
                                     <div style={{ position: 'relative' }}>
@@ -340,25 +323,25 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                                                     !pickedLocation ? 'Auto-filled when map location is picked' :
                                                         (poiError ? 'Temporarily unavailable' : 'Not found nearby')
                                             }
+                                            className="m3-input"
                                             style={{
-                                                background: isReady ? '#f0f7ff' : '#fafafa',
-                                                color: isReady ? '#1a3a5c' : '#aaa',
-                                                fontWeight: isReady ? '600' : 'normal',
+                                                background: isReady ? 'var(--md-sys-color-primary-container)' : undefined,
+                                                color: isReady ? 'var(--md-sys-color-on-primary-container)' : undefined,
+                                                fontWeight: isReady ? 600 : undefined,
                                                 cursor: isReady ? 'pointer' : 'default',
-                                                paddingRight: isReady ? '36px' : undefined,
-                                                border: isReady ? '1px solid #90cdf4' : '1px solid #e2e8f0',
+                                                paddingRight: isReady ? 36 : undefined,
                                             }}
                                             onClick={() => isReady && window.open(poi!.osmUrl, '_blank', 'noopener,noreferrer')}
                                             title={isReady ? `Open ${poi!.name} on OpenStreetMap` : undefined}
                                         />
                                         {isSearching && (
-                                            <span style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px', color: '#aaa' }}>
+                                            <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: 'var(--md-sys-color-outline)' }}>
                                                 ⏳
                                             </span>
                                         )}
                                         {isReady && (
                                             <span
-                                                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: '#3182ce', cursor: 'pointer', fontWeight: 'bold' }}
+                                                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: 'var(--md-sys-color-primary)', cursor: 'pointer', fontWeight: 'bold' }}
                                                 onClick={() => window.open(poi!.osmUrl, '_blank', 'noopener,noreferrer')}
                                                 title="Open on OpenStreetMap"
                                             >
@@ -372,71 +355,77 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                     </div>
                 </div>
 
-                <div className="form-group">
-                    <label>Address</label>
+                <div className="m3-input-group">
+                    <label className="m3-input-label">Address</label>
                     <input
                         type="text"
                         value={formData.address}
                         onChange={e => setFormData({ ...formData, address: e.target.value })}
                         placeholder="Full address"
+                        className="m3-input"
                     />
                 </div>
 
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Area (sq ft) *</label>
+                <div className="m3-form-row">
+                    <div className="m3-input-group">
+                        <label className="m3-input-label">Area (sq ft) *</label>
                         <input
                             type="number" required min="0"
                             value={formData.area}
                             onChange={e => setFormData({ ...formData, area: parseInt(e.target.value) })}
                             placeholder="e.g., 1200"
+                            className="m3-input"
                         />
                     </div>
-                    <div className="form-group">
-                        <label>BHK *</label>
+                    <div className="m3-input-group">
+                        <label className="m3-input-label">BHK *</label>
                         <input
                             type="number" required min="1" max="10"
                             value={formData.bhk}
                             onChange={e => setFormData({ ...formData, bhk: parseInt(e.target.value) })}
+                            className="m3-input"
                         />
                     </div>
                 </div>
 
-                <div className="form-group">
-                    <label>Price (₹) *</label>
+                <div className="m3-input-group">
+                    <label className="m3-input-label">Price (₹) *</label>
                     <input
                         type="number" required min="0"
                         value={formData.price}
                         onChange={e => setFormData({ ...formData, price: parseFloat(e.target.value) })}
                         placeholder="e.g., 5000000 (50 lakhs)"
+                        className="m3-input"
                     />
                 </div>
 
-                <div className="form-group">
-                    <label>Amenities (comma-separated)</label>
+                <div className="m3-input-group">
+                    <label className="m3-input-label">Amenities (comma-separated)</label>
                     <input
                         type="text"
                         value={formData.amenities}
                         onChange={e => setFormData({ ...formData, amenities: e.target.value })}
                         placeholder="e.g., parking, gym, swimming pool, garden"
+                        className="m3-input"
                     />
                 </div>
 
-                <div className="form-group">
-                    <label>Contact (phone/name)</label>
+                <div className="m3-input-group">
+                    <label className="m3-input-label">Contact (phone/name)</label>
                     <input
                         type="text"
                         value={formData.contact}
                         onChange={e => setFormData({ ...formData, contact: e.target.value })}
                         placeholder="e.g., 9876543210 or John Doe"
+                        className="m3-input"
                     />
                 </div>
 
-                {message && <div className="success">{message}</div>}
-                {error && <div className="error">{error}</div>}
+                {message && <div className="m3-alert m3-alert-success">{message}</div>}
+                {error && <div className="m3-alert m3-alert-error">{error}</div>}
 
-                <div style={{ display: 'flex', gap: '10px' }}>
-                    <button type="submit" className="button" style={{ flex: 1 }} disabled={loading}>
+                <div className="m3-flex m3-gap-sm">
+                    <button type="submit" className="m3-btn m3-btn-filled" style={{ flex: 1 }} disabled={loading}>
                         {loading
                             ? (isEditing ? 'Updating…' : 'Creating…')
                             : (isEditing ? 'Update Property' : 'Add Property')}
@@ -445,7 +434,8 @@ function PropertyForm({ onSuccess, fixedSellerId, initialData, isEditing }: Prop
                         <button
                             type="button"
                             onClick={() => onSuccess && onSuccess()}
-                            style={{ flex: 1, padding: '10px', background: '#ccc', borderRadius: '4px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                            className="m3-btn m3-btn-tonal"
+                            style={{ flex: 1 }}
                         >
                             Cancel
                         </button>

@@ -201,43 +201,22 @@ export default function LocationPicker({
     };
 
     return (
-        <div style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
+        <div className="m3-map-container" style={{ borderRadius: 'var(--md-sys-shape-corner-sm)' }}>
             {/* Search bar */}
-            <div
-                style={{
-                    display: 'flex',
-                    gap: '8px',
-                    padding: '10px',
-                    background: '#f8f9fa',
-                    borderBottom: '1px solid #ddd',
-                }}
-            >
+            <div className="m3-flex m3-gap-xs" style={{ padding: 10, background: 'var(--md-sys-color-surface-container)', borderBottom: '1px solid var(--md-sys-color-outline-variant)' }}>
                 <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     placeholder="Search for a location..."
-                    style={{
-                        flex: 1,
-                        padding: '8px 12px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        fontSize: '14px',
-                    }}
+                    className="m3-input m3-input-compact"
+                    style={{ flex: 1 }}
                 />
                 <button
                     onClick={handleSearch}
                     disabled={loading}
-                    style={{
-                        padding: '8px 16px',
-                        background: '#4CAF50',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        fontSize: '14px',
-                    }}
+                    className="m3-btn m3-btn-filled m3-btn-sm"
                 >
                     {loading ? '...' : '🔍 Search'}
                 </button>
@@ -248,24 +227,15 @@ export default function LocationPicker({
 
             {/* Selected locations */}
             {locations.length > 0 && (
-                <div style={{ padding: '10px', background: '#f8f9fa', borderTop: '1px solid #ddd' }}>
-                    <small style={{ color: '#666', fontWeight: 'bold' }}>
+                <div style={{ padding: 10, background: 'var(--md-sys-color-surface-container)', borderTop: '1px solid var(--md-sys-color-outline-variant)' }}>
+                    <small className="md-label-medium m3-text-secondary">
                         {mode === 'single' ? 'Selected Location:' : `Selected Localities (${locations.length}):`}
                     </small>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+                    <div className="m3-flex m3-flex-wrap m3-gap-xs" style={{ marginTop: 6 }}>
                         {locations.map((loc, i) => (
                             <span
                                 key={i}
-                                style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    background: '#e3f2fd',
-                                    color: '#1565c0',
-                                    padding: '4px 10px',
-                                    borderRadius: '16px',
-                                    fontSize: '13px',
-                                }}
+                                className="m3-chip m3-chip-primary"
                             >
                                 📍 {loc.name}
                                 <button
@@ -273,9 +243,9 @@ export default function LocationPicker({
                                     style={{
                                         background: 'none',
                                         border: 'none',
-                                        color: '#e53935',
+                                        color: 'var(--md-sys-color-error)',
                                         cursor: 'pointer',
-                                        fontSize: '14px',
+                                        fontSize: 14,
                                         padding: '0 2px',
                                         lineHeight: 1,
                                     }}
@@ -289,28 +259,12 @@ export default function LocationPicker({
             )}
 
             {loading && (
-                <div
-                    style={{
-                        padding: '6px 10px',
-                        background: '#fff3e0',
-                        color: '#e65100',
-                        fontSize: '12px',
-                        textAlign: 'center',
-                    }}
-                >
+                <div className="m3-alert m3-alert-warning" style={{ margin: 0, borderRadius: 0 }}>
                     📡 Resolving location...
                 </div>
             )}
 
-            <div
-                style={{
-                    padding: '6px 10px',
-                    background: '#f5f5f5',
-                    fontSize: '11px',
-                    color: '#999',
-                    textAlign: 'center',
-                }}
-            >
+            <div style={{ padding: '6px 10px', background: 'var(--md-sys-color-surface-container)', fontSize: 11, color: 'var(--md-sys-color-outline)', textAlign: 'center' }}>
                 {mode === 'single'
                     ? 'Click on the map to select property location, or search above'
                     : 'Click on the map to add localities, or search above. Click a marker to remove.'}

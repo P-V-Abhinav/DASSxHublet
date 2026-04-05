@@ -148,26 +148,19 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
     );
 
     return (
-        <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <h1>Seller Dashboard — {sellerName}</h1>
+        <div className="m3-container">
+            <h1 className="md-headline-medium" style={{ marginBottom: 20 }}>Seller Dashboard — {sellerName}</h1>
 
             <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                style={{
-                    padding: '12px 24px',
-                    background: '#4CAF50',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    marginBottom: '20px',
-                }}
+                className={`m3-btn ${showAddForm ? 'm3-btn-error-tonal' : 'm3-btn-filled'}`}
+                style={{ marginBottom: 20 }}
             >
                 {showAddForm ? 'Cancel' : '+ Add New Property'}
             </button>
 
             {showAddForm && (
-                <div style={{ marginBottom: '30px', padding: '20px', background: '#f5f5f5', borderRadius: '8px' }}>
+                <div className="m3-surface-container" style={{ marginBottom: 24 }}>
                     <PropertyForm fixedSellerId={sellerId} onSuccess={() => {
                         setShowAddForm(false);
                         fetchProperties();
@@ -175,15 +168,15 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                 </div>
             )}
 
-            <h2>Your Properties ({properties.length})</h2>
+            <h2 className="md-title-large" style={{ marginBottom: 16 }}>Your Properties ({properties.length})</h2>
 
-            {loading && <p>Loading...</p>}
+            {loading && <p className="m3-loading">Loading...</p>}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+            <div className="m3-grid-cards">
                 {properties.map((property) => (
                     editingProperty === property.id ? (
-                        <div key={property.id} style={{ border: '2px solid #2196F3', borderRadius: '8px', padding: '15px', background: '#f5f5f5' }}>
-                            <h3 style={{ margin: '0 0 15px 0' }}>Edit Property</h3>
+                        <div key={property.id} className="m3-card m3-card-outlined" style={{ borderColor: 'var(--md-sys-color-primary)' }}>
+                            <h3 className="md-title-medium" style={{ marginBottom: 16 }}>Edit Property</h3>
                             <PropertyForm
                                 fixedSellerId={sellerId}
                                 initialData={property}
@@ -195,40 +188,32 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                             />
                         </div>
                     ) : (
-                        <div
-                            key={property.id}
-                            style={{
-                                border: '1px solid #ddd',
-                                padding: '15px',
-                                borderRadius: '8px',
-                                background: 'white',
-                            }}
-                        >
-                            <h3>{property.title}</h3>
-                            <p>{property.locality}</p>
-                            <p>{property.bhk} BHK | {property.area} sq ft</p>
-                            <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#4CAF50' }}>
+                        <div key={property.id} className="m3-card m3-card-outlined">
+                            <h3 className="md-title-medium">{property.title}</h3>
+                            <p className="md-body-medium m3-text-secondary" style={{ marginTop: 4 }}>{property.locality}</p>
+                            <p className="md-body-medium" style={{ marginTop: 4, color: 'var(--md-sys-color-on-surface-variant)' }}>{property.bhk} BHK | {property.area} sq ft</p>
+                            <p className="md-title-medium m3-text-success" style={{ marginTop: 8, fontWeight: 700 }}>
                                 ₹{(property.price / 100000).toFixed(2)} Lakhs
                             </p>
-                            <p style={{
-                                color: property.isActive ? 'green' : 'red',
-                                fontWeight: 'bold',
-                            }}>
-                                {property.isActive ? 'Active' : 'Inactive'}
+                            <p style={{ marginTop: 4 }}>
+                                <span className={`m3-chip ${property.isActive ? 'm3-chip-success' : 'm3-chip-error'}`}>
+                                    {property.isActive ? 'Active' : 'Inactive'}
+                                </span>
                             </p>
                             {property.metadata?.coordinates?.lat && property.metadata?.coordinates?.lon && (
                                 <a
                                     href={`https://www.openstreetmap.org/?mlat=${property.metadata.coordinates.lat}&mlon=${property.metadata.coordinates.lon}#map=16/${property.metadata.coordinates.lat}/${property.metadata.coordinates.lon}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ color: '#2196F3', textDecoration: 'none', fontSize: '14px', display: 'inline-block', marginBottom: '10px' }}
+                                    className="md-body-small m3-text-primary"
+                                    style={{ display: 'inline-block', marginTop: 4, marginBottom: 8 }}
                                 >
                                     View on Map
                                 </a>
                             )}
                             {property.metadata?.nearbyPlaces && (
-                                <div style={{ background: '#f9f9f9', border: '1px solid #eee', borderRadius: '6px', padding: '10px', marginBottom: '10px', fontSize: '13px' }}>
-                                    <div style={{ fontWeight: 'bold', marginBottom: '6px', color: '#555' }}>Nearby Places</div>
+                                <div className="m3-surface-container" style={{ marginBottom: 10 }}>
+                                    <div className="md-label-medium" style={{ marginBottom: 6, color: 'var(--md-sys-color-on-surface-variant)' }}>Nearby Places</div>
                                     {[
                                         { key: 'airport', label: 'Airport', data: property.metadata.nearbyPlaces.airport },
                                         { key: 'busStation', label: 'Bus Station', data: property.metadata.nearbyPlaces.busStation },
@@ -236,14 +221,11 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                         { key: 'hospital', label: 'Hospital', data: (property.metadata.nearbyPlaces as any).hospital },
                                     ].map(({ key, label, data }) =>
                                         data ? (
-                                            <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                                                <span style={{ color: '#333' }}>
-                                                    <strong>{label}:</strong> {data.name}
-                                                </span>
-                                                <span style={{ marginLeft: '8px', whiteSpace: 'nowrap', color: '#777' }}>
-                                                    {data.distanceKm} km
-                                                    {' '}
-                                                    <a href={data.osmUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2196F3', textDecoration: 'none' }}>Map</a>
+                                            <div key={key} className="m3-flex-between md-body-small" style={{ marginBottom: 4 }}>
+                                                <span><strong>{label}:</strong> {data.name}</span>
+                                                <span style={{ marginLeft: 8, whiteSpace: 'nowrap', color: 'var(--md-sys-color-on-surface-variant)' }}>
+                                                    {data.distanceKm} km{' '}
+                                                    <a href={data.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">Map</a>
                                                 </span>
                                             </div>
                                         ) : null
@@ -251,34 +233,11 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                 </div>
                             )}
 
-
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                                <button
-                                    onClick={() => fetchMatchesForProperty(property.id)}
-                                    style={{
-                                        flex: 1,
-                                        padding: '10px',
-                                        background: '#2196F3',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                    }}
-                                >
+                            <div className="m3-flex m3-gap-xs" style={{ marginTop: 12 }}>
+                                <button onClick={() => fetchMatchesForProperty(property.id)} className="m3-btn m3-btn-filled m3-btn-sm" style={{ flex: 1 }}>
                                     View Matches
                                 </button>
-                                <button
-                                    onClick={() => setEditingProperty(property.id)}
-                                    style={{
-                                        flex: 1,
-                                        padding: '10px',
-                                        background: '#FF9800',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                    }}
-                                >
+                                <button onClick={() => setEditingProperty(property.id)} className="m3-btn m3-btn-tonal m3-btn-sm" style={{ flex: 1 }}>
                                     Edit
                                 </button>
                                 {property.isActive && (
@@ -291,15 +250,8 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                                 fetchProperties();
                                             }
                                         }}
-                                        style={{
-                                            flex: 1,
-                                            padding: '10px',
-                                            background: '#f44336',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer',
-                                        }}
+                                        className="m3-btn m3-btn-error m3-btn-sm"
+                                        style={{ flex: 1 }}
                                     >
                                         Mark as Sold
                                     </button>
@@ -311,163 +263,111 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
             </div>
 
             {selectedProperty && matches.length > 0 && (
-                <div style={{ marginTop: '30px' }}>
-                    <h2>Matches for Selected Property</h2>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ background: '#4CAF50', color: 'white' }}>
-                            <tr>
-                                <th style={{ padding: '12px', textAlign: 'left' }}>Buyer Name</th>
-                                <th style={{ padding: '12px', textAlign: 'left' }}>Email</th>
-                                <th style={{ padding: '12px', textAlign: 'left' }}>Phone</th>
-                                <th style={{ padding: '12px', textAlign: 'left' }}>Match Score</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {matches.map((match, idx) => (
-                                <tr key={match.id} style={{ background: idx % 2 === 0 ? '#f9f9f9' : 'white' }}>
-                                    <td style={{ padding: '10px' }}>{match.buyer.name}</td>
-                                    <td style={{ padding: '10px' }}>{match.buyer.email}</td>
-                                    <td style={{ padding: '10px' }}>{match.buyer.phone || 'N/A'}</td>
-                                    <td style={{ padding: '10px', fontWeight: 'bold', color: '#4CAF50' }}>
-                                        <div>{match.matchScore.toFixed(1)}%</div>
-                                        <button
-                                            onClick={() => setSelectedMatchForBreakdown(match)}
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                color: '#1565c0',
-                                                textDecoration: 'underline',
-                                                cursor: 'pointer',
-                                                padding: '0',
-                                                marginTop: '4px',
-                                                fontSize: '12px',
-                                                fontWeight: 600,
-                                            }}
-                                        >
-                                            View Breakdown
-                                        </button>
-                                    </td>
+                <div style={{ marginTop: 32 }}>
+                    <h2 className="md-title-large" style={{ marginBottom: 16 }}>Matches for Selected Property</h2>
+                    <div className="m3-table-container">
+                        <table className="m3-table">
+                            <thead>
+                                <tr>
+                                    <th>Buyer Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Match Score</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {matches.map((match) => (
+                                    <tr key={match.id}>
+                                        <td style={{ fontWeight: 500 }}>{match.buyer.name}</td>
+                                        <td>{match.buyer.email}</td>
+                                        <td>{match.buyer.phone || 'N/A'}</td>
+                                        <td>
+                                            <span className="m3-badge m3-badge-success">{match.matchScore.toFixed(1)}%</span>
+                                            <button
+                                                onClick={() => setSelectedMatchForBreakdown(match)}
+                                                className="m3-btn m3-btn-text m3-btn-sm"
+                                                style={{ display: 'block', marginTop: 4, padding: '2px 4px' }}
+                                            >
+                                                View Breakdown
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
             {selectedMatchForBreakdown && selectedPropertyData && (
-                <div
-                    onClick={() => setSelectedMatchForBreakdown(null)}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 9999,
-                        padding: '20px',
-                    }}
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            width: '100%',
-                            maxWidth: '900px',
-                            background: '#fff',
-                            borderRadius: '10px',
-                            boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
-                            maxHeight: '85vh',
-                            overflow: 'auto',
-                            padding: '24px',
-                        }}
-                    >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <div className="m3-scrim" onClick={() => setSelectedMatchForBreakdown(null)}>
+                    <div className="m3-dialog" onClick={(e) => e.stopPropagation()}>
+                        <div className="m3-flex-between" style={{ alignItems: 'start' }}>
                             <div>
-                                <h2 style={{ margin: 0, marginBottom: '8px' }}>Match Score Breakdown</h2>
-                                <p style={{ margin: 0, color: '#555' }}>
+                                <h2 className="md-headline-small" style={{ marginBottom: 8 }}>Match Score Breakdown</h2>
+                                <p className="md-body-medium m3-text-secondary">
                                     Buyer: <strong>{selectedMatchForBreakdown.buyer.name}</strong> | Property:{' '}
                                     <strong>{selectedPropertyData.title}</strong>
                                 </p>
-                                <p style={{ marginTop: '8px', marginBottom: 0, color: '#2e7d32', fontWeight: 'bold' }}>
+                                <p className="md-body-large m3-text-success" style={{ marginTop: 8, fontWeight: 700 }}>
                                     Total Match Score: {selectedMatchForBreakdown.matchScore.toFixed(1)}%
                                 </p>
                             </div>
-                            <button
-                                onClick={() => setSelectedMatchForBreakdown(null)}
-                                style={{
-                                    border: 'none',
-                                    background: '#efefef',
-                                    borderRadius: '6px',
-                                    padding: '8px 12px',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold',
-                                }}
-                            >
+                            <button onClick={() => setSelectedMatchForBreakdown(null)} className="m3-btn m3-btn-tonal m3-btn-sm">
                                 Close
                             </button>
                         </div>
 
-                        <div style={{ marginTop: '18px', overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #ddd' }}>
-                                <thead style={{ background: '#f5f5f5' }}>
+                        <div className="m3-table-container" style={{ marginTop: 18 }}>
+                            <table className="m3-table">
+                                <thead>
                                     <tr>
-                                        <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Parameter</th>
-                                        <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Score</th>
-                                        <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Buyer Wanted</th>
-                                        <th style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'left' }}>Property Has</th>
+                                        <th>Parameter</th>
+                                        <th>Score</th>
+                                        <th>Buyer Wanted</th>
+                                        <th>Property Has</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 600 }}>Location</td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>{getScoreText(selectedMatchForBreakdown.locationScore)}</td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                            {buyerLocalities.length > 0 ? buyerLocalities.join(', ') : 'No location preference'}
-                                        </td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>{selectedPropertyData.locality}</td>
+                                        <td style={{ fontWeight: 600 }}>Location</td>
+                                        <td>{getScoreText(selectedMatchForBreakdown.locationScore)}</td>
+                                        <td>{buyerLocalities.length > 0 ? buyerLocalities.join(', ') : 'No location preference'}</td>
+                                        <td>{selectedPropertyData.locality}</td>
                                     </tr>
                                     <tr>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 600 }}>Budget</td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>{getScoreText(selectedMatchForBreakdown.budgetScore)}</td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                            {formatBudgetRange(
-                                                selectedMatchForBreakdown.buyer.budgetMin,
-                                                selectedMatchForBreakdown.buyer.budgetMax
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>{formatPrice(selectedPropertyData.price)}</td>
+                                        <td style={{ fontWeight: 600 }}>Budget</td>
+                                        <td>{getScoreText(selectedMatchForBreakdown.budgetScore)}</td>
+                                        <td>{formatBudgetRange(selectedMatchForBreakdown.buyer.budgetMin, selectedMatchForBreakdown.buyer.budgetMax)}</td>
+                                        <td>{formatPrice(selectedPropertyData.price)}</td>
                                     </tr>
                                     <tr>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 600 }}>Size</td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>{getScoreText(selectedMatchForBreakdown.sizeScore)}</td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                        <td style={{ fontWeight: 600 }}>Size</td>
+                                        <td>{getScoreText(selectedMatchForBreakdown.sizeScore)}</td>
+                                        <td>
                                             BHK: {selectedMatchForBreakdown.buyer.bhk || 'Any'}
                                             <br />
                                             Area: {formatAreaRange(selectedMatchForBreakdown.buyer.areaMin, selectedMatchForBreakdown.buyer.areaMax)}
                                         </td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                        <td>
                                             BHK: {selectedPropertyData.bhk}
                                             <br />
                                             Area: {selectedPropertyData.area} sq ft
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 600 }}>Amenities</td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>{getScoreText(selectedMatchForBreakdown.amenitiesScore)}</td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                            {buyerAmenities.length > 0 ? buyerAmenities.join(', ') : 'No amenities preference'}
-                                        </td>
-                                        <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                            {propertyAmenities.length > 0 ? propertyAmenities.join(', ') : 'No amenities listed'}
-                                        </td>
+                                        <td style={{ fontWeight: 600 }}>Amenities</td>
+                                        <td>{getScoreText(selectedMatchForBreakdown.amenitiesScore)}</td>
+                                        <td>{buyerAmenities.length > 0 ? buyerAmenities.join(', ') : 'No amenities preference'}</td>
+                                        <td>{propertyAmenities.length > 0 ? propertyAmenities.join(', ') : 'No amenities listed'}</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
-                        <div style={{ marginTop: '14px', background: '#f8f9fa', padding: '12px', borderRadius: '8px' }}>
-                            <strong>Amenities overlap:</strong>{' '}
-                            {matchedAmenities.length > 0 ? matchedAmenities.join(', ') : 'No common amenities'}
+                        <div className="m3-surface-container" style={{ marginTop: 14 }}>
+                            <strong className="md-label-large">Amenities overlap:</strong>{' '}
+                            <span className="md-body-medium">{matchedAmenities.length > 0 ? matchedAmenities.join(', ') : 'No common amenities'}</span>
                         </div>
                     </div>
                 </div>
