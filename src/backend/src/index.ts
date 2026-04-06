@@ -92,6 +92,8 @@ app.get('/debug-python', (req, res) => {
         : fs.existsSync(venvPythonWindows) ? venvPythonWindows
         : (process.env.PYTHON_PATH || (process.platform === 'win32' ? 'python' : 'python3'));
 
+    const venvPython = process.platform === 'win32' ? venvPythonWindows : venvPythonPosix;
+
     results['__dirname'] = __dirname;
     results['process_cwd'] = process.cwd();
     results['PYTHON_PATH_env'] = process.env.PYTHON_PATH || '(not set)';
