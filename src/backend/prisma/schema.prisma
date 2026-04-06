@@ -6,12 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model Buyer {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @map("_id")
   name      String
   email     String   @unique
   phone     String?
@@ -42,7 +42,7 @@ model Buyer {
 }
 
 model Seller {
-  id             String   @id @default(uuid())
+  id             String   @id @default(uuid()) @map("_id")
   name           String
   email          String   @unique
   phone          String?
@@ -68,8 +68,8 @@ model Seller {
 }
 
 model Property {
-  id          String   @id @default(uuid())
-  sellerId    String
+  id          String   @id @default(uuid()) @map("_id")
+  sellerId    String   @db.ObjectId
   seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   
   // Core attributes
@@ -108,10 +108,10 @@ model Property {
 }
 
 model Lead {
-  id         String    @id @default(uuid())
-  buyerId    String
+  id         String    @id @default(uuid()) @map("_id")
+  buyerId    String    @db.ObjectId
   buyer      Buyer     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  propertyId String
+  propertyId String    @db.ObjectId
   property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   
   // State machine (string instead of enum for SQLite)
@@ -136,10 +136,10 @@ model Lead {
 }
 
 model Match {
-  id         String   @id @default(uuid())
-  buyerId    String
+  id         String   @id @default(uuid()) @map("_id")
+  buyerId    String   @db.ObjectId
   buyer      Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  propertyId String
+  propertyId String   @db.ObjectId
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   
   // Match score breakdown
@@ -161,8 +161,8 @@ model Match {
 }
 
 model WorkflowEvent {
-  id          String    @id @default(uuid())
-  leadId      String?
+  id          String    @id @default(uuid()) @map("_id")
+  leadId      String?   @db.ObjectId
   lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   
   // Valid values: LEAD_CREATED, STATE_TRANSITION, MATCH_GENERATED, ERROR, INVALID_TRANSITION
