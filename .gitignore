@@ -1,16 +1,51 @@
+# --- Node.js ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env.bak
+*.env.old
+
+# --- Build/Output ---
+dist/
+build/
+out/
+.next/
+.cache/
+*.tsbuildinfo
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env/
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
 # --- Excel / Office Temp Files ---
 ~$*.doc*
 ~$*.xls*
 *.tmp
 
-# --- Python ---
-__pycache__/
-*.py[cod]
-venv/
-
-# --- OS Specific ---
-.DS_Store
-Thumbs.db
+# --- Data and Logs ---
+*.log
+*.db
+src/backend/scraper/facebook_group_scraper/data/*.csv
+src/backend/scraper/data/*.csv
+src/backend/credentials-log.json
 
 # --- Local documentation output ---
 context/
