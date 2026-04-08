@@ -42,7 +42,6 @@ Thumbs.db
 
 # --- Data and Logs ---
 *.log
-*.db
 src/backend/scraper/facebook_group_scraper/data/*.csv
 src/backend/scraper/data/*.csv
 src/backend/credentials-log.json
