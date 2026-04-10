@@ -137,7 +137,10 @@ export class ScrapingService {
             const pythonProcess = spawn(ScrapingService.PYTHON_EXEC_PATH, [
                 this.PYTHON_SCRIPT_PATH,
                 '--list-scrapers'
-            ]);
+            ], {
+                cwd: ScrapingService.SCRAPER_DIR,
+                env: { ...process.env, PYTHONPATH: ScrapingService.SCRAPER_DIR }
+            });
 
             let dataString = '';
             let errorString = '';
@@ -190,7 +193,10 @@ export class ScrapingService {
                 args.push('--zenrows-key', zenrowsKey);
             }
 
-            const pythonProcess = spawn(ScrapingService.PYTHON_EXEC_PATH, args);
+            const pythonProcess = spawn(ScrapingService.PYTHON_EXEC_PATH, args, {
+                cwd: ScrapingService.SCRAPER_DIR,
+                env: { ...process.env, PYTHONPATH: ScrapingService.SCRAPER_DIR }
+            });
 
             let dataString = '';
             let errorString = '';
