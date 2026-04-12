@@ -18,7 +18,7 @@ import { sanitizeResponsePayload } from './utils/response-sanitizer';
 dotenv.config();
 
 // Ensure Python environment is setup and dependencies installed before starting
-import fs from 'fs';
+import * as fs from 'fs';
 import { execSync } from 'child_process';
 (function setupPythonEnv() {
     try {
@@ -99,8 +99,6 @@ app.use('/api/auth', authRoutes);
 
 // Python environment debug endpoint — outside /api so JWT middleware doesn't apply
 app.get('/debug-python', (req, res) => {
-    const { execSync } = require('child_process');
-    const fs = require('fs');
     const results: Record<string, string> = {};
 
     const run = (cmd: string) => {
@@ -180,7 +178,6 @@ app.use('/api/workflow-events', workflowEventRoutes);
 app.use('/api/admin/seed', seedRoutes);
 
 // ── Facebook Group Scraper ────────────────────────────────────────────────
-import fs from 'fs';
 import csv from 'csv-parser';
 import { PropertyService } from './services/property.service';
 import { MatchingService } from './services/matching.service';
@@ -189,9 +186,8 @@ import { LeadService } from './services/lead.service';
 const FB_SCRAPER_DIR = path.join(__dirname, '../scraper/facebook_group_scraper');
 const fbVenvPythonPosix = path.join(FB_SCRAPER_DIR, 'venv', 'bin', 'python');
 const fbVenvPythonWindows = path.join(FB_SCRAPER_DIR, 'venv', 'Scripts', 'python.exe');
-const fsModule = require('fs');
-const FB_PYTHON = fsModule.existsSync(fbVenvPythonPosix) ? fbVenvPythonPosix 
-    : fsModule.existsSync(fbVenvPythonWindows) ? fbVenvPythonWindows 
+const FB_PYTHON = fs.existsSync(fbVenvPythonPosix) ? fbVenvPythonPosix 
+    : fs.existsSync(fbVenvPythonWindows) ? fbVenvPythonWindows 
     : (process.platform === 'win32' ? 'python' : 'python3');
 const FB_SCRIPT = path.join(FB_SCRAPER_DIR, 'pipeline.py');
 
