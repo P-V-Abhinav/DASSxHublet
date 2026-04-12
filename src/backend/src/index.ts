@@ -86,12 +86,12 @@ app.get('/debug-python', (req, res) => {
     };
 
     const scraperDir = path.join(process.cwd(), 'scraper');
-    const renderVenvPython = '/opt/render/project/src/.venv/bin/python';
+    const localVenvPosix = path.join(process.cwd(), '.venv', 'bin', 'python');
     const venvPythonPosix = path.join(scraperDir, 'venv', 'bin', 'python');
     const venvPythonWindows = path.join(scraperDir, 'venv', 'Scripts', 'python.exe');
     
     let resolvedPython = process.platform === 'win32' ? 'python' : 'python3';
-    if (fs.existsSync(renderVenvPython)) resolvedPython = renderVenvPython;
+    if (fs.existsSync(localVenvPosix)) resolvedPython = localVenvPosix;
     else if (fs.existsSync(venvPythonPosix)) resolvedPython = venvPythonPosix;
     else if (fs.existsSync(venvPythonWindows)) resolvedPython = venvPythonWindows;
     else if (process.env.PYTHON_PATH) resolvedPython = process.env.PYTHON_PATH;
