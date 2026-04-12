@@ -17,6 +17,29 @@ import { sanitizeResponsePayload } from './utils/response-sanitizer';
 // Load environment variables
 dotenv.config();
 
+// Ensure Python environment is setup and dependencies installed before starting
+import fs from 'fs';
+import { execSync } from 'child_process';
+(function setupPythonEnv() {
+    try {
+        const isWin = process.platform === 'win32';
+        const venvDir = path.join(process.cwd(), '.venv');
+        const py = isWin ? 'python' : 'python3';
+        const pip = path.join(venvDir, isWin ? 'Scripts' : 'bin', 'pip');
+        const req = path.join(process.cwd(), 'scraper', 'requirements.txt');
+        
+        if (!fs.existsSync(venvDir)) {
+            console.log(`[Startup] Building Python virtual environment...`);
+            execSync(`${py} -m venv .venv`, { stdio: 'inherit' });
+        }
+        
+        console.log(`[Startup] Verifying Python requirements from ${req}...`);
+        execSync(`${pip} install -r "${req}"`, { stdio: 'inherit' });
+    } catch (err: any) {
+        console.error(`[Startup] Failed to setup python virtual environment automatically:`, err.message);
+    }
+})();
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
