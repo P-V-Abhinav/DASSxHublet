@@ -69,7 +69,7 @@ model Seller {
 
 model Property {
   id          String   @id @default(uuid()) @map("_id")
-  sellerId    String   @db.ObjectId
+  sellerId    String   
   seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   
   // Core attributes
@@ -109,9 +109,9 @@ model Property {
 
 model Lead {
   id         String    @id @default(uuid()) @map("_id")
-  buyerId    String    @db.ObjectId
+  buyerId    String    
   buyer      Buyer     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  propertyId String    @db.ObjectId
+  propertyId String    
   property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   
   // State machine (string instead of enum for SQLite)
@@ -137,9 +137,9 @@ model Lead {
 
 model Match {
   id         String   @id @default(uuid()) @map("_id")
-  buyerId    String   @db.ObjectId
+  buyerId    String   
   buyer      Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  propertyId String   @db.ObjectId
+  propertyId String   
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   
   // Match score breakdown
@@ -162,7 +162,7 @@ model Match {
 
 model WorkflowEvent {
   id          String    @id @default(uuid()) @map("_id")
-  leadId      String?   @db.ObjectId
+  leadId      String?   
   lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   
   // Valid values: LEAD_CREATED, STATE_TRANSITION, MATCH_GENERATED, ERROR, INVALID_TRANSITION
