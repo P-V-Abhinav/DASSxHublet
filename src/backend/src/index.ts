@@ -35,6 +35,12 @@ import { execSync } from 'child_process';
         
         console.log(`[Startup] Verifying Python requirements from ${req}...`);
         execSync(`${pip} install -r "${req}"`, { stdio: 'inherit' });
+
+        const fbReq = path.join(process.cwd(), 'scraper', 'facebook_group_scraper', 'requirements.txt');
+        if (fs.existsSync(fbReq)) {
+            console.log(`[Startup] Verifying Facebook Scraper requirements from ${fbReq}...`);
+            execSync(`${pip} install -r "${fbReq}"`, { stdio: 'inherit' });
+        }
     } catch (err: any) {
         console.error(`[Startup] Failed to setup python virtual environment automatically:`, err.message);
     }
@@ -184,9 +190,13 @@ import { MatchingService } from './services/matching.service';
 import { LeadService } from './services/lead.service';
 
 const FB_SCRAPER_DIR = path.join(__dirname, '../scraper/facebook_group_scraper');
+const localVenvPosixFb = path.join(process.cwd(), '.venv', 'bin', 'python');
+const localVenvWindowsFb = path.join(process.cwd(), '.venv', 'Scripts', 'python.exe');
 const fbVenvPythonPosix = path.join(FB_SCRAPER_DIR, 'venv', 'bin', 'python');
 const fbVenvPythonWindows = path.join(FB_SCRAPER_DIR, 'venv', 'Scripts', 'python.exe');
-const FB_PYTHON = fs.existsSync(fbVenvPythonPosix) ? fbVenvPythonPosix 
+const FB_PYTHON = fs.existsSync(localVenvPosixFb) ? localVenvPosixFb
+    : fs.existsSync(localVenvWindowsFb) ? localVenvWindowsFb
+    : fs.existsSync(fbVenvPythonPosix) ? fbVenvPythonPosix 
     : fs.existsSync(fbVenvPythonWindows) ? fbVenvPythonWindows 
     : (process.platform === 'win32' ? 'python' : 'python3');
 const FB_SCRIPT = path.join(FB_SCRAPER_DIR, 'pipeline.py');
