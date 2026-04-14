@@ -51,7 +51,7 @@ export class BuyerService {
         let metadata = data.metadata || {};
         metadata = await ensureGeocodedMetadata(metadata);
 
-        return await prisma.buyer.create({
+        const buyer = await prisma.buyer.create({
             data: {
                 name: data.name,
                 email: data.email,
@@ -67,6 +67,13 @@ export class BuyerService {
                 metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null,
             },
         });
+
+        // Fire-and-forget auto-matching
+        BuyerService.triggerAutoMatching(buyer.id).catch(err =>
+            console.error(`[BuyerService] Auto-matching failed for buyer ${buyer.id}:`, err.message)
+        );
+
+        return buyer;
     }
 
 
@@ -160,10 +167,27 @@ export class BuyerService {
             updateData.metadata = JSON.stringify(geocoded);
         }
 
-        return await prisma.buyer.update({
+        const updated = await prisma.buyer.update({
             where: { id },
             data: updateData,
         });
+
+        // Fire-and-forget auto-matching after preference update
+        BuyerService.triggerAutoMatching(id).catch(err =>
+            console.error(`[BuyerService] Auto-matching failed for buyer ${id}:`, err.message)
+        );
+
+        return updated;
+    }
+
+    /**
+     * Trigger matching for a buyer against all properties (async, non-blocking).
+     */
+    private static async triggerAutoMatching(buyerId: string) {
+        const { MatchingService } = await import('./matching.service');
+        const matchingService = new MatchingService();
+        const matches = await matchingService.findMatchesForBuyer(buyerId);
+        console.log(`[BuyerService] Auto-generated ${matches.length} matches for buyer ${buyerId}`);
     }
 
     /**

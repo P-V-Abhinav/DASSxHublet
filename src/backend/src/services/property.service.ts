@@ -2,10 +2,13 @@ import prisma from '../db/prisma';
 import { Prisma } from '@prisma/client';
 import { forwardGeocode } from '../utils/geocoder';
 import { fetchNearbyPlaces } from '../utils/nearby-places';
+import { GeocodeService } from './geocode.service';
 
 export class PropertyService {
     /**
-     * Create a new property
+     * Create a new property.
+     * Auto-geocodes locality if no coordinates provided.
+     * Auto-triggers matching for all compatible buyers.
      */
     static async createProperty(data: {
         sellerId: string;
@@ -29,9 +32,10 @@ export class PropertyService {
         if (!mergedMetadata.coordinates) {
             try {
                 const geoQuery = data.address || data.locality;
-                const geoResult = await forwardGeocode(geoQuery);
-                if (geoResult) {
-                    mergedMetadata.coordinates = { lat: geoResult.lat, lon: geoResult.lon };
+                const coords = await GeocodeService.geocodeAddress(geoQuery);
+                if (coords) {
+                    mergedMetadata.coordinates = { lat: coords.lat, lon: coords.lon };
+                    console.log(`[PropertyService] Geocoded "${geoQuery}" → ${coords.lat}, ${coords.lon}`);
                 }
             } catch (err) {
                 console.error('[PropertyService] Geocoding failed (non-blocking):', err);
@@ -39,7 +43,6 @@ export class PropertyService {
         }
 
         // After we have coordinates, fetch nearby POIs via Overpass API (non-blocking).
-        // Skip if already fetched (e.g. coordinates came from metadata directly).
         if (mergedMetadata.coordinates && !mergedMetadata.nearbyPlaces) {
             try {
                 const { lat, lon } = mergedMetadata.coordinates;
@@ -63,7 +66,7 @@ export class PropertyService {
             }
         }
 
-        return await prisma.property.create({
+        const property = await prisma.property.create({
             data: {
                 sellerId: data.sellerId,
                 title: data.title,
@@ -73,7 +76,7 @@ export class PropertyService {
                 area: data.area,
                 bhk: data.bhk,
                 price: data.price,
-                amenities: JSON.stringify(data.amenities || []), // SQLite: store as JSON string
+                amenities: JSON.stringify(data.amenities || []),
                 propertyType: data.propertyType || 'apartment',
                 contact: data.contact || null,
                 metadata: Object.keys(mergedMetadata).length > 0 ? JSON.stringify(mergedMetadata) : null,
@@ -83,6 +86,24 @@ export class PropertyService {
                 seller: true,
             },
         });
+
+        // Fire-and-forget auto-matching for this new property
+        this.triggerAutoMatching(property.id).catch(err =>
+            console.error(`[PropertyService] Auto-matching failed for property ${property.id}:`, err.message)
+        );
+
+        return property;
+    }
+
+    /**
+     * Trigger matching for a property against all buyers (async, non-blocking).
+     */
+    private static async triggerAutoMatching(propertyId: string) {
+        // Lazy import to avoid circular dependency
+        const { MatchingService } = await import('./matching.service');
+        const matchingService = new MatchingService();
+        const matches = await matchingService.findMatchesForProperty(propertyId);
+        console.log(`[PropertyService] Auto-generated ${matches.length} matches for property ${propertyId}`);
     }
 
     /**
