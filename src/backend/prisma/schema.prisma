@@ -41,7 +41,7 @@ model Buyer {
 }
 
 model Seller {
-  id             String   @id @default(uuid()) @map("_id")
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   email          String   @unique
   phone          String?
@@ -67,8 +67,8 @@ model Seller {
 }
 
 model Property {
-  id          String   @id @default(uuid()) @map("_id")
-  sellerId    String   
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  sellerId    String   @db.ObjectId
   seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   
   // Core attributes
@@ -107,8 +107,8 @@ model Property {
 }
 
 model Lead {
-  id         String    @id @default(uuid()) @map("_id")
-  buyerId    String    
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId    String    @db.ObjectId
   buyer      Buyer     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   propertyId String    
   property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -135,8 +135,8 @@ model Lead {
 }
 
 model Match {
-  id         String   @id @default(uuid()) @map("_id")
-  buyerId    String   
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId    String   @db.ObjectId
   buyer      Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   propertyId String   
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -160,8 +160,8 @@ model Match {
 }
 
 model WorkflowEvent {
-  id          String    @id @default(uuid()) @map("_id")
-  leadId      String?   
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  leadId      String?   @db.ObjectId
   lead        Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   
   // Valid values: LEAD_CREATED, STATE_TRANSITION, MATCH_GENERATED, ERROR, INVALID_TRANSITION
