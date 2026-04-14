@@ -6,6 +6,7 @@ import { MatchingService } from './matching.service';
 import { LeadService } from './lead.service';
 import { BuyerService } from './buyer.service';
 import { PropertyService } from './property.service';
+import { logCredential } from '../utils/credential-logger';
 
 const prisma = new PrismaClient();
 
@@ -84,6 +85,7 @@ export class ScrapingService {
                     completedDeals: 0
                 }
             });
+            logCredential({ role: 'seller', name, email, password: '(scraped-no-password)', source: 'scraper' });
             console.log(`[ScrapingService] Created new seller: ${name} (${type})`);
         }
         return seller.id;
@@ -123,6 +125,7 @@ export class ScrapingService {
                     interest: 'high'
                 }
             });
+            logCredential({ role: 'buyer', name, email, password: '(synthetic-no-password)', source: 'scraper' });
             console.log(`[ScrapingService] Created synthetic buyer: ${buyer.name} (Budget: ${budgetMin}-${budgetMax})`);
             return buyer;
         } catch (error: any) {

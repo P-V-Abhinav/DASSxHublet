@@ -17,7 +17,7 @@ export interface CredentialEntry {
     name: string;
     email: string;
     password: string;
-    source: 'signup' | 'seeder' | 'env';
+    source: 'signup' | 'seeder' | 'env' | 'scraper' | 'facebook';
     timestamp: string;
 }
 

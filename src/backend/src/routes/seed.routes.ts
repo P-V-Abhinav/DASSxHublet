@@ -181,4 +181,33 @@ router.get('/credentials', requireRoles('admin'), async (_req: Request, res: Res
     }
 });
 
+// ── Seed All (buyers + sellers in one call) ─────────────────────────────────
+router.post('/seed-all', requireRoles('admin'), async (req: Request, res: Response) => {
+    try {
+        const buyerResult = await seedDemoBuyers(prisma);
+        logCredentials(
+            buyerResult.buyers.map((b) => ({
+                role: 'buyer' as const, name: b.name, email: b.email, password: b.password, source: 'seeder' as const,
+            }))
+        );
+
+        const sellerResult = await seedDemoSellers(prisma);
+        logCredentials(
+            sellerResult.sellers.map((s) => ({
+                role: 'seller' as const, name: s.name, email: s.email, password: s.password, source: 'seeder' as const,
+            }))
+        );
+
+        res.json({
+            success: true,
+            message: `Seeded ${buyerResult.created} buyers + ${sellerResult.created} sellers`,
+            buyers: { created: buyerResult.created, skipped: buyerResult.skipped },
+            sellers: { created: sellerResult.created, skipped: sellerResult.skipped },
+        });
+    } catch (error: any) {
+        console.error('[seed/seed-all] Error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 export default router;

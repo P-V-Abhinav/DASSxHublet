@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Buyer {
-  id        String   @id @default(uuid()) @map("_id")
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   email     String   @unique
   phone     String?

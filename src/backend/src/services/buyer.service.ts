@@ -1,11 +1,38 @@
 import prisma from '../db/prisma';
 import { Prisma } from '@prisma/client';
 import { removeCredentialByEmail } from '../utils/credential-logger';
-import { forwardGeocode } from '../utils/geocoder';
+import { GeocodeService } from './geocode.service';
+
+/**
+ * Ensures metadata has localityCoords. If missing but localityText exists,
+ * attempts geocoding via Nominatim and persists the result.
+ */
+async function ensureGeocodedMetadata(metadata: Record<string, any>): Promise<Record<string, any>> {
+    if (metadata.localityCoords && metadata.localityCoords.length > 0) {
+        return metadata; // already has coords
+    }
+
+    const text = metadata.localityText || metadata.city;
+    if (!text) return metadata; // nothing to geocode
+
+    try {
+        const coords = await GeocodeService.geocodeAddress(text);
+        if (coords) {
+            metadata.localityCoords = [{ name: text, lat: coords.lat, lon: coords.lon }];
+            console.log(`[BuyerService] Auto-geocoded "${text}" → ${coords.lat}, ${coords.lon}`);
+        } else {
+            console.warn(`[BuyerService] Geocoding returned no result for "${text}"`);
+        }
+    } catch (e) {
+        console.warn(`[BuyerService] Geocoding failed for "${text}":`, e);
+    }
+    return metadata;
+}
 
 export class BuyerService {
     /**
-     * Create a new buyer with intent
+     * Create a new buyer with intent.
+     * Auto-geocodes locality text to coords if localityCoords is missing.
      */
     static async createBuyer(data: {
         name: string;
@@ -22,6 +49,7 @@ export class BuyerService {
         metadata?: any;
     }) {
         let metadata = data.metadata || {};
+        metadata = await ensureGeocodedMetadata(metadata);
 
         return await prisma.buyer.create({
             data: {
@@ -34,9 +62,9 @@ export class BuyerService {
                 bhk: data.bhk,
                 budgetMin: data.budgetMin,
                 budgetMax: data.budgetMax,
-                amenities: JSON.stringify(data.amenities || []), // SQLite: store as JSON string
+                amenities: JSON.stringify(data.amenities || []),
                 rawPreferences: data.rawPreferences,
-                metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null, // SQLite: store as JSON string
+                metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null,
             },
         });
     }
@@ -71,7 +99,6 @@ export class BuyerService {
 
         if (!buyer) return null;
 
-        // Parse JSON strings back to arrays/objects
         return {
             ...buyer,
             amenities: JSON.parse(buyer.amenities),
@@ -92,16 +119,12 @@ export class BuyerService {
             where.bhk = filters.bhk;
         }
 
-        // For SQLite, we can't use hasSome on JSON strings
-        // We'll filter in memory or skip this filter for now
-
         const buyers = await prisma.buyer.findMany({
             where,
             take: filters?.limit || 100,
             orderBy: { createdAt: 'desc' },
         });
 
-        // Parse JSON strings and optionally filter by localities
         let result = buyers.map((buyer: any) => ({
             ...buyer,
             amenities: JSON.parse(buyer.amenities),
@@ -112,7 +135,8 @@ export class BuyerService {
     }
 
     /**
-     * Update buyer
+     * Update buyer.
+     * Auto-geocodes locality text to coords if localityCoords is missing.
      */
     static async updateBuyer(id: string, data: Partial<{
         name: string;
@@ -127,13 +151,13 @@ export class BuyerService {
         rawPreferences: string;
         metadata: any;
     }>) {
-        // Convert arrays to JSON strings for SQLite
         const updateData: any = { ...data };
         if (data.amenities) {
             updateData.amenities = JSON.stringify(data.amenities);
         }
         if (data.metadata) {
-            updateData.metadata = JSON.stringify(data.metadata);
+            const geocoded = await ensureGeocodedMetadata(data.metadata);
+            updateData.metadata = JSON.stringify(geocoded);
         }
 
         return await prisma.buyer.update({

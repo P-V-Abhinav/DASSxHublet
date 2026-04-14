@@ -55,37 +55,37 @@ const PORT = process.env.PORT || 3000;
 //   - a wildcard glob:  *.vercel.app  (matches all Vercel preview deployments)
 //   - a bare wildcard:  *             (allow all — dev only)
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || 'http://localhost:5173')
-  .split(',')
-  .map((o) => o.trim());
+    .split(',')
+    .map((o) => o.trim());
 
 /** Returns true if `origin` matches an allowed entry (exact or *.domain glob). */
 function isOriginAllowed(origin: string): boolean {
-  for (const allowed of ALLOWED_ORIGINS) {
-    if (allowed === '*') return true;
-    if (allowed === origin) return true;
-    // Wildcard prefix: *.example.com matches anything.example.com (http or https)
-    if (allowed.startsWith('*.')) {
-      const suffix = allowed.slice(1); // e.g. ".vercel.app"
-      try {
-        const { hostname } = new URL(origin);
-        if (hostname.endsWith(suffix)) return true;
-      } catch { /* invalid URL, skip */ }
+    for (const allowed of ALLOWED_ORIGINS) {
+        if (allowed === '*') return true;
+        if (allowed === origin) return true;
+        // Wildcard prefix: *.example.com matches anything.example.com (http or https)
+        if (allowed.startsWith('*.')) {
+            const suffix = allowed.slice(1); // e.g. ".vercel.app"
+            try {
+                const { hostname } = new URL(origin);
+                if (hostname.endsWith(suffix)) return true;
+            } catch { /* invalid URL, skip */ }
+        }
     }
-  }
-  return false;
+    return false;
 }
 
 // Middleware
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (curl, Render health checks, mobile apps, etc.)
-      if (!origin) return callback(null, true);
-      if (isOriginAllowed(origin)) return callback(null, true);
-      return callback(new Error(`CORS: origin ${origin} not allowed`));
-    },
-    credentials: true,
-  })
+    cors({
+        origin: (origin, callback) => {
+            // Allow requests with no origin (curl, Render health checks, mobile apps, etc.)
+            if (!origin) return callback(null, true);
+            if (isOriginAllowed(origin)) return callback(null, true);
+            return callback(new Error(`CORS: origin ${origin} not allowed`));
+        },
+        credentials: true,
+    })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -116,7 +116,6 @@ app.get('/debug-python', (req, res) => {
     const localVenvPosix = path.join(process.cwd(), '.venv', 'bin', 'python');
     const venvPythonPosix = path.join(scraperDir, 'venv', 'bin', 'python');
     const venvPythonWindows = path.join(scraperDir, 'venv', 'Scripts', 'python.exe');
-    
     let resolvedPython = process.platform === 'win32' ? 'python' : 'python3';
     if (fs.existsSync(localVenvPosix)) resolvedPython = localVenvPosix;
     else if (fs.existsSync(venvPythonPosix)) resolvedPython = venvPythonPosix;
@@ -188,6 +187,8 @@ import csv from 'csv-parser';
 import { PropertyService } from './services/property.service';
 import { MatchingService } from './services/matching.service';
 import { LeadService } from './services/lead.service';
+import { logCredential } from './utils/credential-logger';
+import { GeocodeService } from './services/geocode.service';
 
 const FB_SCRAPER_DIR = path.join(__dirname, '../scraper/facebook_group_scraper');
 const localVenvPosixFb = path.join(process.cwd(), '.venv', 'bin', 'python');
@@ -196,8 +197,8 @@ const fbVenvPythonPosix = path.join(FB_SCRAPER_DIR, 'venv', 'bin', 'python');
 const fbVenvPythonWindows = path.join(FB_SCRAPER_DIR, 'venv', 'Scripts', 'python.exe');
 const FB_PYTHON = fs.existsSync(localVenvPosixFb) ? localVenvPosixFb
     : fs.existsSync(localVenvWindowsFb) ? localVenvWindowsFb
-    : fs.existsSync(fbVenvPythonPosix) ? fbVenvPythonPosix 
-    : fs.existsSync(fbVenvPythonWindows) ? fbVenvPythonWindows 
+    : fs.existsSync(fbVenvPythonPosix) ? fbVenvPythonPosix
+    : fs.existsSync(fbVenvPythonWindows) ? fbVenvPythonWindows
     : (process.platform === 'win32' ? 'python' : 'python3');
 const FB_SCRIPT = path.join(FB_SCRAPER_DIR, 'pipeline.py');
 
@@ -235,7 +236,7 @@ app.post('/api/admin/fb-scrape', async (req, res) => {
             proc.on('close', (code: number) => {
                 if (stdout) console.log(`[FB-Scrape] stdout:\n${stdout}`);
                 if (stderr) console.error(`[FB-Scrape] stderr:\n${stderr}`);
-                
+
                 if (code !== 0) {
                     return reject(new Error(`Facebook scraper exited with code ${code}: ${stderr.slice(-500)}`));
                 }
@@ -268,7 +269,7 @@ app.post('/api/admin/fb-scrape', async (req, res) => {
 // Load locally saved extracted_listings.csv
 app.get('/api/admin/fb-load-csv', async (req, res) => {
     const csvPath = path.join(FB_SCRAPER_DIR, 'data/extracted_listings.csv');
-    
+
     if (!fs.existsSync(csvPath)) {
         return res.status(404).json({ success: false, error: 'extracted_listings.csv not found. Run the python scraper first.' });
     }
@@ -317,6 +318,7 @@ app.post('/api/admin/fb-save', async (req, res) => {
                         completedDeals: 0,
                     }
                 });
+                logCredential({ role: 'seller', name: sellerName, email, password: '(facebook-no-password)', source: 'facebook' });
             }
 
             const title = row.TITLE && row.TITLE !== '-' ? row.TITLE : 'Facebook Listing';
@@ -382,8 +384,24 @@ app.post('/api/admin/fb-save', async (req, res) => {
                     scrapedAt: new Date().toISOString()
                 },
             });
+
+            // Auto-geocode the property if no coordinates in metadata
+            try {
+                const propMeta = newProperty.metadata ? JSON.parse(newProperty.metadata) : {};
+                if (!propMeta.coordinates && locality !== 'Unknown') {
+                    const coords = await GeocodeService.geocodeAddress(locality);
+                    if (coords) {
+                        propMeta.coordinates = coords;
+                        await prisma.property.update({ where: { id: newProperty.id }, data: { metadata: JSON.stringify(propMeta) } });
+                        console.log(`[FB-Save] Geocoded "${locality}" → ${coords.lat}, ${coords.lon}`);
+                    }
+                }
+            } catch (geoErr: any) {
+                console.warn(`[FB-Save] Geocoding failed for "${locality}":`, geoErr.message);
+            }
+
             saved++;
-            
+
             // --- AUTO-MATCHING & LEAD CREATION ---
             try {
                 const matches = await matchingService.findMatchesForProperty(newProperty.id);
