@@ -100,9 +100,6 @@ export class AuthController {
                 email,
                 phone,
                 passwordHash,
-                localities: toStringArray(localities).length > 0
-                    ? toStringArray(localities)
-                    : parsedIntent?.localities || [],
                 areaMin: areaMin ?? parsedIntent?.areaMin,
                 areaMax: areaMax ?? parsedIntent?.areaMax,
                 bhk: bhk ?? parsedIntent?.bhk,

@@ -2,6 +2,7 @@ import prisma from '../db/prisma';
 import { RuleBasedMatcher, Matcher, BuyerIntent, PropertyData } from '../matchers/rule-based-matcher';
 import { WorkflowEventService } from './workflow-event.service';
 import { KeywordIntentParser } from '../parsers/intent-parser';
+import { GeocodeService } from './geocode.service';
 
 const intentParser = new KeywordIntentParser();
 
@@ -38,14 +39,26 @@ export class MatchingService {
             include: { seller: true },
         });
 
-        // Score each property
-        // Re-parse rawPreferences on-the-fly if stored localities is empty
-        // (handles buyers created before the parser was improved)
-        let storedLocalities: string[] = JSON.parse(buyer.localities);
-        if (storedLocalities.length === 0 && buyer.rawPreferences) {
-            const reparsed = intentParser.parse(buyer.rawPreferences);
-            if (reparsed.localities.length > 0) {
-                storedLocalities = reparsed.localities;
+        // Pre-process buyer coordinates
+        const buyerMeta = buyer.metadata ? JSON.parse(buyer.metadata) : {};
+        if (!buyerMeta.localityCoords || buyerMeta.localityCoords.length === 0) {
+            console.warn(`Buyer ${buyerId} has no locality coords in metadata — location scoring will be 0`);
+        }
+
+        // Pre-process properties
+        for (const property of properties) {
+            const propMeta = property.metadata ? JSON.parse(property.metadata) : {};
+            if (!propMeta.coordinates || typeof propMeta.coordinates.lat !== 'number') {
+                console.log(`Geocoding property locality: ${property.locality}`);
+                const coords = await GeocodeService.geocodeAddress(property.locality);
+                if (coords) {
+                    propMeta.coordinates = coords;
+                    await prisma.property.update({
+                        where: { id: property.id },
+                        data: { metadata: JSON.stringify(propMeta) }
+                    });
+                    property.metadata = JSON.stringify(propMeta);
+                }
             }
         }
 
@@ -56,7 +69,6 @@ export class MatchingService {
                 const propMeta = property.metadata ? JSON.parse(property.metadata) : null;
 
                 const buyerIntent: BuyerIntent = {
-                    localities: storedLocalities,
                     localityCoords: buyerMeta?.localityCoords || undefined,
                     areaMin: buyer.areaMin || undefined,
                     areaMax: buyer.areaMax || undefined,
@@ -193,8 +205,30 @@ export class MatchingService {
             throw new Error(`Property ${propertyId} not found`);
         }
 
+        const propMeta = property.metadata ? JSON.parse(property.metadata) : {};
+        if (!propMeta.coordinates || typeof propMeta.coordinates.lat !== 'number') {
+            console.log(`Geocoding property locality: ${property.locality}`);
+            const coords = await GeocodeService.geocodeAddress(property.locality);
+            if (coords) {
+                propMeta.coordinates = coords;
+                await prisma.property.update({
+                    where: { id: property.id },
+                    data: { metadata: JSON.stringify(propMeta) }
+                });
+                property.metadata = JSON.stringify(propMeta);
+            }
+        }
+
         // Get all buyers
         const buyers = await prisma.buyer.findMany();
+
+        // Pre-process buyers sequentially
+        for (const buyer of buyers) {
+            const buyerMeta = buyer.metadata ? JSON.parse(buyer.metadata) : {};
+            if (!buyerMeta.localityCoords || buyerMeta.localityCoords.length === 0) {
+                console.warn(`Buyer ${buyer.id} has no locality coords — skipping geocode`);
+            }
+        }
 
         // Score each buyer
         const matches = buyers
@@ -203,7 +237,6 @@ export class MatchingService {
                 const propMeta = property.metadata ? JSON.parse(property.metadata) : null;
 
                 const buyerIntent: BuyerIntent = {
-                    localities: JSON.parse(buyer.localities),
                     localityCoords: buyerMeta?.localityCoords || undefined,
                     areaMin: buyer.areaMin || undefined,
                     areaMax: buyer.areaMax || undefined,

@@ -6,7 +6,6 @@ export interface Matcher {
 }
 
 export interface BuyerIntent {
-    localities: string[];
     localityCoords?: Array<{ name: string; lat: number; lon: number }>;
     areaMin?: number;
     areaMax?: number;
@@ -53,6 +52,17 @@ export class RuleBasedMatcher implements Matcher {
         const sizeScore = this.scoreSize(buyerIntent, property);
         const amenitiesScore = this.scoreAmenities(buyerIntent, property);
 
+        // Hard discard threshold: any match with locationScore < 25% must be explicitly excluded
+        if (locationScore < 25) {
+            return {
+                totalScore: 0,
+                locationScore,
+                budgetScore,
+                sizeScore,
+                amenitiesScore,
+            };
+        }
+
         const totalScore =
             locationScore * this.WEIGHTS.location +
             budgetScore * this.WEIGHTS.budget +
@@ -70,51 +80,24 @@ export class RuleBasedMatcher implements Matcher {
 
     /**
      * Score location match (0-100)
-     * Uses Haversine distance when coordinates are available for both buyer and property.
-     * Falls back to string matching when coordinates are missing.
-     * Returns 50 (neutral) when the buyer has no locality preference.
+     * Strictly uses Haversine distance tracking against geolocated pins.
+     * All string overlap fallback legacy rules have been removed.
      */
     private scoreLocation(buyerIntent: BuyerIntent, property: PropertyData): number {
-        // No locality preference → neutral score
-        if (!buyerIntent.localities || buyerIntent.localities.length === 0) {
-            return 50;
+        // Enforce strict geo dependency
+        if (!buyerIntent.localityCoords || buyerIntent.localityCoords.length === 0) return 0;
+        if (property.lat === undefined || property.lon === undefined) return 0;
+
+        let bestDistanceScore = 0;
+
+        // Find the maximum proximity (minimum physical distance) scoring output
+        for (const coord of buyerIntent.localityCoords) {
+            const dist = haversineDistance(coord.lat, coord.lon, property.lat, property.lon);
+            const score = distanceToScore(dist);
+            if (score > bestDistanceScore) bestDistanceScore = score;
         }
 
-        // ── Distance-based scoring (preferred when coords available) ──────────
-        if (
-            property.lat !== undefined && property.lon !== undefined &&
-            buyerIntent.localityCoords && buyerIntent.localityCoords.length > 0
-        ) {
-            let bestScore = 0;
-            for (const coord of buyerIntent.localityCoords) {
-                const dist = haversineDistance(coord.lat, coord.lon, property.lat, property.lon);
-                const score = distanceToScore(dist);
-                if (score > bestScore) bestScore = score;
-            }
-            return bestScore;
-        }
-
-        // ── Fallback: string-based scoring ────────────────────────────────────
-        const propLocality = property.locality.toLowerCase().trim();
-        const buyerLocalities = buyerIntent.localities.map(l => l.toLowerCase().trim());
-
-        for (const buyerLoc of buyerLocalities) {
-            // Exact match
-            if (propLocality === buyerLoc) return 100;
-
-            // Property locality contains buyer preference (e.g. "thane west" ⊇ "thane")
-            if (propLocality.includes(buyerLoc)) return 80;
-
-            // Buyer preference contains property locality (e.g. "thane west sector 5" ⊇ "thane west")
-            if (buyerLoc.includes(propLocality)) return 75;
-
-            // Token-level overlap: share at least one meaningful word
-            const propTokens = propLocality.split(/\s+/).filter(w => w.length > 2);
-            const buyerTokens = buyerLoc.split(/\s+/).filter(w => w.length > 2);
-            if (propTokens.some(t => buyerTokens.includes(t))) return 60;
-        }
-
-        return 0;
+        return bestDistanceScore;
     }
 
     /**

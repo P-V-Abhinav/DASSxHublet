@@ -12,7 +12,6 @@ export class BuyerService {
         email: string;
         phone?: string;
         passwordHash?: string;
-        localities: string[];
         areaMin?: number;
         areaMax?: number;
         bhk?: number;
@@ -24,51 +23,12 @@ export class BuyerService {
     }) {
         let metadata = data.metadata || {};
 
-        // Geocode each locality and build localityCoords array (used by the matcher for
-        // distance-based scoring) as well as coordinates (the primary GPS pin for the map).
-        if (data.localities && data.localities.length > 0) {
-            const localityCoords: Array<{ name: string; lat: number; lon: number }> = [];
-
-            for (const loc of data.localities) {
-                // Skip if we already have a coord for this name
-                if (metadata.localityCoords?.some((c: any) => c.name === loc)) continue;
-                try {
-                    const geoResult = await forwardGeocode(loc);
-                    if (geoResult) {
-                        localityCoords.push({ name: loc, lat: geoResult.lat, lon: geoResult.lon });
-                    }
-                    // Nominatim rate-limit: 1 req/sec. Caller may also add delays between
-                    // buyers, but we guard here too.
-                    await new Promise(r => setTimeout(r, 1100));
-                } catch {
-                    // non-blocking – skip bad geocodes
-                }
-            }
-
-            if (localityCoords.length > 0) {
-                // localityCoords — array used by RuleBasedMatcher.scoreLocation()
-                metadata.localityCoords = [
-                    ...(metadata.localityCoords || []),
-                    ...localityCoords,
-                ];
-                // coordinates — single point used for map display (first result)
-                if (!metadata.coordinates) {
-                    metadata.coordinates = {
-                        lat: localityCoords[0].lat,
-                        lon: localityCoords[0].lon,
-                        displayName: localityCoords[0].name,
-                    };
-                }
-            }
-        }
-
         return await prisma.buyer.create({
             data: {
                 name: data.name,
                 email: data.email,
                 phone: data.phone,
                 passwordHash: data.passwordHash,
-                localities: JSON.stringify(data.localities), // SQLite: store as JSON string
                 areaMin: data.areaMin,
                 areaMax: data.areaMax,
                 bhk: data.bhk,
@@ -114,7 +74,6 @@ export class BuyerService {
         // Parse JSON strings back to arrays/objects
         return {
             ...buyer,
-            localities: JSON.parse(buyer.localities),
             amenities: JSON.parse(buyer.amenities),
             metadata: buyer.metadata ? JSON.parse(buyer.metadata) : null,
         };
@@ -125,7 +84,6 @@ export class BuyerService {
      */
     static async getAllBuyers(filters?: {
         bhk?: number;
-        localities?: string[];
         limit?: number;
     }) {
         const where: any = {};
@@ -146,17 +104,9 @@ export class BuyerService {
         // Parse JSON strings and optionally filter by localities
         let result = buyers.map((buyer: any) => ({
             ...buyer,
-            localities: JSON.parse(buyer.localities),
             amenities: JSON.parse(buyer.amenities),
             metadata: buyer.metadata ? JSON.parse(buyer.metadata) : null,
         }));
-
-        // Filter by localities in memory if needed
-        if (filters?.localities && filters.localities.length > 0) {
-            result = result.filter((buyer: any) =>
-                buyer.localities.some((loc: string) => filters.localities!.includes(loc))
-            );
-        }
 
         return result;
     }
@@ -168,7 +118,6 @@ export class BuyerService {
         name: string;
         email: string;
         phone: string;
-        localities: string[];
         areaMin: number;
         areaMax: number;
         bhk: number;
@@ -180,9 +129,6 @@ export class BuyerService {
     }>) {
         // Convert arrays to JSON strings for SQLite
         const updateData: any = { ...data };
-        if (data.localities) {
-            updateData.localities = JSON.stringify(data.localities);
-        }
         if (data.amenities) {
             updateData.amenities = JSON.stringify(data.amenities);
         }

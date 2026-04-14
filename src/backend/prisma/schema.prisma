@@ -18,7 +18,6 @@ model Buyer {
   passwordHash String?
   
   // Structured intent (stored as JSON strings for SQLite)
-  localities     String   // JSON array of locations
   areaMin        Int?     // in sq ft
   areaMax        Int?     // in sq ft
   bhk            Int?     // number of bedrooms

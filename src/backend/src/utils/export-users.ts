@@ -77,10 +77,11 @@ export async function exportUsersList(): Promise<void> {
 
         let localities = '—';
         try {
-            const locs = JSON.parse(b.localities || '[]');
-            if (Array.isArray(locs) && locs.length > 0) {
-                localities = locs.slice(0, 3).join(', ');
-                if (locs.length > 3) localities += ` (+${locs.length - 3})`;
+            const meta = JSON.parse(b.metadata || '{}');
+            const coords: Array<{ name: string }> = meta.localityCoords || [];
+            if (coords.length > 0) {
+                localities = coords.slice(0, 3).map((c) => c.name).join(', ');
+                if (coords.length > 3) localities += ` (+${coords.length - 3})`;
             }
         } catch { /* */ }
 

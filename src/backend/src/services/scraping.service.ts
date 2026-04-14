@@ -111,7 +111,6 @@ export class ScrapingService {
                 name: name,
                 email: email,
                 phone: `9${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
-                localities: [property.locality, property.city],
                 areaMin: areaMin,
                 areaMax: areaMax,
                 budgetMin: budgetMin,

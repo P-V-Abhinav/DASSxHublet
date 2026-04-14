@@ -17,7 +17,6 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
         minBudget: '',
         maxBudget: '',
         bhk: '',
-        localities: '',
         amenities: '',
         additionalNotes: '',
         rawQuery: '',
@@ -42,17 +41,6 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
             if (formData.email) payload.email = formData.email;
             if (formData.phone) payload.phone = formData.phone;
             if (formData.rawQuery) payload.rawPreferences = formData.rawQuery;
-
-            const localitiesArray = formData.localities
-                .split(',')
-                .map((l) => l.trim())
-                .filter((l) => l.length > 0);
-
-            // Only send localities if the user explicitly typed them. 
-            // Otherwise let backend parsed intent take over.
-            if (localitiesArray.length > 0) {
-                payload.localities = localitiesArray;
-            }
 
             const amenitiesArray = formData.amenities
                 .split(',')
@@ -102,12 +90,6 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
 
     const handleLocationsChange = (locations: PickedLocation[]) => {
         setPickedLocations(locations);
-        // Also update the text field to stay in sync
-        const names = locations.map((l) => l.name);
-        setFormData((prev) => ({
-            ...prev,
-            localities: names.join(', '),
-        }));
     };
 
     return (
@@ -146,7 +128,7 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
                                 📍 Preferred Localities
                             </h3>
                             <p className="md-body-small" style={{ color: 'var(--md-sys-color-on-surface-variant)', marginTop: 2 }}>
-                                Type localities below or pick them on the map
+                                Pick your preferred locations on the map
                             </p>
                         </div>
                         <button
@@ -157,16 +139,6 @@ const BuyerForm = ({ buyerId, onPreferencesUpdated }: BuyerFormProps) => {
                             {showMap ? '✕ Hide Map' : '🗺️ Pick on Map'}
                         </button>
                     </div>
-
-                    <input
-                        type="text"
-                        name="localities"
-                        value={formData.localities}
-                        onChange={handleChange}
-                        placeholder="e.g., Thane, Powai, Andheri (comma-separated)"
-                        className="m3-input"
-                        style={{ marginBottom: showMap ? 12 : 0 }}
-                    />
 
                     {showMap && (
                         <LocationPicker

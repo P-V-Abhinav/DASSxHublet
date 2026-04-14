@@ -241,381 +241,98 @@ export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onL
 
             {/* Main content */}
             <main className="m3-dashboard-main">
-              <div className="m3-container">
-                {loading && <p className="m3-loading">Loading...</p>}
-                {error && <div className="m3-alert m3-alert-error">Error: {error}</div>}
+                <div className="m3-container">
+                    {loading && <p className="m3-loading">Loading...</p>}
+                    {error && <div className="m3-alert m3-alert-error">Error: {error}</div>}
 
-                {/* Admin Tools (always visible except settings tabs) */}
-                {!activeTab.startsWith('settings-') && (
-                    <div className="m3-surface-container m3-flex m3-gap-sm m3-flex-wrap" style={{ alignItems: 'center', marginBottom: 20 }}>
-                        <span className="md-label-large m3-text-primary" style={{ marginRight: 8 }}>Admin Tools:</span>
-                        {activeTab === 'sellers' && (
+                    {/* Admin Tools (always visible except settings tabs) */}
+                    {!activeTab.startsWith('settings-') && (
+                        <div className="m3-surface-container m3-flex m3-gap-sm m3-flex-wrap" style={{ alignItems: 'center', marginBottom: 20 }}>
+                            <span className="md-label-large m3-text-primary" style={{ marginRight: 8 }}>Admin Tools:</span>
+                            {activeTab === 'sellers' && (
+                                <button
+                                    onClick={async () => {
+                                        if (!window.confirm('Reset ALL seller trust scores, ratings, and deals to 0?\n\nThis cannot be undone.')) return;
+                                        setResettingSellers(true); setActionMessage(null);
+                                        try { const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error || 'Failed'}`); fetchData(); }
+                                        catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); }
+                                        finally { setResettingSellers(false); }
+                                    }}
+                                    disabled={resettingSellers}
+                                    className="m3-btn m3-btn-error m3-btn-sm"
+                                >{resettingSellers ? 'Resetting...' : 'Reset Seller Trust to 0'}</button>
+                            )}
                             <button
                                 onClick={async () => {
-                                    if (!window.confirm('Reset ALL seller trust scores, ratings, and deals to 0?\n\nThis cannot be undone.')) return;
-                                    setResettingSellers(true); setActionMessage(null);
-                                    try { const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error || 'Failed'}`); fetchData(); }
-                                    catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); }
-                                    finally { setResettingSellers(false); }
+                                    if (credentials) { setCredentials(null); return; }
+                                    try { const res = await axios.get(`${API_BASE_URL}/admin/seed/credentials`); setCredentials(res.data.credentials || []); }
+                                    catch (err: any) { alert('Failed to fetch credentials: ' + (err.response?.data?.error || err.message)); }
                                 }}
-                                disabled={resettingSellers}
-                                className="m3-btn m3-btn-error m3-btn-sm"
-                            >{resettingSellers ? 'Resetting...' : 'Reset Seller Trust to 0'}</button>
-                        )}
-                        <button
-                            onClick={async () => {
-                                if (credentials) { setCredentials(null); return; }
-                                try { const res = await axios.get(`${API_BASE_URL}/admin/seed/credentials`); setCredentials(res.data.credentials || []); }
-                                catch (err: any) { alert('Failed to fetch credentials: ' + (err.response?.data?.error || err.message)); }
-                            }}
-                            className="m3-btn m3-btn-tonal m3-btn-sm"
-                        >{credentials ? 'Hide Credentials' : 'View Credentials'}</button>
-                    </div>
-                )}
-
-                {actionMessage && (
-                    <div className={`m3-alert ${actionMessage.includes('[OK]') ? 'm3-alert-success' : 'm3-alert-error'}`}>
-                        {actionMessage}
-                    </div>
-                )}
-
-                {/* Credentials — fixed white-on-white */}
-                {credentials && (
-                    <div className="m3-credential-card">
-                        <h3 className="md-title-medium" style={{ color: 'var(--md-sys-color-inverse-primary)', marginBottom: 12 }}>Stored Credentials ({credentials.length})</h3>
-                        <div className="m3-table-container">
-                            <table className="m3-table" style={{ fontSize: 13 }}>
-                                <thead><tr>
-                                    <th>Role</th><th>Name</th><th>Email</th><th>Password</th><th>Source</th><th>Timestamp</th>
-                                </tr></thead>
-                                <tbody>{credentials.map((c: any, i: number) => (
-                                    <tr key={i}>
-                                        <td><span className={`m3-chip ${c.role === 'admin' ? 'm3-chip-error' : c.role === 'buyer' ? 'm3-chip-success' : 'm3-chip-warning'}`} style={{ textTransform: 'uppercase', fontSize: 11 }}>{c.role}</span></td>
-                                        <td>{c.name}</td>
-                                        <td style={{ fontFamily: 'monospace' }}>{c.email}</td>
-                                        <td style={{ fontFamily: 'monospace' }}>{c.password}</td>
-                                        <td className="md-body-small">{c.source}</td>
-                                        <td className="md-body-small">{c.timestamp ? new Date(c.timestamp).toLocaleString() : '--'}</td>
-                                    </tr>
-                                ))}</tbody>
-                            </table>
+                                className="m3-btn m3-btn-tonal m3-btn-sm"
+                            >{credentials ? 'Hide Credentials' : 'View Credentials'}</button>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* ═══════════════════ TAB CONTENT ═══════════════════ */}
-                <div className="m3-fade-in" key={activeTab}>
+                    {actionMessage && (
+                        <div className={`m3-alert ${actionMessage.includes('[OK]') ? 'm3-alert-success' : 'm3-alert-error'}`}>
+                            {actionMessage}
+                        </div>
+                    )}
 
-                {/* ── BUYERS ────────────────────────── */}
-                {activeTab === 'buyers' && (
-                    <div>
-                        <div className="m3-flex-between m3-flex-wrap m3-gap-sm" style={{ marginBottom: 16 }}>
-                            <h2 className="md-title-large">All Buyers ({buyers.length})</h2>
-                            <div className="m3-flex m3-gap-xs">
-                                <button onClick={async () => { if (!window.confirm('Seed demo buyers?')) return; setSeedingBuyers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-buyers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setSeedingBuyers(false); } }} disabled={seedingBuyers} className="m3-btn m3-btn-tonal m3-btn-sm">{seedingBuyers ? 'Seeding...' : 'Seed Demo Buyers'}</button>
-                                <button onClick={async () => { if (!window.confirm('Delete ALL buyers?')) return; setDeletingBuyers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-buyers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setDeletingBuyers(false); } }} disabled={deletingBuyers} className="m3-btn m3-btn-error m3-btn-sm">{deletingBuyers ? 'Deleting...' : 'Delete All Buyers'}</button>
+                    {/* Credentials — fixed white-on-white */}
+                    {credentials && (
+                        <div className="m3-credential-card">
+                            <h3 className="md-title-medium" style={{ color: 'var(--md-sys-color-inverse-primary)', marginBottom: 12 }}>Stored Credentials ({credentials.length})</h3>
+                            <div className="m3-table-container">
+                                <table className="m3-table" style={{ fontSize: 13 }}>
+                                    <thead><tr>
+                                        <th>Role</th><th>Name</th><th>Email</th><th>Password</th><th>Source</th><th>Timestamp</th>
+                                    </tr></thead>
+                                    <tbody>{credentials.map((c: any, i: number) => (
+                                        <tr key={i}>
+                                            <td><span className={`m3-chip ${c.role === 'admin' ? 'm3-chip-error' : c.role === 'buyer' ? 'm3-chip-success' : 'm3-chip-warning'}`} style={{ textTransform: 'uppercase', fontSize: 11 }}>{c.role}</span></td>
+                                            <td>{c.name}</td>
+                                            <td style={{ fontFamily: 'monospace' }}>{c.email}</td>
+                                            <td style={{ fontFamily: 'monospace' }}>{c.password}</td>
+                                            <td className="md-body-small">{c.source}</td>
+                                            <td className="md-body-small">{c.timestamp ? new Date(c.timestamp).toLocaleString() : '--'}</td>
+                                        </tr>
+                                    ))}</tbody>
+                                </table>
                             </div>
                         </div>
-                        <div className="m3-table-container">
-                            <table className="m3-table">
-                                <thead><tr>
-                                    <th>Name</th><th>Email</th><th>Phone</th><th>Localities</th><th>BHK</th><th>Budget</th><th>Area</th><th>Amenities</th><th>Joined</th><th>Actions</th>
-                                </tr></thead>
-                                <tbody>{buyers.map(b => (
-                                    <tr key={b.id}>
-                                        <td style={{ fontWeight: 500 }}>{b.name}{b.metadata?.coordinates?.lat && <div style={{ marginTop: 4 }}><a href={`https://www.openstreetmap.org/?mlat=${b.metadata.coordinates.lat}&mlon=${b.metadata.coordinates.lon}#map=16/${b.metadata.coordinates.lat}/${b.metadata.coordinates.lon}`} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small">Map</a></div>}</td>
-                                        <td className="md-body-small">{b.email}</td>
-                                        <td>{b.phone || 'N/A'}</td>
-                                        <td style={{ maxWidth: 200 }}>{Array.isArray(b.localities) ? b.localities.join(', ') : (b.localities || 'N/A')}</td>
-                                        <td>{b.bhk ? `${b.bhk} BHK` : 'N/A'}</td>
-                                        <td style={{ fontWeight: 600 }} className="m3-text-success">{b.budgetMin || b.budgetMax ? `${fmtPrice(b.budgetMin || 0)} – ${fmtPrice(b.budgetMax || 0)}` : 'N/A'}</td>
-                                        <td>{b.areaMin || b.areaMax ? `${b.areaMin || '?'} – ${b.areaMax || '?'} sqft` : 'N/A'}</td>
-                                        <td className="md-body-small">{Array.isArray(b.amenities) && b.amenities.length > 0 ? b.amenities.join(', ') : 'None'}</td>
-                                        <td className="md-body-small">{fmt(b.createdAt)}</td>
-                                        <td><button onClick={async () => { try { await axios.delete(`${API_BASE_URL}/buyers/${b.id}`); fetchData(); } catch { alert('Failed to delete buyer'); } }} className="m3-btn m3-btn-error m3-btn-sm">Remove</button></td>
-                                    </tr>
-                                ))}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
+                    )}
 
-                {/* ── SELLERS ──────────────────────── */}
-                {activeTab === 'sellers' && (
-                    <div>
-                        <div className="m3-flex-between m3-flex-wrap m3-gap-sm" style={{ marginBottom: 16 }}>
-                            <h2 className="md-title-large">All Sellers ({sellers.length})</h2>
-                            <div className="m3-flex m3-gap-xs">
-                                <button onClick={async () => { if (!window.confirm('Seed demo sellers?')) return; setSeedingSellers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-sellers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setSeedingSellers(false); } }} disabled={seedingSellers} className="m3-btn m3-btn-tonal m3-btn-sm">{seedingSellers ? 'Seeding...' : 'Seed Demo Sellers'}</button>
-                                <button onClick={async () => { if (!window.confirm('Delete ALL sellers?')) return; setDeletingSellers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-sellers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setDeletingSellers(false); } }} disabled={deletingSellers} className="m3-btn m3-btn-error m3-btn-sm">{deletingSellers ? 'Deleting...' : 'Delete All Sellers'}</button>
-                            </div>
-                        </div>
-                        <div className="m3-table-container">
-                            <table className="m3-table">
-                                <thead><tr>
-                                    <th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Properties</th><th>Rating</th><th>Deals</th><th>Trust</th><th>Joined</th><th>Actions</th>
-                                </tr></thead>
-                                <tbody>{sellers.map((s: any) => (
-                                    <tr key={s.id}>
-                                        <td style={{ fontWeight: 500 }}>{s.name}{(() => { const c = s.properties?.[0]?.metadata?.coordinates; const city = s.metadata?.city; const href = c ? `https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=14/${c.lat}/${c.lon}` : city ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(city + ', India')}` : null; return href ? <div style={{ marginTop: 4 }}><a href={href} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small">Map</a></div> : null; })()}</td>
-                                        <td className="md-body-small">{s.email}</td>
-                                        <td>{s.phone || 'N/A'}</td>
-                                        <td><span className={`m3-chip ${s.sellerType === 'owner' ? 'm3-chip-primary' : s.sellerType === 'builder' ? 'm3-chip-filled' : 'm3-chip-warning'}`} style={{ textTransform: 'capitalize' }}>{s.sellerType}</span></td>
-                                        <td><strong>{s.propertyCount || s._count?.properties || 0}</strong>{s.properties?.length > 0 && <div className="md-body-small m3-text-secondary" style={{ marginTop: 4 }}>{s.properties.slice(0, 2).map((p: any) => <div key={p.id}>{p.title?.substring(0, 30)}{p.title?.length > 30 ? '...' : ''}</div>)}{s.properties.length > 2 && <div>+{s.properties.length - 2} more</div>}</div>}</td>
-                                        <td>{s.ratingCount === 0 ? "Not rated" : <><span style={{ fontWeight: 600 }}>{s.rating.toFixed(1)}</span> <span className="md-body-small m3-text-secondary">({s.ratingCount})</span></>}</td>
-                                        <td>{s.completedDeals}</td>
-                                        <td><span className={`m3-badge ${s.trustScore >= 70 ? 'm3-badge-success' : s.trustScore >= 40 ? 'm3-badge-warning' : 'm3-badge-error'}`}>{s.trustScore}</span></td>
-                                        <td className="md-body-small">{fmt(s.createdAt)}</td>
-                                        <td>
-                                            <div className="m3-flex m3-gap-xs" style={{ alignItems: 'center' }}>
-                                                <select onChange={(e) => { if (e.target.value) { handleOverrideRating(s.id, Number(e.target.value)); e.target.value = ""; } }} defaultValue="" className="m3-input m3-select m3-input-compact" style={{ width: 90 }}>
-                                                    <option value="" disabled>Rate</option>
-                                                    <option value="1">1★</option><option value="2">2★</option><option value="3">3★</option><option value="4">4★</option><option value="5">5★</option>
-                                                </select>
-                                                <button onClick={async () => { if (window.confirm(`Delete seller "${s.name}"?`)) { try { await axios.delete(`${API_BASE_URL}/sellers/${s.id}`); fetchData(); } catch { alert('Failed'); } } }} className="m3-btn m3-btn-error m3-btn-sm">Remove</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
+                    {/* ═══════════════════ TAB CONTENT ═══════════════════ */}
+                    <div className="m3-fade-in" key={activeTab}>
 
-                {/* ── PROPERTIES ───────────────────── */}
-                {activeTab === 'properties' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 16 }}>All Properties ({properties.length})</h2>
-                        <div className="m3-table-container">
-                            <table className="m3-table">
-                                <thead><tr>
-                                    <th>Img</th><th>Map</th><th>Title</th><th>Locality</th><th>Type</th><th>BHK</th><th>Area</th><th>Price</th><th>Seller</th><th>Contact</th><th>Source</th><th>Posted</th><th>Status</th><th>Actions</th>
-                                </tr></thead>
-                                <tbody>{properties.map(p => (
-                                    <tr key={p.id}>
-                                        <td style={{ width: 50, padding: 6 }}>{p.metadata?.imageUrl ? <img src={p.metadata.imageUrl} alt="" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 'var(--md-sys-shape-corner-xs)' }} /> : <div style={{ width: 48, height: 48, background: 'var(--md-sys-color-surface-container)', borderRadius: 'var(--md-sys-shape-corner-xs)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏠</div>}</td>
-                                        <td style={{ width: 36 }}>{p.metadata?.coordinates?.lat ? <a href={`https://www.openstreetmap.org/?mlat=${p.metadata.coordinates.lat}&mlon=${p.metadata.coordinates.lon}#map=16/${p.metadata.coordinates.lat}/${p.metadata.coordinates.lon}`} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small" style={{ fontWeight: 600 }}>Map</a> : <span className="m3-text-secondary">—</span>}</td>
-                                        <td style={{ maxWidth: 250 }}>
-                                            <strong>{p.title}</strong>
-                                            {p.description && <div className="md-body-small m3-text-secondary" style={{ marginTop: 4, maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</div>}
-                                            {p.metadata?.sourceUrl && <a href={p.metadata.sourceUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small">View listing ↗</a>}
-                                            {p.metadata?.groupUrl && <a href={p.metadata.groupUrl} target="_blank" rel="noopener noreferrer" className="md-body-small" style={{ color: 'var(--md-sys-color-tertiary)', marginLeft: p.metadata?.sourceUrl ? 8 : 0, display: 'inline-block' }}>View Group ↗</a>}
-                                        </td>
-                                        <td>
-                                            {p.locality}
-                                            {p.metadata?.landmark && <div className="md-body-small m3-text-secondary">📍 {p.metadata.landmark}</div>}
-                                            {p.metadata?.nearbyPlaces && (
-                                                <div className="md-body-small m3-text-secondary" style={{ marginTop: 5, lineHeight: 1.7 }}>
-                                                    {p.metadata.nearbyPlaces.airport && <div><strong>Airport:</strong> <a href={p.metadata.nearbyPlaces.airport.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">{p.metadata.nearbyPlaces.airport.name}</a> <span className="m3-text-secondary">({p.metadata.nearbyPlaces.airport.distanceKm} km)</span></div>}
-                                                    {p.metadata.nearbyPlaces.busStation && <div><strong>Bus:</strong> <a href={p.metadata.nearbyPlaces.busStation.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">{p.metadata.nearbyPlaces.busStation.name}</a> <span className="m3-text-secondary">({p.metadata.nearbyPlaces.busStation.distanceKm} km)</span></div>}
-                                                    {p.metadata.nearbyPlaces.trainStation && <div><strong>Train:</strong> <a href={p.metadata.nearbyPlaces.trainStation.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">{p.metadata.nearbyPlaces.trainStation.name}</a> <span className="m3-text-secondary">({p.metadata.nearbyPlaces.trainStation.distanceKm} km)</span></div>}
-                                                    {p.metadata.nearbyPlaces.hospital && <div><strong>Hospital:</strong> <a href={p.metadata.nearbyPlaces.hospital.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">{p.metadata.nearbyPlaces.hospital.name}</a> <span className="m3-text-secondary">({p.metadata.nearbyPlaces.hospital.distanceKm} km)</span></div>}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td><span className="m3-chip m3-chip-primary" style={{ textTransform: 'capitalize' }}>{p.propertyType}</span></td>
-                                        <td>{p.bhk || '—'}</td>
-                                        <td>{p.area ? `${p.area} sqft` : '—'}</td>
-                                        <td style={{ fontWeight: 600 }} className="m3-text-success">{fmtPrice(p.price)}</td>
-                                        <td><strong>{p.seller?.name || 'Unknown'}</strong><div className="md-body-small m3-text-secondary">{p.seller?.sellerType || ''}</div>{p.metadata?.companyName && <div className="md-body-small m3-text-secondary">🏢 {p.metadata.companyName}</div>}</td>
-                                        <td>{p.contact || 'N/A'}</td>
-                                        <td>{p.metadata?.source ? <span className="m3-chip m3-chip-warning">{p.metadata.source}</span> : '—'}{p.metadata?.scraper && <div className="md-body-small m3-text-secondary" style={{ marginTop: 3 }}>{p.metadata.scraper}</div>}</td>
-                                        <td className="md-body-small">{p.metadata?.postedDate || '—'}</td>
-                                        <td><span className={`m3-chip ${p.isActive ? 'm3-chip-success' : 'm3-chip-error'}`}>{p.isActive ? 'Active' : 'Inactive'}</span></td>
-                                        <td>{p.isActive && <button onClick={async () => { if (window.confirm('Mark as sold?')) { try { await axios.put(`${API_BASE_URL}/properties/${p.id}/mark-sold`, {}); fetchData(); } catch { alert('Failed'); } } }} className="m3-btn m3-btn-error m3-btn-sm">Mark Sold</button>}</td>
-                                    </tr>
-                                ))}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── LEADS ────────────────────────── */}
-                {activeTab === 'leads' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 16 }}>All Leads ({leads.length})</h2>
-                        <div className="m3-table-container">
-                            <table className="m3-table">
-                                <thead><tr>
-                                    <th>Buyer</th><th>Seller</th><th>Property</th><th>Price</th><th>State</th><th>Match Score</th><th>Created</th><th>Updated</th>
-                                </tr></thead>
-                                <tbody>{leads.map((l: any) => (
-                                    <tr key={l.id}>
-                                        <td><strong>{l.buyer.name}</strong><br /><span className="md-body-small m3-text-secondary">{l.buyer.email}</span>{l.buyer.phone && <div className="md-body-small m3-text-secondary">📞 {l.buyer.phone}</div>}</td>
-                                        <td><strong>{l.property?.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{l.property?.seller?.email || ''}</span>{l.property?.seller?.sellerType && <div style={{ marginTop: 4 }}><span className={getSellerRoleChipClass(l.property.seller.sellerType)}>{l.property.seller.sellerType}</span></div>}</td>
-                                        <td>{l.property.title}<br /><span className="md-body-small m3-text-secondary">{l.property.locality}</span>{l.property.bhk && <span className="md-body-small m3-text-secondary"> · {l.property.bhk} BHK</span>}{l.property.area && <span className="md-body-small m3-text-secondary"> · {l.property.area} sqft</span>}</td>
-                                        <td style={{ fontWeight: 600 }} className="m3-text-success">{l.property.price ? fmtPrice(l.property.price) : '—'}</td>
-                                        <td><span className={`m3-chip ${getStateChipClass(l.state)}`}>{l.state}</span></td>
-                                        <td>{l.matchScore ? <strong style={{ color: getScoreColor(l.matchScore) }}>{l.matchScore.toFixed(1)}%</strong> : 'N/A'}</td>
-                                        <td className="md-body-small">{fmt(l.createdAt)}</td>
-                                        <td className="md-body-small">{fmt(l.updatedAt)}</td>
-                                    </tr>
-                                ))}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── MATCHES ──────────────────────── */}
-                {activeTab === 'matches' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 16 }}>All Matches ({matches.length})</h2>
-                        <div className="m3-table-container">
-                            <table className="m3-table">
-                                <thead><tr>
-                                    <th>Buyer</th><th>Seller</th><th>Property</th><th>Match</th><th>Location</th><th>Budget</th><th>Size</th><th>Amenities</th><th>Created</th>
-                                </tr></thead>
-                                <tbody>{matches.map(m => (
-                                    <tr key={m.id}>
-                                        <td><strong>{m.buyer.name}</strong><br /><span className="md-body-small m3-text-secondary">{m.buyer.email}</span></td>
-                                        <td><strong>{m.property.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{m.property.seller?.email || ''}</span>{m.property.seller?.sellerType && <div style={{ marginTop: 4 }}><span className={getSellerRoleChipClass(m.property.seller.sellerType)}>{m.property.seller.sellerType}</span></div>}</td>
-                                        <td>{m.property.title}<br /><span className="md-body-small m3-text-secondary">{m.property.locality}</span></td>
-                                        <td><strong style={{ color: getScoreColor(m.matchScore) }}>{m.matchScore.toFixed(1)}%</strong></td>
-                                        <td><span className={getScoreClass(m.locationScore)}>{m.locationScore?.toFixed(1) || 'N/A'}%</span></td>
-                                        <td><span className={getScoreClass(m.budgetScore)}>{m.budgetScore?.toFixed(1) || 'N/A'}%</span></td>
-                                        <td><span className={getScoreClass(m.sizeScore)}>{m.sizeScore?.toFixed(1) || 'N/A'}%</span></td>
-                                        <td><span className={getScoreClass(m.amenitiesScore)}>{m.amenitiesScore?.toFixed(1) || 'N/A'}%</span></td>
-                                        <td className="md-body-small">{fmt(m.createdAt)}</td>
-                                    </tr>
-                                ))}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── LOGS ─────────────────────────── */}
-                {activeTab === 'logs' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 16 }}>Workflow Event Logs ({logs.length})</h2>
-                        <div className="m3-table-container">
-                            <table className="m3-table">
-                                <thead><tr>
-                                    <th>Timestamp</th><th>Event Type</th><th>From State</th><th>To State</th><th>Description</th>
-                                </tr></thead>
-                                <tbody>{logs.map(log => (
-                                    <tr key={log.id}>
-                                        <td className="md-body-small">{fmt(log.createdAt)}</td>
-                                        <td><span className={`m3-chip ${getEventChipClass(log.eventType)}`}>{log.eventType}</span></td>
-                                        <td>{log.fromState || '-'}</td>
-                                        <td>{log.toState || '-'}</td>
-                                        <td className="md-body-small">{log.description || '-'}</td>
-                                    </tr>
-                                ))}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── MANUAL SCRAPE ────────────────── */}
-                {activeTab === 'manual-scrape' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 8 }}>Manual Scrape</h2>
-                        <p className="md-body-medium m3-text-secondary" style={{ marginBottom: 20 }}>Trigger a manual scrape for properties in a specific city.</p>
-                        <div className="m3-surface-container m3-flex m3-gap-md m3-flex-wrap" style={{ alignItems: 'flex-end', marginBottom: 20 }}>
-                            <div style={{ flex: 1, minWidth: 200 }}>
-                                <label className="m3-input-label">City Name</label>
-                                <input type="text" value={manualCity} onChange={(e) => setManualCity(e.target.value)} placeholder="e.g. Pune, Mumbai, Delhi" className="m3-input" />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 200 }}>
-                                <label className="m3-input-label">Scraper</label>
-                                <select value={manualScraper} onChange={(e) => setManualScraper(e.target.value)} className="m3-input m3-select">
-                                    <option value="" disabled>Select a scraper</option>
-                                    {availableScrapers.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
-                            <button onClick={async () => { if (!manualCity || !manualScraper) { alert("Provide both city and scraper"); return; } setManualScraping(true); setManualScrapeMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/trigger-scrape`, { city: manualCity, scraper: manualScraper }); setManualScrapeMessage(res.data.success ? `✓ Scrape triggered. Results: ${JSON.stringify(res.data.results)}` : `✗ ${res.data.error || 'Failed'}`); } catch (err: any) { setManualScrapeMessage(`✗ ${err.response?.data?.error || err.message}`); } finally { setManualScraping(false); } }} disabled={manualScraping} className="m3-btn m3-btn-filled">{manualScraping ? 'Scraping...' : 'Trigger Scrape'}</button>
-                        </div>
-                        {manualScrapeMessage && <div className={`m3-alert ${manualScrapeMessage.startsWith('✓') ? 'm3-alert-success' : 'm3-alert-error'}`}>{manualScrapeMessage}</div>}
-                    </div>
-                )}
-
-                {/* ── FB SCRAPE ────────────────────── */}
-                {activeTab === 'fb-scrape' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 8 }}>Facebook Group Scraper</h2>
-                        <p className="md-body-medium m3-text-secondary" style={{ marginBottom: 20 }}>Scrape real estate listings from Facebook groups using Apify + Groq LLM extraction.</p>
-
-                        <div className="m3-surface-container m3-flex m3-gap-md m3-flex-wrap" style={{ alignItems: 'flex-end', marginBottom: 20 }}>
-                            <div style={{ flex: 1, minWidth: 300 }}>
-                                <label className="m3-input-label">Facebook Group URL</label>
-                                <input type="text" value={fbGroupUrl} onChange={(e) => setFbGroupUrl(e.target.value)} placeholder="https://www.facebook.com/groups/..." className="m3-input" />
-                            </div>
-                            <div style={{ width: 140 }}>
-                                <label className="m3-input-label">No. of Posts</label>
-                                <input type="number" value={fbPostLimit} onChange={(e) => setFbPostLimit(Number(e.target.value))} min={1} max={100} className="m3-input" />
-                            </div>
-                            <button onClick={async () => { if (!fbGroupUrl.trim()) { setFbError('Please enter a URL'); return; } setFbScraping(true); setFbError(null); setFbMessage(null); setFbResults([]); try { const res = await axios.post(`${API_BASE_URL}/admin/fb-scrape`, { groupUrl: fbGroupUrl.trim(), limit: fbPostLimit }); if (res.data.success && Array.isArray(res.data.data)) { setFbResults(res.data.data); setFbMessage(`✓ Scraped ${res.data.data.length} listing(s)`); } else { setFbError('Unexpected response'); } } catch (err: any) { setFbError(err.response?.data?.error || err.message); } finally { setFbScraping(false); } }} disabled={fbScraping} className="m3-btn m3-btn-filled">{fbScraping ? 'Scraping...' : 'Scrape Group'}</button>
-                            <button onClick={async () => { setFbScraping(true); setFbError(null); setFbMessage(null); setFbResults([]); try { const res = await axios.get(`${API_BASE_URL}/admin/fb-load-csv`); if (res.data.success && Array.isArray(res.data.data)) { setFbResults(res.data.data); setFbMessage(`✓ Loaded ${res.data.data.length} listing(s) from CSV`); } else { setFbError('Unexpected response'); } } catch (err: any) { setFbError(err.response?.data?.error || err.message); } finally { setFbScraping(false); } }} disabled={fbScraping} className="m3-btn m3-btn-tonal">Load CSV</button>
-                        </div>
-
-                        {/* Saved Links */}
-                        <div className="m3-surface-container-low" style={{ marginBottom: 16, padding: '12px 16px' }}>
-                            <div className="m3-flex-between" style={{ marginBottom: 8 }}>
-                                <span className="md-label-medium m3-text-secondary">💾 Saved Links</span>
-                                <button
-                                    onClick={() => {
-                                        if (!fbGroupUrl.trim()) return;
-                                        const label = prompt('Label for this link:', new URL(fbGroupUrl).pathname.split('/').pop() || 'Group');
-                                        if (label) addFbLink(fbGroupUrl.trim(), label);
-                                    }}
-                                    className="m3-btn m3-btn-tonal m3-btn-sm"
-                                    disabled={!fbGroupUrl.trim()}
-                                >Save Current URL</button>
-                            </div>
-                            {savedFbLinks.length === 0 ? (
-                                <span className="md-body-small m3-text-secondary">No saved links yet. Enter a URL above and click "Save Current URL".</span>
-                            ) : (
-                                <div className="m3-saved-links">
-                                    {savedFbLinks.map((link, idx) => (
-                                        <button key={idx} className="m3-saved-link-chip" onClick={() => setFbGroupUrl(link.url)} title={link.url}>
-                                            📘 {link.label}
-                                            <span
-                                                className="m3-saved-link-chip__delete"
-                                                onClick={(e) => { e.stopPropagation(); removeFbLink(idx); }}
-                                                title="Remove"
-                                            >✕</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {fbError && <div className="m3-alert m3-alert-error">{fbError}</div>}
-                        {fbMessage && <div className="m3-alert m3-alert-success">{fbMessage}</div>}
-
-                        {fbScraping && (
-                            <div className="m3-loading" style={{ padding: 40 }}>
-                                <p className="md-title-medium">Scraping in progress...</p>
-                                <p className="md-body-small m3-text-secondary" style={{ marginTop: 4 }}>This may take a few minutes.</p>
-                            </div>
-                        )}
-
-                        {fbResults.length > 0 && (
+                        {/* ── BUYERS ────────────────────────── */}
+                        {activeTab === 'buyers' && (
                             <div>
-                                <div className="m3-flex-between" style={{ marginBottom: 12 }}>
-                                    <h3 className="md-title-medium">Scraped Results ({fbResults.length})</h3>
-                                    <button onClick={async () => { setFbSaving(true); setFbError(null); try { const res = await axios.post(`${API_BASE_URL}/admin/fb-save`, { rows: fbResults }); if (res.data.success) { setFbMessage(`✓ Saved ${res.data.saved} properties!` + (res.data.errors?.length > 0 ? ` (${res.data.errors.length} errors)` : '')); setFbResults([]); } else { setFbError('Save failed'); } } catch (err: any) { setFbError(err.response?.data?.error || err.message); } finally { setFbSaving(false); } }} disabled={fbSaving} className="m3-btn m3-btn-filled">{fbSaving ? 'Saving...' : 'Save to Database'}</button>
+                                <div className="m3-flex-between m3-flex-wrap m3-gap-sm" style={{ marginBottom: 16 }}>
+                                    <h2 className="md-title-large">All Buyers ({buyers.length})</h2>
+                                    <div className="m3-flex m3-gap-xs">
+                                        <button onClick={async () => { if (!window.confirm('Seed demo buyers?')) return; setSeedingBuyers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-buyers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setSeedingBuyers(false); } }} disabled={seedingBuyers} className="m3-btn m3-btn-tonal m3-btn-sm">{seedingBuyers ? 'Seeding...' : 'Seed Demo Buyers'}</button>
+                                        <button onClick={async () => { if (!window.confirm('Delete ALL buyers?')) return; setDeletingBuyers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-buyers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setDeletingBuyers(false); } }} disabled={deletingBuyers} className="m3-btn m3-btn-error m3-btn-sm">{deletingBuyers ? 'Deleting...' : 'Delete All Buyers'}</button>
+                                    </div>
                                 </div>
                                 <div className="m3-table-container">
-                                    <table className="m3-table" style={{ fontSize: 13 }}>
+                                    <table className="m3-table">
                                         <thead><tr>
-                                            <th>✕</th><th>Title</th><th>Locality</th><th>Type</th><th>BHK</th><th>Area</th><th>Price</th><th>Amenities</th><th>Seller</th><th>Contact</th><th>Status</th><th>Date</th><th>Group</th>
+                                            <th>Name</th><th>Email</th><th>Phone</th><th>Localities</th><th>BHK</th><th>Budget</th><th>Area</th><th>Amenities</th><th>Joined</th><th>Actions</th>
                                         </tr></thead>
-                                        <tbody>{fbResults.map((row, idx) => (
-                                            <tr key={idx}>
-                                                <td style={{ textAlign: 'center' }}><button onClick={() => setFbResults(prev => prev.filter((_, i) => i !== idx))} className="m3-btn m3-btn-error m3-btn-sm" style={{ padding: '4px 8px', minHeight: 'unset' }}>✕</button></td>
-                                                <td style={{ fontWeight: 600, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.TITLE}</td>
-                                                <td>{row.LOCALITY}</td>
-                                                <td><span className="m3-chip m3-chip-primary" style={{ fontSize: 11 }}>{row.TYPE}</span></td>
-                                                <td>{row.BHK}</td>
-                                                <td>{row.AREA}</td>
-                                                <td style={{ fontWeight: 600 }} className="m3-text-success">{row.PRICE}</td>
-                                                <td className="md-body-small" style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.AMENITIES}</td>
-                                                <td>{row.SELLER}</td>
-                                                <td>{row.CONTACT}</td>
-                                                <td><span className={`m3-chip ${row.STATUS === 'ready_to_move' ? 'm3-chip-success' : row.STATUS === 'under_construction' ? 'm3-chip-warning' : 'm3-chip-filled'}`} style={{ fontSize: 10 }}>{row.STATUS}</span></td>
-                                                <td className="md-body-small">{row.CREATED_AT}</td>
-                                                <td>{row.GROUP_URL && row.GROUP_URL !== '-' ? <a href={row.GROUP_URL} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small">View ↗</a> : '-'}</td>
+                                        <tbody>{buyers.map(b => (
+                                            <tr key={b.id}>
+                                                <td style={{ fontWeight: 500 }}>{b.name}{b.metadata?.coordinates?.lat && <div style={{ marginTop: 4 }}><a href={`https://www.openstreetmap.org/?mlat=${b.metadata.coordinates.lat}&mlon=${b.metadata.coordinates.lon}#map=16/${b.metadata.coordinates.lat}/${b.metadata.coordinates.lon}`} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small">Map</a></div>}</td>
+                                                <td className="md-body-small">{b.email}</td>
+                                                <td>{b.phone || 'N/A'}</td>
+                                                <td style={{ maxWidth: 200 }}>{Array.isArray(b.localities) ? b.localities.join(', ') : (b.localities || 'N/A')}</td>
+                                                <td>{b.bhk ? `${b.bhk} BHK` : 'N/A'}</td>
+                                                <td style={{ fontWeight: 600 }} className="m3-text-success">{b.budgetMin || b.budgetMax ? `${fmtPrice(b.budgetMin || 0)} – ${fmtPrice(b.budgetMax || 0)}` : 'N/A'}</td>
+                                                <td>{b.areaMin || b.areaMax ? `${b.areaMin || '?'} – ${b.areaMax || '?'} sqft` : 'N/A'}</td>
+                                                <td className="md-body-small">{Array.isArray(b.amenities) && b.amenities.length > 0 ? b.amenities.join(', ') : 'None'}</td>
+                                                <td className="md-body-small">{fmt(b.createdAt)}</td>
+                                                <td><button onClick={async () => { try { await axios.delete(`${API_BASE_URL}/buyers/${b.id}`); fetchData(); } catch { alert('Failed to delete buyer'); } }} className="m3-btn m3-btn-error m3-btn-sm">Remove</button></td>
                                             </tr>
                                         ))}</tbody>
                                     </table>
@@ -623,109 +340,392 @@ export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onL
                             </div>
                         )}
 
-                        {!fbScraping && fbResults.length === 0 && !fbMessage && (
-                            <div className="m3-empty-state">
-                                <p>Enter a Facebook group URL and click <strong>Scrape Group</strong> to get started.</p>
+                        {/* ── SELLERS ──────────────────────── */}
+                        {activeTab === 'sellers' && (
+                            <div>
+                                <div className="m3-flex-between m3-flex-wrap m3-gap-sm" style={{ marginBottom: 16 }}>
+                                    <h2 className="md-title-large">All Sellers ({sellers.length})</h2>
+                                    <div className="m3-flex m3-gap-xs">
+                                        <button onClick={async () => { if (!window.confirm('Seed demo sellers?')) return; setSeedingSellers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-sellers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setSeedingSellers(false); } }} disabled={seedingSellers} className="m3-btn m3-btn-tonal m3-btn-sm">{seedingSellers ? 'Seeding...' : 'Seed Demo Sellers'}</button>
+                                        <button onClick={async () => { if (!window.confirm('Delete ALL sellers?')) return; setDeletingSellers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-sellers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setDeletingSellers(false); } }} disabled={deletingSellers} className="m3-btn m3-btn-error m3-btn-sm">{deletingSellers ? 'Deleting...' : 'Delete All Sellers'}</button>
+                                    </div>
+                                </div>
+                                <div className="m3-table-container">
+                                    <table className="m3-table">
+                                        <thead><tr>
+                                            <th>Name</th><th>Email</th><th>Phone</th><th>Type</th><th>Properties</th><th>Rating</th><th>Deals</th><th>Trust</th><th>Joined</th><th>Actions</th>
+                                        </tr></thead>
+                                        <tbody>{sellers.map((s: any) => (
+                                            <tr key={s.id}>
+                                                <td style={{ fontWeight: 500 }}>{s.name}{(() => { const c = s.properties?.[0]?.metadata?.coordinates; const city = s.metadata?.city; const href = c ? `https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=14/${c.lat}/${c.lon}` : city ? `https://www.openstreetmap.org/search?query=${encodeURIComponent(city + ', India')}` : null; return href ? <div style={{ marginTop: 4 }}><a href={href} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small">Map</a></div> : null; })()}</td>
+                                                <td className="md-body-small">{s.email}</td>
+                                                <td>{s.phone || 'N/A'}</td>
+                                                <td><span className={`m3-chip ${s.sellerType === 'owner' ? 'm3-chip-primary' : s.sellerType === 'builder' ? 'm3-chip-filled' : 'm3-chip-warning'}`} style={{ textTransform: 'capitalize' }}>{s.sellerType}</span></td>
+                                                <td><strong>{s.propertyCount || s._count?.properties || 0}</strong>{s.properties?.length > 0 && <div className="md-body-small m3-text-secondary" style={{ marginTop: 4 }}>{s.properties.slice(0, 2).map((p: any) => <div key={p.id}>{p.title?.substring(0, 30)}{p.title?.length > 30 ? '...' : ''}</div>)}{s.properties.length > 2 && <div>+{s.properties.length - 2} more</div>}</div>}</td>
+                                                <td>{s.ratingCount === 0 ? "Not rated" : <><span style={{ fontWeight: 600 }}>{s.rating.toFixed(1)}</span> <span className="md-body-small m3-text-secondary">({s.ratingCount})</span></>}</td>
+                                                <td>{s.completedDeals}</td>
+                                                <td><span className={`m3-badge ${s.trustScore >= 70 ? 'm3-badge-success' : s.trustScore >= 40 ? 'm3-badge-warning' : 'm3-badge-error'}`}>{s.trustScore}</span></td>
+                                                <td className="md-body-small">{fmt(s.createdAt)}</td>
+                                                <td>
+                                                    <div className="m3-flex m3-gap-xs" style={{ alignItems: 'center' }}>
+                                                        <select onChange={(e) => { if (e.target.value) { handleOverrideRating(s.id, Number(e.target.value)); e.target.value = ""; } }} defaultValue="" className="m3-input m3-select m3-input-compact" style={{ width: 90 }}>
+                                                            <option value="" disabled>Rate</option>
+                                                            <option value="1">1★</option><option value="2">2★</option><option value="3">3★</option><option value="4">4★</option><option value="5">5★</option>
+                                                        </select>
+                                                        <button onClick={async () => { if (window.confirm(`Delete seller "${s.name}"?`)) { try { await axios.delete(`${API_BASE_URL}/sellers/${s.id}`); fetchData(); } catch { alert('Failed'); } } }} className="m3-btn m3-btn-error m3-btn-sm">Remove</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}</tbody>
+                                    </table>
+                                </div>
                             </div>
                         )}
-                    </div>
-                )}
 
-                {/* ── SETTINGS - PROFILE ──────────── */}
-                {activeTab === 'settings-profile' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 16 }}>Profile</h2>
-                        <div className="m3-settings-section">
-                            <div className="m3-card m3-card-outlined" style={{ padding: 24 }}>
-                                <div className="m3-flex m3-gap-md" style={{ alignItems: 'center', marginBottom: 20 }}>
-                                    <div className="m3-sidebar__user-avatar" style={{ width: 56, height: 56, fontSize: 24 }}>
-                                        {userEmail.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div className="md-title-medium">{userEmail}</div>
-                                        <div className="md-body-small m3-text-secondary">Administrator</div>
-                                    </div>
-                                </div>
-                                <div className="m3-settings-row">
-                                    <div><div className="md-label-large">Email</div><div className="md-body-medium m3-text-secondary">{userEmail}</div></div>
-                                </div>
-                                <div className="m3-settings-row">
-                                    <div><div className="md-label-large">Role</div><div className="md-body-medium m3-text-secondary">Admin</div></div>
-                                </div>
-                                <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--md-sys-color-outline-variant)' }}>
-                                    <button onClick={onLogout} className="m3-btn m3-btn-error-tonal" style={{ width: '100%' }}>Logout</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* ── SETTINGS - THEME ────────────── */}
-                {activeTab === 'settings-theme' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 16 }}>Theme</h2>
-                        <div className="m3-settings-section">
-                            <div className="m3-card m3-card-outlined" style={{ padding: 24 }}>
-                                <div className="m3-settings-row">
-                                    <div>
-                                        <div className="md-label-large">Dark Mode</div>
-                                        <div className="md-body-small m3-text-secondary">Toggle between light and dark theme</div>
-                                    </div>
-                                    <label className="m3-switch">
-                                        <input type="checkbox" checked={theme === 'dark'} onChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
-                                        <span className="m3-switch__track" />
-                                    </label>
-                                </div>
-                                <div className="m3-settings-row">
-                                    <div>
-                                        <div className="md-label-large">Current Theme</div>
-                                        <div className="md-body-small m3-text-secondary">{theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</div>
-                                    </div>
+                        {/* ── PROPERTIES ───────────────────── */}
+                        {activeTab === 'properties' && (
+                            <div>
+                                <h2 className="md-title-large" style={{ marginBottom: 16 }}>All Properties ({properties.length})</h2>
+                                <div className="m3-table-container">
+                                    <table className="m3-table">
+                                        <thead><tr>
+                                            <th>Img</th><th>Map</th><th>Title</th><th>Locality</th><th>Type</th><th>BHK</th><th>Area</th><th>Price</th><th>Seller</th><th>Contact</th><th>Source</th><th>Posted</th><th>Status</th><th>Actions</th>
+                                        </tr></thead>
+                                        <tbody>{properties.map(p => (
+                                            <tr key={p.id}>
+                                                <td style={{ width: 50, padding: 6 }}>{p.metadata?.imageUrl ? <img src={p.metadata.imageUrl} alt="" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 'var(--md-sys-shape-corner-xs)' }} /> : <div style={{ width: 48, height: 48, background: 'var(--md-sys-color-surface-container)', borderRadius: 'var(--md-sys-shape-corner-xs)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🏠</div>}</td>
+                                                <td style={{ width: 36 }}>{p.metadata?.coordinates?.lat ? <a href={`https://www.openstreetmap.org/?mlat=${p.metadata.coordinates.lat}&mlon=${p.metadata.coordinates.lon}#map=16/${p.metadata.coordinates.lat}/${p.metadata.coordinates.lon}`} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small" style={{ fontWeight: 600 }}>Map</a> : <span className="m3-text-secondary">—</span>}</td>
+                                                <td style={{ maxWidth: 250 }}>
+                                                    <strong>{p.title}</strong>
+                                                    {p.description && <div className="md-body-small m3-text-secondary" style={{ marginTop: 4, maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</div>}
+                                                    {p.metadata?.sourceUrl && <a href={p.metadata.sourceUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small">View listing ↗</a>}
+                                                    {p.metadata?.groupUrl && <a href={p.metadata.groupUrl} target="_blank" rel="noopener noreferrer" className="md-body-small" style={{ color: 'var(--md-sys-color-tertiary)', marginLeft: p.metadata?.sourceUrl ? 8 : 0, display: 'inline-block' }}>View Group ↗</a>}
+                                                </td>
+                                                <td>
+                                                    {p.locality}
+                                                    {p.metadata?.landmark && <div className="md-body-small m3-text-secondary">📍 {p.metadata.landmark}</div>}
+                                                    {p.metadata?.nearbyPlaces && (
+                                                        <div className="md-body-small m3-text-secondary" style={{ marginTop: 5, lineHeight: 1.7 }}>
+                                                            {p.metadata.nearbyPlaces.airport && <div><strong>Airport:</strong> <a href={p.metadata.nearbyPlaces.airport.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">{p.metadata.nearbyPlaces.airport.name}</a> <span className="m3-text-secondary">({p.metadata.nearbyPlaces.airport.distanceKm} km)</span></div>}
+                                                            {p.metadata.nearbyPlaces.busStation && <div><strong>Bus:</strong> <a href={p.metadata.nearbyPlaces.busStation.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">{p.metadata.nearbyPlaces.busStation.name}</a> <span className="m3-text-secondary">({p.metadata.nearbyPlaces.busStation.distanceKm} km)</span></div>}
+                                                            {p.metadata.nearbyPlaces.trainStation && <div><strong>Train:</strong> <a href={p.metadata.nearbyPlaces.trainStation.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">{p.metadata.nearbyPlaces.trainStation.name}</a> <span className="m3-text-secondary">({p.metadata.nearbyPlaces.trainStation.distanceKm} km)</span></div>}
+                                                            {p.metadata.nearbyPlaces.hospital && <div><strong>Hospital:</strong> <a href={p.metadata.nearbyPlaces.hospital.osmUrl} target="_blank" rel="noopener noreferrer" className="m3-text-primary">{p.metadata.nearbyPlaces.hospital.name}</a> <span className="m3-text-secondary">({p.metadata.nearbyPlaces.hospital.distanceKm} km)</span></div>}
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td><span className="m3-chip m3-chip-primary" style={{ textTransform: 'capitalize' }}>{p.propertyType}</span></td>
+                                                <td>{p.bhk || '—'}</td>
+                                                <td>{p.area ? `${p.area} sqft` : '—'}</td>
+                                                <td style={{ fontWeight: 600 }} className="m3-text-success">{fmtPrice(p.price)}</td>
+                                                <td><strong>{p.seller?.name || 'Unknown'}</strong><div className="md-body-small m3-text-secondary">{p.seller?.sellerType || ''}</div>{p.metadata?.companyName && <div className="md-body-small m3-text-secondary">🏢 {p.metadata.companyName}</div>}</td>
+                                                <td>{p.contact || 'N/A'}</td>
+                                                <td>{p.metadata?.source ? <span className="m3-chip m3-chip-warning">{p.metadata.source}</span> : '—'}{p.metadata?.scraper && <div className="md-body-small m3-text-secondary" style={{ marginTop: 3 }}>{p.metadata.scraper}</div>}</td>
+                                                <td className="md-body-small">{p.metadata?.postedDate || '—'}</td>
+                                                <td><span className={`m3-chip ${p.isActive ? 'm3-chip-success' : 'm3-chip-error'}`}>{p.isActive ? 'Active' : 'Inactive'}</span></td>
+                                                <td>{p.isActive && <button onClick={async () => { if (window.confirm('Mark as sold?')) { try { await axios.put(`${API_BASE_URL}/properties/${p.id}/mark-sold`, {}); fetchData(); } catch { alert('Failed'); } } }} className="m3-btn m3-btn-error m3-btn-sm">Mark Sold</button>}</td>
+                                            </tr>
+                                        ))}</tbody>
+                                    </table>
                                 </div>
                             </div>
+                        )}
+
+                        {/* ── LEADS ────────────────────────── */}
+                        {activeTab === 'leads' && (
+                            <div>
+                                <h2 className="md-title-large" style={{ marginBottom: 16 }}>All Leads ({leads.length})</h2>
+                                <div className="m3-table-container">
+                                    <table className="m3-table">
+                                        <thead><tr>
+                                            <th>Buyer</th><th>Seller</th><th>Property</th><th>Price</th><th>State</th><th>Match Score</th><th>Created</th><th>Updated</th>
+                                        </tr></thead>
+                                        <tbody>{leads.map((l: any) => (
+                                            <tr key={l.id}>
+                                                <td><strong>{l.buyer.name}</strong><br /><span className="md-body-small m3-text-secondary">{l.buyer.email}</span>{l.buyer.phone && <div className="md-body-small m3-text-secondary">📞 {l.buyer.phone}</div>}</td>
+                                                <td><strong>{l.property?.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{l.property?.seller?.email || ''}</span>{l.property?.seller?.sellerType && <div style={{ marginTop: 4 }}><span className={getSellerRoleChipClass(l.property.seller.sellerType)}>{l.property.seller.sellerType}</span></div>}</td>
+                                                <td>{l.property.title}<br /><span className="md-body-small m3-text-secondary">{l.property.locality}</span>{l.property.bhk && <span className="md-body-small m3-text-secondary"> · {l.property.bhk} BHK</span>}{l.property.area && <span className="md-body-small m3-text-secondary"> · {l.property.area} sqft</span>}</td>
+                                                <td style={{ fontWeight: 600 }} className="m3-text-success">{l.property.price ? fmtPrice(l.property.price) : '—'}</td>
+                                                <td><span className={`m3-chip ${getStateChipClass(l.state)}`}>{l.state}</span></td>
+                                                <td>{l.matchScore ? <strong style={{ color: getScoreColor(l.matchScore) }}>{l.matchScore.toFixed(1)}%</strong> : 'N/A'}</td>
+                                                <td className="md-body-small">{fmt(l.createdAt)}</td>
+                                                <td className="md-body-small">{fmt(l.updatedAt)}</td>
+                                            </tr>
+                                        ))}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── MATCHES ──────────────────────── */}
+                        {activeTab === 'matches' && (
+                            <div>
+                                <h2 className="md-title-large" style={{ marginBottom: 16 }}>All Matches ({matches.length})</h2>
+                                <div className="m3-table-container">
+                                    <table className="m3-table">
+                                        <thead><tr>
+                                            <th>Buyer</th><th>Seller</th><th>Property</th><th>Match</th><th>Location</th><th>Budget</th><th>Size</th><th>Amenities</th><th>Created</th>
+                                        </tr></thead>
+                                        <tbody>{matches.map(m => (
+                                            <tr key={m.id}>
+                                                <td><strong>{m.buyer.name}</strong><br /><span className="md-body-small m3-text-secondary">{m.buyer.email}</span></td>
+                                                <td><strong>{m.property.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{m.property.seller?.email || ''}</span>{m.property.seller?.sellerType && <div style={{ marginTop: 4 }}><span className={getSellerRoleChipClass(m.property.seller.sellerType)}>{m.property.seller.sellerType}</span></div>}</td>
+                                                <td>{m.property.title}<br /><span className="md-body-small m3-text-secondary">{m.property.locality}</span></td>
+                                                <td><strong style={{ color: getScoreColor(m.matchScore) }}>{m.matchScore.toFixed(1)}%</strong></td>
+                                                <td><span className={getScoreClass(m.locationScore)}>{m.locationScore?.toFixed(1) || 'N/A'}%</span></td>
+                                                <td><span className={getScoreClass(m.budgetScore)}>{m.budgetScore?.toFixed(1) || 'N/A'}%</span></td>
+                                                <td><span className={getScoreClass(m.sizeScore)}>{m.sizeScore?.toFixed(1) || 'N/A'}%</span></td>
+                                                <td><span className={getScoreClass(m.amenitiesScore)}>{m.amenitiesScore?.toFixed(1) || 'N/A'}%</span></td>
+                                                <td className="md-body-small">{fmt(m.createdAt)}</td>
+                                            </tr>
+                                        ))}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── LOGS ─────────────────────────── */}
+                        {activeTab === 'logs' && (
+                            <div>
+                                <h2 className="md-title-large" style={{ marginBottom: 16 }}>Workflow Event Logs ({logs.length})</h2>
+                                <div className="m3-table-container">
+                                    <table className="m3-table">
+                                        <thead><tr>
+                                            <th>Timestamp</th><th>Event Type</th><th>From State</th><th>To State</th><th>Description</th>
+                                        </tr></thead>
+                                        <tbody>{logs.map(log => (
+                                            <tr key={log.id}>
+                                                <td className="md-body-small">{fmt(log.createdAt)}</td>
+                                                <td><span className={`m3-chip ${getEventChipClass(log.eventType)}`}>{log.eventType}</span></td>
+                                                <td>{log.fromState || '-'}</td>
+                                                <td>{log.toState || '-'}</td>
+                                                <td className="md-body-small">{log.description || '-'}</td>
+                                            </tr>
+                                        ))}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── MANUAL SCRAPE ────────────────── */}
+                        {activeTab === 'manual-scrape' && (
+                            <div>
+                                <h2 className="md-title-large" style={{ marginBottom: 8 }}>Manual Scrape</h2>
+                                <p className="md-body-medium m3-text-secondary" style={{ marginBottom: 20 }}>Trigger a manual scrape for properties in a specific city.</p>
+                                <div className="m3-surface-container m3-flex m3-gap-md m3-flex-wrap" style={{ alignItems: 'flex-end', marginBottom: 20 }}>
+                                    <div style={{ flex: 1, minWidth: 200 }}>
+                                        <label className="m3-input-label">City Name</label>
+                                        <input type="text" value={manualCity} onChange={(e) => setManualCity(e.target.value)} placeholder="e.g. Pune, Mumbai, Delhi" className="m3-input" />
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 200 }}>
+                                        <label className="m3-input-label">Scraper</label>
+                                        <select value={manualScraper} onChange={(e) => setManualScraper(e.target.value)} className="m3-input m3-select">
+                                            <option value="" disabled>Select a scraper</option>
+                                            {availableScrapers.map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                    </div>
+                                    <button onClick={async () => { if (!manualCity || !manualScraper) { alert("Provide both city and scraper"); return; } setManualScraping(true); setManualScrapeMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/trigger-scrape`, { city: manualCity, scraper: manualScraper }); setManualScrapeMessage(res.data.success ? `✓ Scrape triggered. Results: ${JSON.stringify(res.data.results)}` : `✗ ${res.data.error || 'Failed'}`); } catch (err: any) { setManualScrapeMessage(`✗ ${err.response?.data?.error || err.message}`); } finally { setManualScraping(false); } }} disabled={manualScraping} className="m3-btn m3-btn-filled">{manualScraping ? 'Scraping...' : 'Trigger Scrape'}</button>
+                                </div>
+                                {manualScrapeMessage && <div className={`m3-alert ${manualScrapeMessage.startsWith('✓') ? 'm3-alert-success' : 'm3-alert-error'}`}>{manualScrapeMessage}</div>}
+                            </div>
+                        )}
+
+                        {/* ── FB SCRAPE ────────────────────── */}
+                        {activeTab === 'fb-scrape' && (
+                            <div>
+                                <h2 className="md-title-large" style={{ marginBottom: 8 }}>Facebook Group Scraper</h2>
+                                <p className="md-body-medium m3-text-secondary" style={{ marginBottom: 20 }}>Scrape real estate listings from Facebook groups using Apify + Groq LLM extraction.</p>
+
+                                <div className="m3-surface-container m3-flex m3-gap-md m3-flex-wrap" style={{ alignItems: 'flex-end', marginBottom: 20 }}>
+                                    <div style={{ flex: 1, minWidth: 300 }}>
+                                        <label className="m3-input-label">Facebook Group URL</label>
+                                        <input type="text" value={fbGroupUrl} onChange={(e) => setFbGroupUrl(e.target.value)} placeholder="https://www.facebook.com/groups/..." className="m3-input" />
+                                    </div>
+                                    <div style={{ width: 140 }}>
+                                        <label className="m3-input-label">No. of Posts</label>
+                                        <input type="number" value={fbPostLimit} onChange={(e) => setFbPostLimit(Number(e.target.value))} min={1} max={100} className="m3-input" />
+                                    </div>
+                                    <button onClick={async () => { if (!fbGroupUrl.trim()) { setFbError('Please enter a URL'); return; } setFbScraping(true); setFbError(null); setFbMessage(null); setFbResults([]); try { const res = await axios.post(`${API_BASE_URL}/admin/fb-scrape`, { groupUrl: fbGroupUrl.trim(), limit: fbPostLimit }); if (res.data.success && Array.isArray(res.data.data)) { setFbResults(res.data.data); setFbMessage(`✓ Scraped ${res.data.data.length} listing(s)`); } else { setFbError('Unexpected response'); } } catch (err: any) { setFbError(err.response?.data?.error || err.message); } finally { setFbScraping(false); } }} disabled={fbScraping} className="m3-btn m3-btn-filled">{fbScraping ? 'Scraping...' : 'Scrape Group'}</button>
+                                    <button onClick={async () => { setFbScraping(true); setFbError(null); setFbMessage(null); setFbResults([]); try { const res = await axios.get(`${API_BASE_URL}/admin/fb-load-csv`); if (res.data.success && Array.isArray(res.data.data)) { setFbResults(res.data.data); setFbMessage(`✓ Loaded ${res.data.data.length} listing(s) from CSV`); } else { setFbError('Unexpected response'); } } catch (err: any) { setFbError(err.response?.data?.error || err.message); } finally { setFbScraping(false); } }} disabled={fbScraping} className="m3-btn m3-btn-tonal">Load CSV</button>
+                                </div>
+
+                                {/* Saved Links */}
+                                <div className="m3-surface-container-low" style={{ marginBottom: 16, padding: '12px 16px' }}>
+                                    <div className="m3-flex-between" style={{ marginBottom: 8 }}>
+                                        <span className="md-label-medium m3-text-secondary">💾 Saved Links</span>
+                                        <button
+                                            onClick={() => {
+                                                if (!fbGroupUrl.trim()) return;
+                                                const label = prompt('Label for this link:', new URL(fbGroupUrl).pathname.split('/').pop() || 'Group');
+                                                if (label) addFbLink(fbGroupUrl.trim(), label);
+                                            }}
+                                            className="m3-btn m3-btn-tonal m3-btn-sm"
+                                            disabled={!fbGroupUrl.trim()}
+                                        >Save Current URL</button>
+                                    </div>
+                                    {savedFbLinks.length === 0 ? (
+                                        <span className="md-body-small m3-text-secondary">No saved links yet. Enter a URL above and click "Save Current URL".</span>
+                                    ) : (
+                                        <div className="m3-saved-links">
+                                            {savedFbLinks.map((link, idx) => (
+                                                <button key={idx} className="m3-saved-link-chip" onClick={() => setFbGroupUrl(link.url)} title={link.url}>
+                                                    📘 {link.label}
+                                                    <span
+                                                        className="m3-saved-link-chip__delete"
+                                                        onClick={(e) => { e.stopPropagation(); removeFbLink(idx); }}
+                                                        title="Remove"
+                                                    >✕</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {fbError && <div className="m3-alert m3-alert-error">{fbError}</div>}
+                                {fbMessage && <div className="m3-alert m3-alert-success">{fbMessage}</div>}
+
+                                {fbScraping && (
+                                    <div className="m3-loading" style={{ padding: 40 }}>
+                                        <p className="md-title-medium">Scraping in progress...</p>
+                                        <p className="md-body-small m3-text-secondary" style={{ marginTop: 4 }}>This may take a few minutes.</p>
+                                    </div>
+                                )}
+
+                                {fbResults.length > 0 && (
+                                    <div>
+                                        <div className="m3-flex-between" style={{ marginBottom: 12 }}>
+                                            <h3 className="md-title-medium">Scraped Results ({fbResults.length})</h3>
+                                            <button onClick={async () => { setFbSaving(true); setFbError(null); try { const res = await axios.post(`${API_BASE_URL}/admin/fb-save`, { rows: fbResults }); if (res.data.success) { setFbMessage(`✓ Saved ${res.data.saved} properties!` + (res.data.errors?.length > 0 ? ` (${res.data.errors.length} errors)` : '')); setFbResults([]); } else { setFbError('Save failed'); } } catch (err: any) { setFbError(err.response?.data?.error || err.message); } finally { setFbSaving(false); } }} disabled={fbSaving} className="m3-btn m3-btn-filled">{fbSaving ? 'Saving...' : 'Save to Database'}</button>
+                                        </div>
+                                        <div className="m3-table-container">
+                                            <table className="m3-table" style={{ fontSize: 13 }}>
+                                                <thead><tr>
+                                                    <th>✕</th><th>Title</th><th>Locality</th><th>Type</th><th>BHK</th><th>Area</th><th>Price</th><th>Amenities</th><th>Seller</th><th>Contact</th><th>Status</th><th>Date</th><th>Group</th>
+                                                </tr></thead>
+                                                <tbody>{fbResults.map((row, idx) => (
+                                                    <tr key={idx}>
+                                                        <td style={{ textAlign: 'center' }}><button onClick={() => setFbResults(prev => prev.filter((_, i) => i !== idx))} className="m3-btn m3-btn-error m3-btn-sm" style={{ padding: '4px 8px', minHeight: 'unset' }}>✕</button></td>
+                                                        <td style={{ fontWeight: 600, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.TITLE}</td>
+                                                        <td>{row.LOCALITY}</td>
+                                                        <td><span className="m3-chip m3-chip-primary" style={{ fontSize: 11 }}>{row.TYPE}</span></td>
+                                                        <td>{row.BHK}</td>
+                                                        <td>{row.AREA}</td>
+                                                        <td style={{ fontWeight: 600 }} className="m3-text-success">{row.PRICE}</td>
+                                                        <td className="md-body-small" style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.AMENITIES}</td>
+                                                        <td>{row.SELLER}</td>
+                                                        <td>{row.CONTACT}</td>
+                                                        <td><span className={`m3-chip ${row.STATUS === 'ready_to_move' ? 'm3-chip-success' : row.STATUS === 'under_construction' ? 'm3-chip-warning' : 'm3-chip-filled'}`} style={{ fontSize: 10 }}>{row.STATUS}</span></td>
+                                                        <td className="md-body-small">{row.CREATED_AT}</td>
+                                                        <td>{row.GROUP_URL && row.GROUP_URL !== '-' ? <a href={row.GROUP_URL} target="_blank" rel="noopener noreferrer" className="m3-text-primary md-body-small">View ↗</a> : '-'}</td>
+                                                    </tr>
+                                                ))}</tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!fbScraping && fbResults.length === 0 && !fbMessage && (
+                                    <div className="m3-empty-state">
+                                        <p>Enter a Facebook group URL and click <strong>Scrape Group</strong> to get started.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ── SETTINGS - PROFILE ──────────── */}
+                        {activeTab === 'settings-profile' && (
+                            <div>
+                                <h2 className="md-title-large" style={{ marginBottom: 16 }}>Profile</h2>
+                                <div className="m3-settings-section">
+                                    <div className="m3-card m3-card-outlined" style={{ padding: 24 }}>
+                                        <div className="m3-flex m3-gap-md" style={{ alignItems: 'center', marginBottom: 20 }}>
+                                            <div className="m3-sidebar__user-avatar" style={{ width: 56, height: 56, fontSize: 24 }}>
+                                                {userEmail.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div className="md-title-medium">{userEmail}</div>
+                                                <div className="md-body-small m3-text-secondary">Administrator</div>
+                                            </div>
+                                        </div>
+                                        <div className="m3-settings-row">
+                                            <div><div className="md-label-large">Email</div><div className="md-body-medium m3-text-secondary">{userEmail}</div></div>
+                                        </div>
+                                        <div className="m3-settings-row">
+                                            <div><div className="md-label-large">Role</div><div className="md-body-medium m3-text-secondary">Admin</div></div>
+                                        </div>
+                                        <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid var(--md-sys-color-outline-variant)' }}>
+                                            <button onClick={onLogout} className="m3-btn m3-btn-error-tonal" style={{ width: '100%' }}>Logout</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── SETTINGS - THEME ────────────── */}
+                        {activeTab === 'settings-theme' && (
+                            <div>
+                                <h2 className="md-title-large" style={{ marginBottom: 16 }}>Theme</h2>
+                                <div className="m3-settings-section">
+                                    <div className="m3-card m3-card-outlined" style={{ padding: 24 }}>
+                                        <div className="m3-settings-row">
+                                            <div>
+                                                <div className="md-label-large">Dark Mode</div>
+                                                <div className="md-body-small m3-text-secondary">Toggle between light and dark theme</div>
+                                            </div>
+                                            <label className="m3-switch">
+                                                <input type="checkbox" checked={theme === 'dark'} onChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
+                                                <span className="m3-switch__track" />
+                                            </label>
+                                        </div>
+                                        <div className="m3-settings-row">
+                                            <div>
+                                                <div className="md-label-large">Current Theme</div>
+                                                <div className="md-body-small m3-text-secondary">{theme === 'dark' ? '🌙 Dark' : '☀️ Light'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>{/* close m3-fade-in */}
+
+                    {/* Summary Stats */}
+                    <div className="m3-surface-container" style={{ marginTop: 30, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, textAlign: 'center' }}>
+                        {[
+                            { label: 'Buyers', count: buyers.length, color: 'var(--md-sys-color-primary)' },
+                            { label: 'Sellers', count: sellers.length, color: 'var(--md-sys-color-tertiary)' },
+                            { label: 'Properties', count: properties.length, color: 'var(--md-sys-color-warning)' },
+                            { label: 'Leads', count: leads.length, color: 'var(--md-sys-color-secondary)' },
+                            { label: 'Matches', count: matches.length, color: 'var(--md-sys-color-error)' },
+                            { label: 'Event Logs', count: logs.length, color: 'var(--md-sys-color-outline)' },
+                        ].map(s => (
+                            <div key={s.label}>
+                                <h3 className="md-label-medium m3-text-secondary" style={{ marginBottom: 10 }}>{s.label}</h3>
+                                <p className="md-display-small" style={{ color: s.color }}>{s.count}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Property Map Tab */}
+                    {activeTab === 'property-map' && (
+                        <div>
+                            <h2 className="md-title-large" style={{ marginBottom: 12 }}>All Properties Map</h2>
+                            <div style={{ marginBottom: 10 }}><MapSearchBar map={propertyMapInstance.current} placeholder="Search for a location..." /></div>
+                            <div ref={propertyMapRef} className="m3-map-container" style={{ height: 600 }} />
+                            <PropertyMapLoader mapRef={propertyMapRef} mapInstance={propertyMapInstance} activeTab={activeTab} />
                         </div>
-                    </div>
-                )}
+                    )}
 
-                </div>{/* close m3-fade-in */}
-
-                {/* Summary Stats */}
-                <div className="m3-surface-container" style={{ marginTop: 30, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16, textAlign: 'center' }}>
-                    {[
-                        { label: 'Buyers', count: buyers.length, color: 'var(--md-sys-color-primary)' },
-                        { label: 'Sellers', count: sellers.length, color: 'var(--md-sys-color-tertiary)' },
-                        { label: 'Properties', count: properties.length, color: 'var(--md-sys-color-warning)' },
-                        { label: 'Leads', count: leads.length, color: 'var(--md-sys-color-secondary)' },
-                        { label: 'Matches', count: matches.length, color: 'var(--md-sys-color-error)' },
-                        { label: 'Event Logs', count: logs.length, color: 'var(--md-sys-color-outline)' },
-                    ].map(s => (
-                        <div key={s.label}>
-                            <h3 className="md-label-medium m3-text-secondary" style={{ marginBottom: 10 }}>{s.label}</h3>
-                            <p className="md-display-small" style={{ color: s.color }}>{s.count}</p>
+                    {/* Buyer Map Tab */}
+                    {activeTab === 'buyer-map' && (
+                        <div>
+                            <h2 className="md-title-large" style={{ marginBottom: 12 }}>Buyer Preferred Localities</h2>
+                            <div style={{ marginBottom: 10 }}><MapSearchBar map={buyerMapInstance.current} placeholder="Search for a location..." /></div>
+                            <div ref={buyerMapRef} className="m3-map-container" style={{ height: 600 }} />
+                            <BuyerMapLoader mapRef={buyerMapRef} mapInstance={buyerMapInstance} activeTab={activeTab} />
                         </div>
-                    ))}
-                </div>
-
-                {/* Property Map Tab */}
-                {activeTab === 'property-map' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 12 }}>All Properties Map</h2>
-                        <div style={{ marginBottom: 10 }}><MapSearchBar map={propertyMapInstance.current} placeholder="Search for a location..." /></div>
-                        <div ref={propertyMapRef} className="m3-map-container" style={{ height: 600 }} />
-                        <PropertyMapLoader mapRef={propertyMapRef} mapInstance={propertyMapInstance} activeTab={activeTab} />
-                    </div>
-                )}
-
-                {/* Buyer Map Tab */}
-                {activeTab === 'buyer-map' && (
-                    <div>
-                        <h2 className="md-title-large" style={{ marginBottom: 12 }}>Buyer Preferred Localities</h2>
-                        <div style={{ marginBottom: 10 }}><MapSearchBar map={buyerMapInstance.current} placeholder="Search for a location..." /></div>
-                        <div ref={buyerMapRef} className="m3-map-container" style={{ height: 600 }} />
-                        <BuyerMapLoader mapRef={buyerMapRef} mapInstance={buyerMapInstance} activeTab={activeTab} />
-                    </div>
-                )}
-              </div>{/* close m3-container */}
+                    )}
+                </div>{/* close m3-container */}
             </main>
         </div>
     );
