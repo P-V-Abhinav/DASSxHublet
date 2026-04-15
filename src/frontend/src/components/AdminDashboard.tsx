@@ -112,6 +112,7 @@ export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onL
     const [fbError, setFbError] = useState<string | null>(null);
 
     const [seedingBuyers, setSeedingBuyers] = useState(false);
+    const [refreshingMatches, setRefreshingMatches] = useState(false);
     const [seedingSellers, setSeedingSellers] = useState(false);
     const [deletingBuyers, setDeletingBuyers] = useState(false);
     const [deletingSellers, setDeletingSellers] = useState(false);
@@ -459,7 +460,10 @@ export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onL
                         {/* ── MATCHES ──────────────────────── */}
                         {activeTab === 'matches' && (
                             <div>
-                                <h2 className="md-title-large" style={{ marginBottom: 16 }}>All Matches ({matches.length})</h2>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                                    <h2 className="md-title-large" style={{ margin: 0 }}>All Matches ({matches.length})</h2>
+                                    <button onClick={async () => { setRefreshingMatches(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/matches/refresh-all`); setActionMessage(res.data.success ? `[OK] ${res.data.message} — ${res.data.totalMatches} total matches` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setRefreshingMatches(false); } }} disabled={refreshingMatches} className="m3-btn m3-btn-filled m3-btn-sm">{refreshingMatches ? 'Refreshing...' : '⟳ Refresh All Matches'}</button>
+                                </div>
                                 <div className="m3-table-container">
                                     <table className="m3-table">
                                         <thead><tr>
