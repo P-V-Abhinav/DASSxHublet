@@ -48,17 +48,20 @@ export class MatchingService {
         // Pre-process properties
         for (const property of properties) {
             const propMeta = property.metadata ? JSON.parse(property.metadata) : {};
-            if (!propMeta.coordinates || typeof propMeta.coordinates.lat !== 'number') {
+            if (!propMeta.coordinates && !propMeta.geocodeFailed) {
                 console.log(`Geocoding property locality: ${property.locality}`);
                 const coords = await GeocodeService.geocodeAddress(property.locality);
                 if (coords) {
                     propMeta.coordinates = coords;
-                    await prisma.property.update({
-                        where: { id: property.id },
-                        data: { metadata: JSON.stringify(propMeta) }
-                    });
-                    property.metadata = JSON.stringify(propMeta);
+                } else {
+                    propMeta.geocodeFailed = true;
                 }
+
+                await prisma.property.update({
+                    where: { id: property.id },
+                    data: { metadata: JSON.stringify(propMeta) }
+                });
+                property.metadata = JSON.stringify(propMeta);
             }
         }
 
@@ -206,17 +209,20 @@ export class MatchingService {
         }
 
         const propMeta = property.metadata ? JSON.parse(property.metadata) : {};
-        if (!propMeta.coordinates || typeof propMeta.coordinates.lat !== 'number') {
+        if (!propMeta.coordinates && !propMeta.geocodeFailed) {
             console.log(`Geocoding property locality: ${property.locality}`);
             const coords = await GeocodeService.geocodeAddress(property.locality);
             if (coords) {
                 propMeta.coordinates = coords;
-                await prisma.property.update({
-                    where: { id: property.id },
-                    data: { metadata: JSON.stringify(propMeta) }
-                });
-                property.metadata = JSON.stringify(propMeta);
+            } else {
+                propMeta.geocodeFailed = true;
             }
+
+            await prisma.property.update({
+                where: { id: property.id },
+                data: { metadata: JSON.stringify(propMeta) }
+            });
+            property.metadata = JSON.stringify(propMeta);
         }
 
         // Get all buyers

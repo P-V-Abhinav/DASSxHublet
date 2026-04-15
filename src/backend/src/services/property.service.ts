@@ -29,16 +29,19 @@ export class PropertyService {
 
         // If coordinates are already provided (from map picker), use them.
         // Otherwise, try to geocode the locality (non-blocking).
-        if (!mergedMetadata.coordinates) {
+        if (!mergedMetadata.coordinates && !mergedMetadata.geocodeFailed) {
             try {
                 const geoQuery = data.address || data.locality;
                 const coords = await GeocodeService.geocodeAddress(geoQuery);
                 if (coords) {
                     mergedMetadata.coordinates = { lat: coords.lat, lon: coords.lon };
                     console.log(`[PropertyService] Geocoded "${geoQuery}" → ${coords.lat}, ${coords.lon}`);
+                } else {
+                    mergedMetadata.geocodeFailed = true;
                 }
             } catch (err) {
                 console.error('[PropertyService] Geocoding failed (non-blocking):', err);
+                mergedMetadata.geocodeFailed = true;
             }
         }
 

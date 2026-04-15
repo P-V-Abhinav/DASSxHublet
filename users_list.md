@@ -1,35 +1,39 @@
 #  Users List — Buyers & Sellers
 
-> Auto-generated on 14/4/2026, 10:00:15 pm. Updated after every scrape.
+> Auto-generated on 15/4/2026, 2:51:19 pm. Updated after every scrape.
 
 ---
 
-##  Sellers (17 total)
+##  Sellers (19 total)
 
 | # | Name | Email | Phone | Type | Rating | Properties |
 |---|------|-------|-------|------|--------|------------|
-| 1 | Chandra S K Singh | `chandrasksingh@hublet.scraped` | 0000000000 | agent | 4.0  | 0 |
-| 2 | Unknown | `unknown@hublet.scraped` | 0000000000 | agent | 4.0  | 5 |
-| 3 | Alliance Realtors CHN | `alliance.chn@demo.com` | 9200000015 | agent | 4.7  | 2 |
-| 4 | Ramesh Iyer (Owner) | `ramesh.chn@demo.com` | 9200000014 | owner | 3.6  | 1 |
-| 5 | Casagrand Group | `casagrand.chn@demo.com` | 9200000013 | builder | 4.5  | 2 |
-| 6 | Kumar Properties Pune | `kumar.pun@demo.com` | 9200000012 | agent | 3.9  | 2 |
-| 7 | Amit Shah (Owner) | `amit.pun@demo.com` | 9200000011 | owner | 3.8  | 1 |
-| 8 | Kolte Patil Developers | `kolte.pun@demo.com` | 9200000010 | builder | 3.6  | 2 |
-| 9 | Hiranandani Agents | `hiranandani.mum@demo.com` | 9200000009 | agent | 4.8  | 2 |
-| 10 | Sunita Verma (Owner) | `sunita.mum@demo.com` | 9200000008 | owner | 3.7  | 1 |
-| 11 | Lodha Group MUM | `lodha.mum@demo.com` | 9200000007 | builder | 4.2  | 2 |
-| 12 | Brigade Realty | `brigade.blr@demo.com` | 9200000006 | agent | 4.5  | 2 |
-| 13 | Anand Murthy (Owner) | `anand.blr@demo.com` | 9200000005 | owner | 4.7  | 1 |
-| 14 | Prestige Group BLR | `prestige.blr@demo.com` | 9200000004 | builder | 3.9  | 2 |
-| 15 | Sai Realtors | `sai.hyd@demo.com` | 9200000003 | agent | 4.6  | 2 |
-| 16 | Rajesh Kumar (Owner) | `rajesh.hyd@demo.com` | 9200000002 | owner | 4.1  | 1 |
-| 17 | Srinivas Builders | `srinivas.hyd@demo.com` | 9200000001 | builder | 4.7  | 2 |
+| 1 | Hanu Reddy Realty India Pvt. Ltd. | `hanureddyrealtyindiapvtltd@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 2 | Balamurugan | `balamurugan@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
+| 3 | Hemdevs International Realty Services | `hemdevsinternationalrealtyservices@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 4 | Unknown | `unknown@hublet.scraped` | 0000000000 | agent | 4.0  | 6 |
+| 5 | Alliance Realtors CHN | `alliance.chn@demo.com` | 9200000015 | agent | 4.6  | 2 |
+| 6 | Ramesh Iyer (Owner) | `ramesh.chn@demo.com` | 9200000014 | owner | 4.9  | 1 |
+| 7 | Casagrand Group | `casagrand.chn@demo.com` | 9200000013 | builder | 4.3  | 2 |
+| 8 | Kumar Properties Pune | `kumar.pun@demo.com` | 9200000012 | agent | 4.9  | 2 |
+| 9 | Amit Shah (Owner) | `amit.pun@demo.com` | 9200000011 | owner | 4.3  | 1 |
+| 10 | Kolte Patil Developers | `kolte.pun@demo.com` | 9200000010 | builder | 4.0  | 2 |
+| 11 | Hiranandani Agents | `hiranandani.mum@demo.com` | 9200000009 | agent | 4.2  | 2 |
+| 12 | Sunita Verma (Owner) | `sunita.mum@demo.com` | 9200000008 | owner | 3.9  | 1 |
+| 13 | Lodha Group MUM | `lodha.mum@demo.com` | 9200000007 | builder | 4.8  | 2 |
+| 14 | Brigade Realty | `brigade.blr@demo.com` | 9200000006 | agent | 4.5  | 2 |
+| 15 | Anand Murthy (Owner) | `anand.blr@demo.com` | 9200000005 | owner | 3.8  | 1 |
+| 16 | Prestige Group BLR | `prestige.blr@demo.com` | 9200000004 | builder | 4.2  | 2 |
+| 17 | Sai Realtors | `sai.hyd@demo.com` | 9200000003 | agent | 4.8  | 2 |
+| 18 | Rajesh Kumar (Owner) | `rajesh.hyd@demo.com` | 9200000002 | owner | 4.7  | 1 |
+| 19 | Srinivas Builders | `srinivas.hyd@demo.com` | 9200000001 | builder | 3.9  | 2 |
 
 <details><summary> Quick Login Emails (click to expand)</summary>
 
 ```
-chandrasksingh@hublet.scraped
+hanureddyrealtyindiapvtltd@hublet.scraped
+balamurugan@hublet.scraped
+hemdevsinternationalrealtyservices@hublet.scraped
 unknown@hublet.scraped
 alliance.chn@demo.com
 ramesh.chn@demo.com
@@ -146,7 +150,7 @@ arjun.hyd@demo.com
 
 ##  Summary
 
-- **Total Sellers**: 17
+- **Total Sellers**: 19
 - **Total Buyers**: 40
-- **Total Properties**: 30
-- **Last Updated**: 14/4/2026, 10:00:15 pm
+- **Total Properties**: 34
+- **Last Updated**: 15/4/2026, 2:51:19 pm

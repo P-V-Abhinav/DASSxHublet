@@ -15,6 +15,8 @@ async function ensureGeocodedMetadata(metadata: Record<string, any>): Promise<Re
     const text = metadata.localityText || metadata.city;
     if (!text) return metadata; // nothing to geocode
 
+    if (metadata.geocodeFailed) return metadata;
+
     try {
         const coords = await GeocodeService.geocodeAddress(text);
         if (coords) {
@@ -22,9 +24,11 @@ async function ensureGeocodedMetadata(metadata: Record<string, any>): Promise<Re
             console.log(`[BuyerService] Auto-geocoded "${text}" → ${coords.lat}, ${coords.lon}`);
         } else {
             console.warn(`[BuyerService] Geocoding returned no result for "${text}"`);
+            metadata.geocodeFailed = true;
         }
     } catch (e) {
         console.warn(`[BuyerService] Geocoding failed for "${text}":`, e);
+        metadata.geocodeFailed = true;
     }
     return metadata;
 }
