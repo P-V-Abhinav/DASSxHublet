@@ -13,6 +13,7 @@ import { seedDemoSellers } from '../scripts/seed-demo-sellers';
 import { resetSellerTrust } from '../scripts/reset-seller-trust';
 import { resetDatabase } from '../scripts/reset-database';
 import { getCredentials, logCredential, logCredentials, clearCredentials, removeCredentialByEmail } from '../utils/credential-logger';
+import { refreshAllMatches } from '../utils/refresh-matches';
 
 const router = Router();
 
@@ -39,6 +40,9 @@ router.post('/demo-buyers', requireRoles('admin'), async (req: Request, res: Res
             skipped: result.skipped,
             buyers: result.buyers,
         });
+
+        // Fire-and-forget: refresh matches now that buyers exist
+        refreshAllMatches().catch(e => console.error('[seed/demo-buyers] Match refresh error:', e.message));
     } catch (error: any) {
         console.error('[seed/demo-buyers] Error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -68,6 +72,9 @@ router.post('/demo-sellers', requireRoles('admin'), async (req: Request, res: Re
             skipped: result.skipped,
             sellers: result.sellers,
         });
+
+        // Fire-and-forget: refresh matches now that properties exist
+        refreshAllMatches().catch(e => console.error('[seed/demo-sellers] Match refresh error:', e.message));
     } catch (error: any) {
         console.error('[seed/demo-sellers] Error:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -204,6 +211,9 @@ router.post('/seed-all', requireRoles('admin'), async (req: Request, res: Respon
             buyers: { created: buyerResult.created, skipped: buyerResult.skipped },
             sellers: { created: sellerResult.created, skipped: sellerResult.skipped },
         });
+
+        // Fire-and-forget: refresh matches now that all data is seeded
+        refreshAllMatches().catch(e => console.error('[seed/seed-all] Match refresh error:', e.message));
     } catch (error: any) {
         console.error('[seed/seed-all] Error:', error);
         res.status(500).json({ success: false, error: error.message });
