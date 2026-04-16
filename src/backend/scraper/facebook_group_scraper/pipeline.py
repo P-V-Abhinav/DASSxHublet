@@ -12,7 +12,7 @@ import sys
 
 import pandas as pd
 
-import config
+import settings
 from scraper import scrape_all_groups, save_raw
 from extractor import GroqExtractor, save_extracted
 
@@ -34,11 +34,17 @@ def run_extract(raw_df: pd.DataFrame = None) -> pd.DataFrame:
     print("=" * 55)
 
     if raw_df is None:
-        if not os.path.exists(config.RAW_CSV):
-            print(f"❌ No raw data found at {config.RAW_CSV}")
+        if not os.path.exists(settings.RAW_CSV):
+            print(f"❌ No raw data found at {settings.RAW_CSV}")
             print("   Run with --scrape-only first, or run the full pipeline.")
             sys.exit(1)
-        raw_df = pd.read_csv(config.RAW_CSV)
+        raw_df = pd.read_csv(settings.RAW_CSV)
+
+    if raw_df.empty:
+        print("[EXTRACT][WARN] Raw scrape result is empty. Writing empty extracted output.")
+        empty_df = pd.DataFrame(columns=settings.EXPECTED_COLUMNS)
+        save_extracted(empty_df)
+        return empty_df
 
     extractor = GroqExtractor()
     result_df = extractor.extract_all(raw_df)
@@ -63,7 +69,7 @@ def main():
     args = parser.parse_args()
 
     # Ensure data directory exists
-    os.makedirs(config.DATA_DIR, exist_ok=True)
+    os.makedirs(settings.DATA_DIR, exist_ok=True)
 
     print("\n[Facebook Real Estate Pipeline]")
     print("-" * 55)
@@ -82,7 +88,7 @@ def main():
         run_extract(raw_df)
         print("\n✅ Full pipeline complete.")
 
-    print(f"\n📁 Output directory: {config.DATA_DIR}/")
+    print(f"\n📁 Output directory: {settings.DATA_DIR}/")
 
 
 if __name__ == "__main__":

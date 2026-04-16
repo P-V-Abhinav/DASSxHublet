@@ -1,36 +1,78 @@
 #  Users List — Buyers & Sellers
 
-> Auto-generated on 15/4/2026, 2:51:19 pm. Updated after every scrape.
+> Auto-generated on 16/4/2026, 9:57:17 pm. Updated after every scrape.
 
 ---
 
-##  Sellers (19 total)
+##  Sellers (40 total)
 
 | # | Name | Email | Phone | Type | Rating | Properties |
 |---|------|-------|-------|------|--------|------------|
-| 1 | Hanu Reddy Realty India Pvt. Ltd. | `hanureddyrealtyindiapvtltd@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
-| 2 | Balamurugan | `balamurugan@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
-| 3 | Hemdevs International Realty Services | `hemdevsinternationalrealtyservices@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
-| 4 | Unknown | `unknown@hublet.scraped` | 0000000000 | agent | 4.0  | 6 |
-| 5 | Alliance Realtors CHN | `alliance.chn@demo.com` | 9200000015 | agent | 4.6  | 2 |
-| 6 | Ramesh Iyer (Owner) | `ramesh.chn@demo.com` | 9200000014 | owner | 4.9  | 1 |
-| 7 | Casagrand Group | `casagrand.chn@demo.com` | 9200000013 | builder | 4.3  | 2 |
-| 8 | Kumar Properties Pune | `kumar.pun@demo.com` | 9200000012 | agent | 4.9  | 2 |
-| 9 | Amit Shah (Owner) | `amit.pun@demo.com` | 9200000011 | owner | 4.3  | 1 |
-| 10 | Kolte Patil Developers | `kolte.pun@demo.com` | 9200000010 | builder | 4.0  | 2 |
-| 11 | Hiranandani Agents | `hiranandani.mum@demo.com` | 9200000009 | agent | 4.2  | 2 |
-| 12 | Sunita Verma (Owner) | `sunita.mum@demo.com` | 9200000008 | owner | 3.9  | 1 |
-| 13 | Lodha Group MUM | `lodha.mum@demo.com` | 9200000007 | builder | 4.8  | 2 |
-| 14 | Brigade Realty | `brigade.blr@demo.com` | 9200000006 | agent | 4.5  | 2 |
-| 15 | Anand Murthy (Owner) | `anand.blr@demo.com` | 9200000005 | owner | 3.8  | 1 |
-| 16 | Prestige Group BLR | `prestige.blr@demo.com` | 9200000004 | builder | 4.2  | 2 |
-| 17 | Sai Realtors | `sai.hyd@demo.com` | 9200000003 | agent | 4.8  | 2 |
-| 18 | Rajesh Kumar (Owner) | `rajesh.hyd@demo.com` | 9200000002 | owner | 4.7  | 1 |
-| 19 | Srinivas Builders | `srinivas.hyd@demo.com` | 9200000001 | builder | 3.9  | 2 |
+| 1 | Dinesh | `dinesh@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
+| 2 | prashant | `prashant@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 3 | Ganesh G | `ganeshg@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 4 | Waquar Ahmed | `waquarahmed@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 5 | Anugraha | `anugraha@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 6 | Best Solution Real Estate (Regd) | `bestsolutionrealestateregd@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 7 | Dwarka Realty | `dwarkarealty@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 8 | HMAL. | `hmal@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 9 | Mohammad Saif | `mohammadsaif@hublet.scraped` | 0000000000 | agent | 4.0  | 2 |
+| 10 | Kevin A | `kevina@hublet.scraped` | 0000000000 | agent | 4.0  | 3 |
+| 11 | MUZAMMIL AHMED PATEL FAIYAZ | `muzammilahmedpatelfaiyaz@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 12 | Bharathvasi Promoters | `bharathvasipromoters@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 13 | Manoj Gupta | `manojgupta@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
+| 14 | Bhaskar Pai | `bhaskarpai@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
+| 15 | Chetan Pichamuthu | `chetanpichamuthu@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
+| 16 | Sundaran M | `sundaranm@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
+| 17 | Vikash | `vikash@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
+| 18 | SIDDHARTH MITTAL | `siddharthmittal@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 19 | Skytech Real Infra | `skytechrealinfra@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 20 | MAHESH GANESH GAIKWAD | `maheshganeshgaikwad@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 21 | Shubh Housing | `shubhhousing@hublet.scraped` | 0000000000 | builder | 4.0  | 1 |
+| 22 | Hanu Reddy Realty India Pvt. Ltd. | `hanureddyrealtyindiapvtltd@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 23 | Balamurugan | `balamurugan@hublet.scraped` | 0000000000 | owner | 4.0  | 1 |
+| 24 | Hemdevs International Realty Services | `hemdevsinternationalrealtyservices@hublet.scraped` | 0000000000 | agent | 4.0  | 1 |
+| 25 | Unknown | `unknown@hublet.scraped` | 0000000000 | agent | 4.0  | 20 |
+| 26 | Alliance Realtors CHN | `alliance.chn@demo.com` | 9200000015 | agent | 4.6  | 2 |
+| 27 | Ramesh Iyer (Owner) | `ramesh.chn@demo.com` | 9200000014 | owner | 4.9  | 1 |
+| 28 | Casagrand Group | `casagrand.chn@demo.com` | 9200000013 | builder | 4.3  | 2 |
+| 29 | Kumar Properties Pune | `kumar.pun@demo.com` | 9200000012 | agent | 4.9  | 2 |
+| 30 | Amit Shah (Owner) | `amit.pun@demo.com` | 9200000011 | owner | 4.3  | 1 |
+| 31 | Kolte Patil Developers | `kolte.pun@demo.com` | 9200000010 | builder | 4.0  | 2 |
+| 32 | Hiranandani Agents | `hiranandani.mum@demo.com` | 9200000009 | agent | 4.2  | 2 |
+| 33 | Sunita Verma (Owner) | `sunita.mum@demo.com` | 9200000008 | owner | 3.9  | 1 |
+| 34 | Lodha Group MUM | `lodha.mum@demo.com` | 9200000007 | builder | 4.8  | 2 |
+| 35 | Brigade Realty | `brigade.blr@demo.com` | 9200000006 | agent | 4.5  | 2 |
+| 36 | Anand Murthy (Owner) | `anand.blr@demo.com` | 9200000005 | owner | 3.8  | 1 |
+| 37 | Prestige Group BLR | `prestige.blr@demo.com` | 9200000004 | builder | 4.2  | 2 |
+| 38 | Sai Realtors | `sai.hyd@demo.com` | 9200000003 | agent | 4.8  | 2 |
+| 39 | Rajesh Kumar (Owner) | `rajesh.hyd@demo.com` | 9200000002 | owner | 4.7  | 1 |
+| 40 | Srinivas Builders | `srinivas.hyd@demo.com` | 9200000001 | builder | 3.9  | 2 |
 
 <details><summary> Quick Login Emails (click to expand)</summary>
 
 ```
+dinesh@hublet.scraped
+prashant@hublet.scraped
+ganeshg@hublet.scraped
+waquarahmed@hublet.scraped
+anugraha@hublet.scraped
+bestsolutionrealestateregd@hublet.scraped
+dwarkarealty@hublet.scraped
+hmal@hublet.scraped
+mohammadsaif@hublet.scraped
+kevina@hublet.scraped
+muzammilahmedpatelfaiyaz@hublet.scraped
+bharathvasipromoters@hublet.scraped
+manojgupta@hublet.scraped
+bhaskarpai@hublet.scraped
+chetanpichamuthu@hublet.scraped
+sundaranm@hublet.scraped
+vikash@hublet.scraped
+siddharthmittal@hublet.scraped
+skytechrealinfra@hublet.scraped
+maheshganeshgaikwad@hublet.scraped
+shubhhousing@hublet.scraped
 hanureddyrealtyindiapvtltd@hublet.scraped
 balamurugan@hublet.scraped
 hemdevsinternationalrealtyservices@hublet.scraped
@@ -59,7 +101,7 @@ srinivas.hyd@demo.com
 
 | # | Name | Email | Phone | BHK | Budget Range | Area Range | Localities |
 |---|------|-------|-------|-----|--------------|------------|------------|
-| 1 | Shalini Iyer | `shalini.chn@demo.com` | 9100000040 | 2 BHK | ₹50.00 Lac – ₹80.00 Lac | 800 – 1200 sqft | Porur |
+| 1 | Shalini Iyer | `shalini.chn@demo.com` | 9100000040 | 2 BHK | ₹50.00 Lac – ₹80.00 Lac | 800 – 1200 sqft | Mumbai |
 | 2 | Arun Prasad | `arun.chn@demo.com` | 9100000039 | 3 BHK | ₹80.00 Lac – ₹1.40 Cr | 1400 – 2000 sqft | Nungambakkam |
 | 3 | Divya Krishnan | `divya.chn@demo.com` | 9100000038 | 2 BHK | ₹35.00 Lac – ₹55.00 Lac | 750 – 1050 sqft | Tambaram, Chennai |
 | 4 | Ganesh Raman | `ganesh.chn@demo.com` | 9100000037 | 2 BHK | ₹45.00 Lac – ₹75.00 Lac | 850 – 1250 sqft | Thoraipakkam |
@@ -77,7 +119,7 @@ srinivas.hyd@demo.com
 | 16 | Anjali Kulkarni | `anjali.pun@demo.com` | 9100000010 | 2 BHK | ₹40.00 Lac – ₹65.00 Lac | 800 – 1200 sqft | Hinjewadi, Wakad |
 | 17 | Swati Kulkarni MUM | `swati.mum@demo.com` | 9100000030 | 2 BHK | ₹70.00 Lac – ₹1.20 Cr | 600 – 900 sqft | Borivali West |
 | 18 | Varun Joshi MUM | `varun.mum@demo.com` | 9100000029 | 2 BHK | ₹90.00 Lac – ₹1.40 Cr | 650 – 950 sqft | Kandivali East |
-| 19 | Tanvi Desai | `tanvi.mum@demo.com` | 9100000028 | 1 BHK | ₹50.00 Lac – ₹80.00 Lac | 450 – 700 sqft | Malad West, Mumbai |
+| 19 | Tanvi Desai | `tanvi.mum@demo.com` | 9100000028 | 1 BHK | ₹50.00 Lac – ₹80.00 Lac | 450 – 700 sqft | Zone 8 Anna Nagar, Saifabad |
 | 20 | Sameer Khan | `sameer.mum@demo.com` | 9100000027 | 3 BHK | ₹2.00 Cr – ₹3.50 Cr | 1200 – 1800 sqft | Worli |
 | 21 | Pooja Mehta | `pooja.mum@demo.com` | 9100000026 | 2 BHK | ₹1.00 Cr – ₹1.80 Cr | 700 – 1000 sqft | Goregaon East |
 | 22 | Rohan Deshmukh | `rohan.mum@demo.com` | 9100000009 | 1 BHK | ₹40.00 Lac – ₹70.00 Lac | 400 – 650 sqft | Thane West, Mumbai |
@@ -150,7 +192,7 @@ arjun.hyd@demo.com
 
 ##  Summary
 
-- **Total Sellers**: 19
+- **Total Sellers**: 40
 - **Total Buyers**: 40
-- **Total Properties**: 34
-- **Last Updated**: 15/4/2026, 2:51:19 pm
+- **Total Properties**: 72
+- **Last Updated**: 16/4/2026, 9:57:17 pm

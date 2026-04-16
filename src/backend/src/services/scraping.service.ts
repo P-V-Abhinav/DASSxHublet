@@ -173,6 +173,9 @@ export class ScrapingService {
     static async scrapeCity(city: string, limit: number = 10, scraper: string = 'magicbricks-direct'): Promise<{ added: number, errors: string[] }> {
         return new Promise(async (resolve, reject) => {
             console.log(`[ScrapingService] Starting scrape for ${city} (limit: ${limit}, scraper: ${scraper})`);
+            console.log(`[ScrapingService] Python: ${ScrapingService.PYTHON_EXEC_PATH}`);
+            console.log(`[ScrapingService] Script: ${this.PYTHON_SCRIPT_PATH}`);
+            console.log(`[ScrapingService] CWD:    ${ScrapingService.SCRAPER_DIR}`);
 
             const args = [
                 this.PYTHON_SCRIPT_PATH,
@@ -210,7 +213,9 @@ export class ScrapingService {
             });
 
             pythonProcess.stderr.on('data', (data) => {
-                errorString += data.toString();
+                const msg = data.toString();
+                console.error(`[ScrapingService] STDERR: ${msg}`);
+                errorString += msg;
             });
 
             pythonProcess.on('close', async (code) => {
@@ -220,6 +225,11 @@ export class ScrapingService {
                 }
 
                 try {
+                    console.log(`[ScrapingService] Raw stdout length: ${dataString.length}`);
+                    console.log(`[ScrapingService] Raw stdout (first 500 chars): ${dataString.substring(0, 500)}`);
+                    if (errorString) {
+                        console.warn(`[ScrapingService] Stderr (non-fatal): ${errorString.substring(0, 500)}`);
+                    }
                     const listings: ScrapedProperty[] = JSON.parse(dataString);
                     console.log(`[ScrapingService] Scraper returned ${listings.length} listings`);
 

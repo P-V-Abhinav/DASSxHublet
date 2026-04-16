@@ -14,11 +14,51 @@ import os
 import time
 from datetime import datetime
 
+
+def _load_env_file(path):
+    """Load KEY=VALUE pairs from .env into os.environ without overriding existing vars."""
+    if not os.path.exists(path):
+        return
+
+    with open(path, 'r', encoding='utf-8') as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith('#'):
+                continue
+
+            if line.startswith('export '):
+                line = line[len('export '):].strip()
+
+            if '=' not in line:
+                continue
+
+            key, value = line.split('=', 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+def _load_runtime_env():
+    """Load local and parent .env files so token-gated scrapers run in local dev."""
+    base_dir = os.path.dirname(__file__)
+    for env_path in (
+        os.path.join(base_dir, '.env'),
+        os.path.join(base_dir, '..', '.env'),
+    ):
+        _load_env_file(env_path)
+
+
+_load_runtime_env()
+
 # Config
-PYTHON = os.path.join(os.path.dirname(__file__), 'venv/bin/python')
+_LOCAL_VENV_PYTHON = os.path.join(os.path.dirname(__file__), 'venv/bin/python')
+# Prefer active interpreter so the script works in system/conda/venv setups.
+PYTHON = _LOCAL_VENV_PYTHON if os.path.exists(_LOCAL_VENV_PYTHON) else sys.executable
 SCRAPER_SCRIPT = os.path.join(os.path.dirname(__file__), 'scraper.py')
 DEFAULT_CITY = 'mumbai'
-DEFAULT_LIMIT = 3
+DEFAULT_LIMIT = 1
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), 'scraper_test_results.txt')
 
 SCRAPERS = [
@@ -56,7 +96,14 @@ def run_scraper(scraper_name, city, limit):
         duration = time.time() - start
 
         if result.returncode != 0:
-            return None, result.stderr.strip(), duration
+            err_text = result.stderr.strip()
+            try:
+                err_payload = json.loads(err_text)
+                if isinstance(err_payload, dict) and err_payload.get("error"):
+                    err_text = err_payload["error"]
+            except (json.JSONDecodeError, TypeError, ValueError):
+                pass
+            return None, err_text, duration
 
         listings = json.loads(result.stdout)
         return listings, None, duration

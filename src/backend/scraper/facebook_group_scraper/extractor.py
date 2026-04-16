@@ -9,7 +9,7 @@ import time
 import pandas as pd
 from openai import OpenAI
 
-import config
+import settings
 
 
 class GroqExtractor:
@@ -17,13 +17,15 @@ class GroqExtractor:
 
     def __init__(
         self,
-        api_key: str = config.ACTIVE_GROQ_KEY,
-        base_url: str = config.GROQ_BASE_URL,
-        model: str = config.GROQ_MODEL,
+        api_key: str = settings.GROQ_API_KEY,
+        base_url: str = settings.GROQ_BASE_URL,
+        model: str = settings.GROQ_MODEL,
     ):
+        if not api_key:
+            raise RuntimeError("Missing Groq API key. Set GROQ_API_KEY_1 or GROQ_API_KEY_2 in src/backend/.env")
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
-        self.prompt = config.EXTRACTION_PROMPT
+        self.prompt = settings.EXTRACTION_PROMPT
 
     # ── Single row extraction ──────────────────────────
 
@@ -49,7 +51,7 @@ class GroqExtractor:
                     {"role": "system", "content": self.prompt},
                     {"role": "user", "content": listing_info},
                 ],
-                temperature=config.LLM_TEMPERATURE,
+                temperature=settings.LLM_TEMPERATURE,
                 response_format={"type": "json_object"},
             )
             return json.loads(response.choices[0].message.content)
@@ -108,16 +110,16 @@ class GroqExtractor:
             results.append(extracted)
 
             if i < total - 1:
-                time.sleep(config.API_DELAY_SECONDS)
+                time.sleep(settings.API_DELAY_SECONDS)
 
         out_df = pd.DataFrame(results)
 
         # Ensure every expected column exists
-        for col in config.EXPECTED_COLUMNS:
+        for col in settings.EXPECTED_COLUMNS:
             if col not in out_df.columns:
                 out_df[col] = "-"
 
-        out_df = out_df[config.EXPECTED_COLUMNS]
+        out_df = out_df[settings.EXPECTED_COLUMNS]
 
         # Final deduplication on extracted output
         before_final = len(out_df)
@@ -135,12 +137,12 @@ class GroqExtractor:
     @staticmethod
     def _fallback(title: str) -> dict:
         """Return a dict of dashes for when extraction fails."""
-        return {col: "-" for col in config.EXPECTED_COLUMNS} | {
+        return {col: "-" for col in settings.EXPECTED_COLUMNS} | {
             "TITLE": title or "-"
         }
 
 
-def save_extracted(df: pd.DataFrame, path: str = config.EXTRACTED_CSV) -> None:
+def save_extracted(df: pd.DataFrame, path: str = settings.EXTRACTED_CSV) -> None:
     """Save the extracted DataFrame to CSV."""
     df.to_csv(path, index=False)
     print(f"\n💾 Saved {len(df)} extracted listings → {path}")
@@ -148,9 +150,9 @@ def save_extracted(df: pd.DataFrame, path: str = config.EXTRACTED_CSV) -> None:
 
 if __name__ == "__main__":
     import os
-    os.makedirs(config.DATA_DIR, exist_ok=True)
+    os.makedirs(settings.DATA_DIR, exist_ok=True)
 
-    raw_df = pd.read_csv(config.RAW_CSV)
+    raw_df = pd.read_csv(settings.RAW_CSV)
     extractor = GroqExtractor()
     result_df = extractor.extract_all(raw_df)
     save_extracted(result_df)
