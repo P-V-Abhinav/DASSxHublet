@@ -7,9 +7,10 @@ import { NotificationService } from './notification.service';
 
 function safeParseJson(value: any, defaultValue: any = null) {
     if (value === null || value === undefined || value === '' || value === 'null') return defaultValue;
-    if (typeof value === 'object') return value;
+    if (typeof value === 'object') return value || defaultValue; // Handle array/object directly (null is object, so it will fall back)
     try {
-        return safeParseJson(value);
+        const parsed = JSON.parse(value);
+        return parsed === null ? defaultValue : parsed;
     } catch (e) {
         return defaultValue;
     }

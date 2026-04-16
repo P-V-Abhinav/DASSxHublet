@@ -21,7 +21,10 @@ router.get('/localities-map', requireRoles('admin'), async (_req: Request, res: 
 
         for (const b of buyers) {
             let meta: any = {};
-            try { meta = b.metadata ? JSON.parse(b.metadata) : {}; } catch { }
+            try { 
+                const parsed = b.metadata ? JSON.parse(b.metadata) : {}; 
+                meta = parsed || {};
+            } catch { }
 
             const coords: Array<{ name: string; lat: number; lon: number }> = meta.localityCoords || [];
             for (const c of coords) {

@@ -7,7 +7,8 @@ import { GeocodeService } from './geocode.service';
  * Ensures metadata has localityCoords. If missing but localityText exists,
  * attempts geocoding via Nominatim and persists the result.
  */
-async function ensureGeocodedMetadata(metadata: Record<string, any>): Promise<Record<string, any>> {
+async function ensureGeocodedMetadata(metadata: Record<string, any> | null | undefined): Promise<Record<string, any>> {
+    if (!metadata) metadata = {};
     if (metadata.localityCoords && metadata.localityCoords.length > 0) {
         return metadata; // already has coords
     }
