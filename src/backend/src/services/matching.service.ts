@@ -79,8 +79,8 @@ export class MatchingService {
         const matches = properties
             .map(property => {
                 // Parse JSON strings for SQLite
-                const buyerMeta = buyer.metadata ? safeParseJson(buyer.metadata) : null;
-                const propMeta = property.metadata ? safeParseJson(property.metadata) : null;
+                const buyerMeta = safeParseJson(buyer.metadata, null);
+                const propMeta = safeParseJson(property.metadata, null);
 
                 const buyerIntent: BuyerIntent = {
                     localityCoords: buyerMeta?.localityCoords || undefined,
@@ -249,7 +249,7 @@ export class MatchingService {
 
         // Pre-process buyers sequentially
         for (const buyer of buyers) {
-            const buyerMeta = buyer.metadata ? safeParseJson(buyer.metadata) : {};
+            const buyerMeta = safeParseJson(buyer.metadata, {});
             if (!buyerMeta.localityCoords || buyerMeta.localityCoords.length === 0) {
                 console.warn(`Buyer ${buyer.id} has no locality coords — skipping geocode`);
             }
@@ -258,8 +258,8 @@ export class MatchingService {
         // Score each buyer
         const matches = buyers
             .map(buyer => {
-                const buyerMeta = buyer.metadata ? safeParseJson(buyer.metadata) : null;
-                const propMeta = property.metadata ? safeParseJson(property.metadata) : null;
+                const buyerMeta = safeParseJson(buyer.metadata, null);
+                const propMeta = safeParseJson(property.metadata, null);
 
                 const buyerIntent: BuyerIntent = {
                     localityCoords: buyerMeta?.localityCoords || undefined,
