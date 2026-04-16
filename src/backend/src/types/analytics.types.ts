@@ -1,3 +1,5 @@
+export type AnalyticsRole = 'admin' | 'seller';
+
 export interface AnalyticsFilters {
   from?: string;
   to?: string;
@@ -8,16 +10,15 @@ export interface AnalyticsFilters {
   sellerType?: string;
   minScore?: number;
   maxScore?: number;
-  sellerId?: string;
 }
 
 export interface AnalyticsMetadata {
   generatedAt: string;
-  filtersApplied: Omit<AnalyticsFilters, 'sellerId'>;
+  filtersApplied: AnalyticsFilters;
   sampleSize: number;
 }
 
-export interface AnalyticsEnvelope<T> {
+export interface AnalyticsResponse<T> {
   metadata: AnalyticsMetadata;
   warnings: string[];
   data: T;

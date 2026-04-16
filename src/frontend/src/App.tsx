@@ -4,7 +4,8 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BuyerDashboard } from './components/BuyerDashboard';
 import { SellerDashboard } from './components/SellerDashboard';
 import { AuthPage } from './components/AuthPage';
-import { AnalyticsDashboard } from './pages/AnalyticsDashboard';
+import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
+import { SellerAnalyticsPage } from './pages/SellerAnalyticsPage';
 import { NotificationBell } from './components/NotificationBell';
 
 import { clearAuthSession, getAuthSession } from './api/client';
@@ -97,14 +98,14 @@ function AdminDashboardWrapper() {
     );
 }
 
-function AnalyticsDashboardWrapper() {
+function AdminAnalyticsPageWrapper() {
     const { user } = getAuthSession();
 
     if (!user || user.role !== 'admin') {
         return <Navigate to="/auth/admin" replace />;
     }
 
-    return <AnalyticsDashboard />;
+    return <AdminAnalyticsPage />;
 }
 
 function BuyerDashboardWrapper() {
@@ -180,9 +181,39 @@ function SellerDashboardWrapper() {
                     </button>
                 </div>
             </header>
-            <SellerDashboard sellerId={userId} sellerName={user.name || 'Seller'} />
+            <SellerDashboard
+                sellerId={userId}
+                sellerName={user.name || 'Seller'}
+                onViewAnalytics={() => navigate(`/seller/${userId}/analytics`)}
+            />
         </div>
     );
+}
+
+function SellerAnalyticsPageWrapper() {
+    const { userId } = useParams<{ userId: string }>();
+    const { user } = getAuthSession();
+
+    if (!userId) {
+        return <Navigate to="/" replace />;
+    }
+
+    if (!user || user.role !== 'seller' || user.id !== userId) {
+        return <Navigate to="/auth/seller" replace />;
+    }
+
+    return <SellerAnalyticsPage />;
+}
+
+function AdminSellerAnalyticsImpersonationWrapper() {
+    const { user } = getAuthSession();
+    const { sellerId } = useParams<{ sellerId: string }>();
+
+    if (!user || user.role !== 'admin') {
+        return <Navigate to="/auth/admin" replace />;
+    }
+
+    return <SellerAnalyticsPage impersonatedSellerId={sellerId} />;
 }
 
 function App() {
@@ -193,9 +224,11 @@ function App() {
                 <Route path="/explore" element={<Navigate to="/" replace />} />
                 <Route path="/auth/:userType" element={<AuthPageWrapper />} />
                 <Route path="/admin" element={<AdminDashboardWrapper />} />
-                <Route path="/admin/analytics" element={<AnalyticsDashboardWrapper />} />
+                <Route path="/admin/analytics" element={<AdminAnalyticsPageWrapper />} />
+                <Route path="/admin/analytics/sellers/:sellerId" element={<AdminSellerAnalyticsImpersonationWrapper />} />
                 <Route path="/buyer/:userId" element={<BuyerDashboardWrapper />} />
                 <Route path="/seller/:userId" element={<SellerDashboardWrapper />} />
+                <Route path="/seller/:userId/analytics" element={<SellerAnalyticsPageWrapper />} />
             </Routes>
         </Router>
     );

@@ -121,7 +121,6 @@ export const AdminDashboard = ({
 
     const [seedingBuyers, setSeedingBuyers] = useState(false);
     const [refreshingMatches, setRefreshingMatches] = useState(false);
-    const [seedingSellers, setSeedingSellers] = useState(false);
     const [deletingBuyers, setDeletingBuyers] = useState(false);
     const [deletingSellers, setDeletingSellers] = useState(false);
     const [resettingSellers, setResettingSellers] = useState(false);

@@ -7,6 +7,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 interface SellerDashboardProps {
     sellerId: string;
     sellerName: string;
+    onViewAnalytics?: () => void;
 }
 
 interface Property {
@@ -46,7 +47,7 @@ interface Match {
     };
 }
 
-export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) => {
+export const SellerDashboard = ({ sellerId, sellerName, onViewAnalytics }: SellerDashboardProps) => {
     const [properties, setProperties] = useState<Property[]>([]);
     const [matches, setMatches] = useState<Match[]>([]);
     const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
@@ -160,6 +161,16 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
     return (
         <div className="m3-container">
             <h1 className="md-headline-medium" style={{ marginBottom: 20 }}>Seller Dashboard — {sellerName}</h1>
+
+            {onViewAnalytics ? (
+                <button
+                    onClick={onViewAnalytics}
+                    className="m3-btn m3-btn-filled"
+                    style={{ marginBottom: 16 }}
+                >
+                    View Seller Analytics
+                </button>
+            ) : null}
 
             <button
                 onClick={() => setShowAddForm(!showAddForm)}
