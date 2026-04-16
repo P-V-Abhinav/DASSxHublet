@@ -82,7 +82,15 @@ const getSellerRoleChipClass = (role?: string): string => {
     }
 };
 
-export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onLogout: () => void }) => {
+export const AdminDashboard = ({
+    userEmail,
+    onLogout,
+    onViewAnalytics,
+}: {
+    userEmail: string;
+    onLogout: () => void;
+    onViewAnalytics?: () => void;
+}) => {
     const [activeTab, setActiveTab] = useState<TabType>('buyers');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -250,27 +258,38 @@ export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onL
                     {!activeTab.startsWith('settings-') && (
                         <div className="m3-surface-container m3-flex m3-gap-sm m3-flex-wrap" style={{ alignItems: 'center', marginBottom: 20 }}>
                             <span className="md-label-large m3-text-primary" style={{ marginRight: 8 }}>Admin Tools:</span>
-                            {activeTab === 'sellers' && (
+                            {onViewAnalytics ? (
                                 <button
-                                    onClick={async () => {
-                                        if (!window.confirm('Reset ALL seller trust scores, ratings, and deals to 0?\n\nThis cannot be undone.')) return;
-                                        setResettingSellers(true); setActionMessage(null);
-                                        try { const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error || 'Failed'}`); fetchData(); }
-                                        catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); }
-                                        finally { setResettingSellers(false); }
-                                    }}
-                                    disabled={resettingSellers}
-                                    className="m3-btn m3-btn-error m3-btn-sm"
-                                >{resettingSellers ? 'Resetting...' : 'Reset Seller Trust to 0'}</button>
+                                    onClick={onViewAnalytics}
+                                    className="m3-btn m3-btn-filled m3-btn-sm"
+                                    style={{ whiteSpace: 'nowrap' }}
+                                >
+                                    View Analytics
+                                </button>
+                            ) : null}
+                            {activeTab === 'sellers' && (
+                                <>
+                                    <button
+                                        onClick={async () => {
+                                            if (!window.confirm('Reset ALL seller trust scores, ratings, and deals to 0?\n\nThis cannot be undone.')) return;
+                                            setResettingSellers(true); setActionMessage(null);
+                                            try { const res = await axios.post(`${API_BASE_URL}/admin/seed/reset-seller-trust`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error || 'Failed'}`); fetchData(); }
+                                            catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); }
+                                            finally { setResettingSellers(false); }
+                                        }}
+                                        disabled={resettingSellers}
+                                        className="m3-btn m3-btn-error m3-btn-sm"
+                                    >{resettingSellers ? 'Resetting...' : 'Reset Seller Trust to 0'}</button>
+                                    <button
+                                        onClick={async () => {
+                                            if (credentials) { setCredentials(null); return; }
+                                            try { const res = await axios.get(`${API_BASE_URL}/admin/seed/credentials`); setCredentials(res.data.credentials || []); }
+                                            catch (err: any) { alert('Failed to fetch credentials: ' + (err.response?.data?.error || err.message)); }
+                                        }}
+                                        className="m3-btn m3-btn-tonal m3-btn-sm"
+                                    >{credentials ? 'Hide Credentials' : 'View Credentials'}</button>
+                                </>
                             )}
-                            <button
-                                onClick={async () => {
-                                    if (credentials) { setCredentials(null); return; }
-                                    try { const res = await axios.get(`${API_BASE_URL}/admin/seed/credentials`); setCredentials(res.data.credentials || []); }
-                                    catch (err: any) { alert('Failed to fetch credentials: ' + (err.response?.data?.error || err.message)); }
-                                }}
-                                className="m3-btn m3-btn-tonal m3-btn-sm"
-                            >{credentials ? 'Hide Credentials' : 'View Credentials'}</button>
                         </div>
                     )}
 
