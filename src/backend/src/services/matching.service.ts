@@ -3,6 +3,7 @@ import { RuleBasedMatcher, Matcher, BuyerIntent, PropertyData } from '../matcher
 import { WorkflowEventService } from './workflow-event.service';
 import { KeywordIntentParser } from '../parsers/intent-parser';
 import { GeocodeService } from './geocode.service';
+import { NotificationService } from './notification.service';
 
 const intentParser = new KeywordIntentParser();
 
@@ -102,6 +103,8 @@ export class MatchingService {
             .sort((a, b) => b.matchResult.totalScore - a.matchResult.totalScore)
             .slice(0, limit);
 
+        let newMatchesCount = 0;
+        
         // Store matches in database
         const storedMatches = await Promise.all(
             matches.map(async match => {
@@ -145,6 +148,7 @@ export class MatchingService {
                 }
 
                 // Create new match
+                newMatchesCount++;
                 const created = await prisma.match.create({
                     data: {
                         buyerId,
@@ -184,6 +188,11 @@ export class MatchingService {
                 minScore,
             },
         });
+
+        // Trigger Notifications for the buyer if there are brand new matches discovered
+        if (newMatchesCount > 0) {
+            await NotificationService.notifyBuyerOfMatches(buyerId, newMatchesCount);
+        }
 
         return storedMatches;
     }
@@ -273,6 +282,8 @@ export class MatchingService {
             .sort((a, b) => b.matchResult.totalScore - a.matchResult.totalScore)
             .slice(0, limit);
 
+        let newMatchesCount = 0;
+
         // Store matches in database
         const storedMatches = await Promise.all(
             matches.map(async match => {
@@ -290,6 +301,7 @@ export class MatchingService {
                     return existing;
                 }
 
+                newMatchesCount++;
                 // Create new match
                 return await prisma.match.create({
                     data: {
@@ -307,6 +319,10 @@ export class MatchingService {
                 });
             })
         );
+
+        if (newMatchesCount > 0) {
+            await NotificationService.notifySellerOfMatches(propertyId, newMatchesCount);
+        }
 
         return storedMatches;
     }

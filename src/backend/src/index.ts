@@ -11,6 +11,7 @@ import matchingRoutes from './routes/matching.routes';
 import workflowEventRoutes from './routes/workflow-event.routes';
 import authRoutes from './routes/auth.routes';
 import seedRoutes from './routes/seed.routes';
+import notificationRoutes from './routes/notification.routes';
 import { authenticateJwt, requireRoles } from './middleware/auth.middleware';
 import { sanitizeResponsePayload } from './utils/response-sanitizer';
 
@@ -181,6 +182,7 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/matches', matchingRoutes);
 app.use('/api/workflow-events', workflowEventRoutes);
 app.use('/api/admin/seed', seedRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ── Facebook Group Scraper ────────────────────────────────────────────────
 import csv from 'csv-parser';

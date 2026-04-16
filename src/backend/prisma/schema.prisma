@@ -34,8 +34,9 @@ model Buyer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  leads     Lead[]
-  matches   Match[]
+  leads         Lead[]
+  matches       Match[]
+  notifications Notification[]
   
   @@index([bhk])
 }
@@ -60,7 +61,8 @@ model Seller {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  properties Property[]
+  properties    Property[]
+  notifications Notification[]
   
   @@index([rating])
   @@index([trustScore])
@@ -69,7 +71,7 @@ model Seller {
 model Property {
   id          String   @id @default(uuid()) @map("_id")
   sellerId    String
-  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  seller      Seller?  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
   
   // Core attributes
   title       String
@@ -109,9 +111,9 @@ model Property {
 model Lead {
   id         String    @id @default(uuid()) @map("_id")
   buyerId    String
-  buyer      Buyer     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  buyer      Buyer?    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   propertyId String
-  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   
   // State machine (string instead of enum for SQLite)
   // Valid values: NEW, ENRICHED, QUALIFIED, NOTIFIED, CONTACTED, CLOSED
@@ -137,9 +139,9 @@ model Lead {
 model Match {
   id         String   @id @default(uuid()) @map("_id")
   buyerId    String
-  buyer      Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  buyer      Buyer?   @relation(fields: [buyerId], references: [id], onDelete: Cascade)
   propertyId String
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   
   // Match score breakdown
   matchScore      Float
@@ -178,3 +180,22 @@ model WorkflowEvent {
   @@index([eventType])
   @@index([createdAt])
 }
+
+model Notification {
+  id        String   @id @default(uuid()) @map("_id")
+  buyerId   String?
+  buyer     Buyer?   @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId  String?
+  seller    Seller?  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([isRead])
+}
+
