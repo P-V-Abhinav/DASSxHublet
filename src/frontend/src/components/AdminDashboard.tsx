@@ -82,7 +82,15 @@ const getSellerRoleChipClass = (role?: string): string => {
     }
 };
 
-export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onLogout: () => void }) => {
+export const AdminDashboard = ({
+    userEmail,
+    onLogout,
+    onViewAnalytics,
+}: {
+    userEmail: string;
+    onLogout: () => void;
+    onViewAnalytics?: () => void;
+}) => {
     const [activeTab, setActiveTab] = useState<TabType>('buyers');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -263,6 +271,20 @@ export const AdminDashboard = ({ userEmail, onLogout }: { userEmail: string; onL
                                     className="m3-btn m3-btn-error m3-btn-sm"
                                 >{resettingSellers ? 'Resetting...' : 'Reset Seller Trust to 0'}</button>
                             )}
+                {/* Admin Tools (always visible except settings tabs) */}
+                {!activeTab.startsWith('settings-') && (
+                    <div className="m3-surface-container m3-flex m3-gap-sm m3-flex-wrap" style={{ alignItems: 'center', marginBottom: 20 }}>
+                        <span className="md-label-large m3-text-primary" style={{ marginRight: 8 }}>Admin Tools:</span>
+                        {onViewAnalytics ? (
+                            <button
+                                onClick={onViewAnalytics}
+                                className="m3-btn m3-btn-filled m3-btn-sm"
+                                style={{ whiteSpace: 'nowrap' }}
+                            >
+                                View Analytics
+                            </button>
+                        ) : null}
+                        {activeTab === 'sellers' && (
                             <button
                                 onClick={async () => {
                                     if (credentials) { setCredentials(null); return; }

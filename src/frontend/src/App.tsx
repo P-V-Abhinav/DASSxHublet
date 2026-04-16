@@ -4,6 +4,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BuyerDashboard } from './components/BuyerDashboard';
 import { SellerDashboard } from './components/SellerDashboard';
 import { AuthPage } from './components/AuthPage';
+import { AnalyticsDashboard } from './pages/AnalyticsDashboard';
 
 import { clearAuthSession, getAuthSession } from './api/client';
 
@@ -87,8 +88,22 @@ function AdminDashboardWrapper() {
     };
 
     return (
-        <AdminDashboard userEmail={user.email || 'admin'} onLogout={handleLogout} />
+        <AdminDashboard
+            userEmail={user.email || 'admin'}
+            onLogout={handleLogout}
+            onViewAnalytics={() => navigate('/admin/analytics')}
+        />
     );
+}
+
+function AnalyticsDashboardWrapper() {
+    const { user } = getAuthSession();
+
+    if (!user || user.role !== 'admin') {
+        return <Navigate to="/auth/admin" replace />;
+    }
+
+    return <AnalyticsDashboard />;
 }
 
 function BuyerDashboardWrapper() {
@@ -171,6 +186,7 @@ function App() {
                 <Route path="/explore" element={<Navigate to="/" replace />} />
                 <Route path="/auth/:userType" element={<AuthPageWrapper />} />
                 <Route path="/admin" element={<AdminDashboardWrapper />} />
+                <Route path="/admin/analytics" element={<AnalyticsDashboardWrapper />} />
                 <Route path="/buyer/:userId" element={<BuyerDashboardWrapper />} />
                 <Route path="/seller/:userId" element={<SellerDashboardWrapper />} />
             </Routes>
