@@ -36,15 +36,23 @@ pip install -r requirements.txt
 
 3. **Configure environment variables**
 
-Create a `.env` file in this directory with your API keys:
+Use the main backend environment file at `src/backend/.env`:
 
 ```env
 # Apify
 APIFY_TOKEN_FB=your_apify_token_here
+APIFY_ACTOR_ID_FB=your_actor_id_or_slug
+FB_RESULTS_LIMIT=20
+FB_VIEW_OPTION=CHRONOLOGICAL
 
 # Groq API Keys (at least one is required)
+GROQ_API_KEY=your_groq_api_key_here
 GROQ_API_KEY_1=your_groq_api_key_here
 GROQ_API_KEY_2=your_second_groq_api_key_here
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+GROQ_MODEL=llama-3.3-70b-versatile
+FB_LLM_TEMPERATURE=0
+FB_API_DELAY_SECONDS=1
 ```
 
 4. **Add Facebook group URLs**
@@ -103,11 +111,10 @@ Fields that can't be determined show `-`.
 
 ```
 facebook_group_scraper/
-├── .env                # API keys (not committed to version control)
 ├── README.md           # This file
 ├── requirements.txt    # Python dependencies
 ├── groups.txt          # Input: Facebook group URLs
-├── config.py           # All settings, prompts, and file paths
+├── settings.py         # Reads all runtime settings from src/backend/.env
 ├── scraper.py          # Apify Facebook group scraper
 ├── extractor.py        # Groq LLM extraction + deduplication
 ├── pipeline.py         # Main entry point (CLI)
@@ -119,10 +126,8 @@ facebook_group_scraper/
 
 ## Configuration
 
-All settings live in `config.py`:
+All runtime settings are loaded from `src/backend/.env`.
 
-- **API Keys** — Loaded from `.env` (Apify token, Groq API keys)
-- **Scraper** — Results limit, view option (`TOP_POSTS` / `RECENT`)
-- **LLM** — Model (`llama-3.3-70b-versatile`), temperature, rate-limit delay
-- **Paths** — Data directory, input/output file locations
-- **Prompt** — The system prompt used for structured data extraction
+- **Apify**: `APIFY_TOKEN_FB` (or `APIFY_TOKEN`), `APIFY_ACTOR_ID_FB`
+- **Scraper**: `FB_RESULTS_LIMIT`, `FB_VIEW_OPTION`
+- **Groq**: `GROQ_API_KEY` (or `GROQ_API_KEY_1`/`GROQ_API_KEY_2`), `GROQ_BASE_URL`, `GROQ_MODEL`, `FB_LLM_TEMPERATURE`, `FB_API_DELAY_SECONDS`

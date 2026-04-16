@@ -9,6 +9,7 @@ import re
 import json
 import sys
 import os
+from typing import Tuple
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from schema import validate_listings
@@ -62,32 +63,37 @@ def get_99acres_listings(city, limit=10, **kwargs):
     Scrapes 99acres.com for property listings using direct HTTP requests + BS4.
     Returns a list of dicts conforming to the strict schema.
     """
+    import sys as _sys
+
     search_url = CITY_URL_MAP.get(city.lower())
     if not search_url:
         formatted_city = city.lower().replace(" ", "-")
         search_url = f"https://www.99acres.com/search/property/buy/{formatted_city}?preference=S&area_unit=1&res_com=R"
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Referer": "https://www.google.com/",
-        "DNT": "1",
-    }
+    print(f"[99acres-direct] URL: {search_url}", file=_sys.stderr)
 
     properties = []
 
     try:
-        response = requests.get(search_url, headers=headers, timeout=30)
+        response, blocked = _fetch_99acres_html(search_url)
+        print(f"[99acres-direct] HTTP {response.status_code}, blocked={blocked}, body_len={len(response.text)}", file=_sys.stderr)
+
+        if blocked:
+            print(f"[99acres-direct] Blocked by 99acres, falling back to Apify", file=_sys.stderr)
+            return _fallback_to_apify(city, limit)
 
         if response.status_code != 200:
-            return []
+            print(f"[99acres-direct] Non-200 status {response.status_code}, falling back to Apify", file=_sys.stderr)
+            return _fallback_to_apify(city, limit)
 
         soup = BeautifulSoup(response.content, 'html.parser')
 
+        page_text = response.text.lower()
+        if any(marker in page_text for marker in ("access denied", "forbidden", "you don't have permission", "captcha")):
+            print(f"[99acres-direct] Block marker found in page, falling back to Apify", file=_sys.stderr)
+            return _fallback_to_apify(city, limit)
+
         # 99acres uses various card structures. Try multiple selectors.
-        # Common: tupleNew, srpTuple, projectTuple
         cards = soup.find_all('div', class_='tupleNew__tupleWrap')
         if not cards:
             cards = soup.find_all('div', class_='srpTuple__tupleWrap')
@@ -95,9 +101,14 @@ def get_99acres_listings(city, limit=10, **kwargs):
             cards = soup.find_all('section', {'data-label': 'SEARCH_TUPLE'})
         if not cards:
             # Fallback: try script tags with JSON data
+            print(f"[99acres-direct] No HTML cards found, trying JSON extraction", file=_sys.stderr)
             properties = _try_json_extraction(soup, city, limit)
+            if not properties:
+                print(f"[99acres-direct] JSON extraction also empty, falling back to Apify", file=_sys.stderr)
+                return _fallback_to_apify(city, limit)
             return validate_listings(properties)
 
+        print(f"[99acres-direct] Found {len(cards)} HTML cards", file=_sys.stderr)
         count = 0
         for card in cards:
             if count >= limit:
@@ -111,10 +122,69 @@ def get_99acres_listings(city, limit=10, **kwargs):
             except Exception:
                 continue
 
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[99acres-direct] Exception: {e}, falling back to Apify", file=_sys.stderr)
+        return _fallback_to_apify(city, limit)
+
+    if not properties:
+        print(f"[99acres-direct] 0 properties parsed, falling back to Apify", file=_sys.stderr)
+        return _fallback_to_apify(city, limit)
 
     return validate_listings(properties)
+
+
+def _fetch_99acres_html(search_url: str) -> Tuple[requests.Response, bool]:
+    """Fetch a 99acres page with header fallbacks; return response and whether it was blocked."""
+    header_variants = [
+        {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://www.google.com/",
+            "DNT": "1",
+        },
+        {
+            "User-Agent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-IN,en-US;q=0.9,en;q=0.8",
+            "Referer": "https://www.google.com/",
+            "DNT": "1",
+        },
+    ]
+
+    session = requests.Session()
+    last_response = None
+
+    for headers in header_variants:
+        resp = session.get(search_url, headers=headers, timeout=30)
+        last_response = resp
+        if resp.status_code in (403, 429):
+            continue
+        return resp, False
+
+    if last_response is None:
+        raise RuntimeError("Failed to fetch 99acres page")
+
+    return last_response, last_response.status_code in (403, 429)
+
+
+def _fallback_to_apify(city, limit):
+    """Fallback to Apify listings when 99acres blocks direct requests from this host."""
+    import sys as _sys
+    token = os.environ.get("APIFY_TOKEN", "").strip()
+    print(f"[99acres-direct] Apify fallback: APIFY_TOKEN={'set (' + token[:10] + '...)' if token else 'NOT SET'}", file=_sys.stderr)
+    if not token:
+        print(f"[99acres-direct] No APIFY_TOKEN, returning empty", file=_sys.stderr)
+        return []
+
+    try:
+        from parsers.ninetyninacres_apify import get_99acres_apify_listings
+        results = get_99acres_apify_listings(city, limit=limit, token=token)
+        print(f"[99acres-direct] Apify fallback returned {len(results)} listings", file=_sys.stderr)
+        return results
+    except Exception as e:
+        print(f"[99acres-direct] Apify fallback failed: {e}", file=_sys.stderr)
+        return []
 
 
 def _try_json_extraction(soup, city, limit):
@@ -126,11 +196,19 @@ def _try_json_extraction(soup, city, limit):
     scripts = soup.find_all('script')
 
     for script in scripts:
-        if not script.string:
+        text = script.get_text() or ""
+        if not text:
             continue
 
-        # Look for JSON data embedded in script tags
-        text = script.string
+        if script.get("id") == "__NEXT_DATA__":
+            try:
+                data = json.loads(text)
+                listings = _extract_from_json(data, city, limit)
+                properties.extend(listings)
+                if properties:
+                    return properties
+            except (json.JSONDecodeError, TypeError, ValueError):
+                pass
 
         # Try __NEXT_DATA__ (Next.js pattern)
         if '__NEXT_DATA__' in text or 'window.__DATA__' in text or '"listingData"' in text:
@@ -168,6 +246,37 @@ def _try_json_extraction(soup, city, limit):
                 continue
 
     return properties
+
+
+def _extract_from_json(payload, city, limit):
+    """Recursively scan JSON payload and map listing-like dicts to schema items."""
+    extracted = []
+
+    def walk(node):
+        if len(extracted) >= limit:
+            return
+
+        if isinstance(node, dict):
+            if any(k in node for k in ('prop_heading', 'property_type', 'locality', 'min_price', 'price', 'spid', 'prop_id')):
+                mapped = _map_json_item(node, city)
+                if mapped:
+                    extracted.append(mapped)
+                    if len(extracted) >= limit:
+                        return
+
+            for value in node.values():
+                walk(value)
+                if len(extracted) >= limit:
+                    return
+
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+                if len(extracted) >= limit:
+                    return
+
+    walk(payload)
+    return extracted[:limit]
 
 
 def _map_json_item(item, city):

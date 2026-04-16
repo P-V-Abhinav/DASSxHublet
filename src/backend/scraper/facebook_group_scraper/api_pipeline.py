@@ -15,7 +15,7 @@ import sys
 # Ensure we can import local modules
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-import config
+import settings
 from scraper import scrape_group
 from extractor import GroqExtractor
 
@@ -26,7 +26,7 @@ def main():
     parser.add_argument("--limit", type=int, default=10, help="Number of posts to scrape")
     args = parser.parse_args()
 
-    os.makedirs(config.DATA_DIR, exist_ok=True)
+    os.makedirs(settings.DATA_DIR, exist_ok=True)
 
     # Step 1: Scrape
     raw_df = scrape_group(args.group_url, limit=args.limit)

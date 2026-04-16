@@ -4,9 +4,10 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from schema import validate_listings
+from parsers.magicbricks_direct import get_magicbricks_listings
 
 APIFY_BASE_URL = "https://api.apify.com/v2"
-ACTOR_ID = "ecomscrape~magicbricks-property-search-scraper"
+DEFAULT_ACTOR_ID = "ecomscrape~magicbricks-property-search-scraper"
 
 # Map city names to MagicBricks search URL format
 CITY_URL_MAP = {
@@ -30,9 +31,12 @@ def get_apify_listings(city, limit=10, token=None):
         limit: Max number of listings to return
         token: Apify API token (reads from APIFY_TOKEN env var if not provided)
     """
+    import sys as _sys
+
     token = token or os.environ.get("APIFY_TOKEN")
     if not token:
-        raise ValueError("Apify API token is required. Set APIFY_TOKEN env var or pass --token.")
+        print(f"[magicbricks-apify] No APIFY_TOKEN, falling back to direct scraper", file=_sys.stderr)
+        return get_magicbricks_listings(city, limit)
 
     # Build the MagicBricks search URL for this city
     search_url = CITY_URL_MAP.get(city.lower())
@@ -46,6 +50,9 @@ def get_apify_listings(city, limit=10, token=None):
         "Content-Type": "application/json",
     }
 
+    actor_ids = _resolve_actor_ids()
+    print(f"[magicbricks-apify] Trying actors: {actor_ids}", file=_sys.stderr)
+
     # 1. Start the actor run
     run_input = {
         "urls": [search_url],
@@ -58,12 +65,37 @@ def get_apify_listings(city, limit=10, token=None):
         },
     }
 
-    run_url = f"{APIFY_BASE_URL}/acts/{ACTOR_ID}/runs"
-    run_resp = requests.post(run_url, headers=headers, json=run_input, timeout=30)
-    run_resp.raise_for_status()
-    run_data = run_resp.json()["data"]
-    run_id = run_data["id"]
-    dataset_id = run_data["defaultDatasetId"]
+    run_id = None
+    dataset_id = None
+    last_error = None
+
+    for actor_id in actor_ids:
+        run_url = f"{APIFY_BASE_URL}/acts/{actor_id}/runs"
+        try:
+            run_resp = requests.post(run_url, headers=headers, json=run_input, timeout=30)
+        except Exception as e:
+            print(f"[magicbricks-apify] Actor '{actor_id}' request failed: {e}", file=_sys.stderr)
+            last_error = e
+            continue
+
+        if run_resp.status_code in (401, 403, 404):
+            print(f"[magicbricks-apify] Actor '{actor_id}' unavailable (HTTP {run_resp.status_code})", file=_sys.stderr)
+            last_error = RuntimeError(
+                f"Actor '{actor_id}' unavailable for this token (HTTP {run_resp.status_code})"
+            )
+            continue
+
+        run_resp.raise_for_status()
+        run_data = run_resp.json()["data"]
+        run_id = run_data["id"]
+        dataset_id = run_data["defaultDatasetId"]
+        print(f"[magicbricks-apify] Actor '{actor_id}' started, run_id={run_id}", file=_sys.stderr)
+        break
+
+    if not run_id or not dataset_id:
+        # Keep service functional even when actor permissions are restricted.
+        print(f"[magicbricks-apify] No actor available, falling back to direct scraper", file=_sys.stderr)
+        return get_magicbricks_listings(city, limit)
 
     # 2. Poll for completion (max ~5 minutes)
     status_url = f"{APIFY_BASE_URL}/actor-runs/{run_id}"
@@ -78,20 +110,25 @@ def get_apify_listings(city, limit=10, token=None):
         status_resp = requests.get(status_url, headers=headers, timeout=15)
         status_resp.raise_for_status()
         status = status_resp.json()["data"]["status"]
+        print(f"[magicbricks-apify] Poll ({elapsed}s): status={status}", file=_sys.stderr)
 
         if status in ("SUCCEEDED", "FINISHED"):
             break
         elif status in ("FAILED", "ABORTED", "TIMED-OUT"):
-            raise RuntimeError(f"Apify actor run failed with status: {status}")
+            print(f"[magicbricks-apify] Actor run failed ({status}), falling back to direct", file=_sys.stderr)
+            return get_magicbricks_listings(city, limit)
 
     if elapsed >= max_wait:
-        raise TimeoutError("Apify actor run timed out after 5 minutes")
+        print(f"[magicbricks-apify] Actor run timed out, falling back to direct", file=_sys.stderr)
+        return get_magicbricks_listings(city, limit)
 
     # 3. Fetch dataset items
     items_url = f"{APIFY_BASE_URL}/datasets/{dataset_id}/items?format=json&limit={limit}"
     items_resp = requests.get(items_url, headers=headers, timeout=30)
     items_resp.raise_for_status()
     raw_items = items_resp.json()
+
+    print(f"[magicbricks-apify] Apify returned {len(raw_items)} raw items", file=_sys.stderr)
 
     # 4. Map Apify output to our ScrapedProperty format
     properties = []
@@ -102,7 +139,28 @@ def get_apify_listings(city, limit=10, token=None):
         except Exception:
             continue
 
+    # If Apify returned 0 usable items, fallback to direct scraping
+    if not properties:
+        print(f"[magicbricks-apify] 0 usable items from Apify, falling back to direct scraper", file=_sys.stderr)
+        return get_magicbricks_listings(city, limit)
+
     return validate_listings(properties)
+
+
+def _resolve_actor_ids():
+    """Resolve actor candidates from env with sane default and no duplicates."""
+    ids = []
+
+    explicit = os.environ.get("APIFY_MAGICBRICKS_ACTOR_ID", "").strip()
+    if explicit:
+        ids.append(explicit)
+
+    csv_ids = os.environ.get("APIFY_MAGICBRICKS_ACTOR_IDS", "").strip()
+    if csv_ids:
+        ids.extend([item.strip() for item in csv_ids.split(",") if item.strip()])
+
+    ids.append(DEFAULT_ACTOR_ID)
+    return list(dict.fromkeys(ids))
 
 
 def _map_apify_item(item, city):

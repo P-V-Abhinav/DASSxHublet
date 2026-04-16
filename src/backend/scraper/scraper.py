@@ -8,7 +8,46 @@ Usage:
 import argparse
 import json
 import sys
+import os
 from registry import list_scrapers, get_scraper
+
+
+def _load_env_file(path):
+    """Load KEY=VALUE pairs from .env into os.environ without overriding existing vars."""
+    if not os.path.exists(path):
+        return
+
+    with open(path, 'r', encoding='utf-8') as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith('#'):
+                continue
+
+            if line.startswith('export '):
+                line = line[len('export '):].strip()
+
+            if '=' not in line:
+                continue
+
+            key, value = line.split('=', 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+
+def _load_runtime_env():
+    """Load local and parent .env files for local development runs."""
+    base_dir = os.path.dirname(__file__)
+    for env_path in (
+        os.path.join(base_dir, '.env'),
+        os.path.join(base_dir, '..', '.env'),
+    ):
+        _load_env_file(env_path)
+
+
+_load_runtime_env()
 
 
 def main():

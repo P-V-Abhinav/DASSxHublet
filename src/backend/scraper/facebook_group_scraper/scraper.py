@@ -6,11 +6,54 @@ Groups are loaded from groups.txt (one URL per line).
 """
 import pandas as pd
 from apify_client import ApifyClient
+from apify_client.errors import ApifyApiError
 
-import config
+import settings
 
 
-def load_group_urls(path: str = config.GROUPS_FILE) -> list[str]:
+def _candidate_view_options(preferred: str) -> list[str]:
+    """Return unique view-option candidates in preferred-first order."""
+    normalized = (preferred or "").strip().upper()
+    candidates = [normalized, "CHRONOLOGICAL", "RECENT", "TOP_POSTS"]
+    return [opt for opt in dict.fromkeys(candidates) if opt]
+
+
+def _is_x402_payment_error(exc: Exception) -> bool:
+    """Detect x402 paid-gateway failures returned by actor endpoints."""
+    msg = str(exc)
+    return "PAYMENT-SIGNATURE" in msg or "x402.org" in msg
+
+
+def _run_actor_with_fallback(client: ApifyClient, run_input: dict) -> tuple[list[dict], str]:
+    """Try configured actor IDs in order and return (items, actor_id) on first success."""
+    last_error = None
+
+    for actor_id in settings.APIFY_ACTOR_FALLBACK_IDS:
+        try:
+            print(f"[SCRAPER] Trying Apify actor: {actor_id}")
+            run = client.actor(actor_id).call(run_input=run_input)
+            items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+            return items, actor_id
+        except ApifyApiError as exc:
+            last_error = exc
+            # If actor is behind x402 billing, try the next fallback actor.
+            if _is_x402_payment_error(exc):
+                print(f"[SCRAPER] Actor {actor_id} requires x402 payment headers, trying fallback...")
+                continue
+            # Non-payment API errors should fail immediately.
+            raise
+
+    if last_error is not None:
+        raise RuntimeError(
+            "All configured Apify actors failed. The current actor(s) may require paid x402 access. "
+            "Set APIFY_ACTOR_ID_FB in .env to a working actor ID. "
+            f"Last error: {last_error}"
+        )
+
+    raise RuntimeError("No Apify actor IDs configured for Facebook scraping.")
+
+
+def load_group_urls(path: str = settings.GROUPS_FILE) -> list[str]:
     """
     Read group URLs from a text file.
     Ignores blank lines and lines starting with #.
@@ -29,8 +72,8 @@ def load_group_urls(path: str = config.GROUPS_FILE) -> list[str]:
 
 def scrape_group(
     group_url: str,
-    limit: int = config.RESULTS_LIMIT,
-    view_option: str = config.VIEW_OPTION,
+    limit: int = settings.RESULTS_LIMIT,
+    view_option: str = settings.VIEW_OPTION,
 ) -> pd.DataFrame:
     """
     Scrape a single Facebook group using the Apify actor.
@@ -41,26 +84,49 @@ def scrape_group(
     print(f"\n[SCRAPER] Scraping: {group_url}")
     print(f"   Limit: {limit} | View: {view_option}")
 
-    client = ApifyClient(config.APIFY_TOKEN)
+    if not settings.APIFY_TOKEN:
+        raise RuntimeError(
+            "APIFY token is missing. Set APIFY_TOKEN_FB (or APIFY_TOKEN) in src/backend/.env and retry."
+        )
 
-    run_input = {
-        "startUrls": [{"url": group_url}],
-        "resultsLimit": limit,
-        "viewOption": view_option,
-    }
+    if not settings.APIFY_ACTOR_FALLBACK_IDS:
+        raise RuntimeError(
+            "APIFY_ACTOR_ID_FB is missing. Set a single actor ID/slug in src/backend/.env and retry."
+        )
 
-    run = client.actor(config.APIFY_ACTOR_ID).call(run_input=run_input)
-    items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+    client = ApifyClient(settings.APIFY_TOKEN)
 
-    df = pd.DataFrame(items)
-    print(f"[OK] Scraped {len(df)} posts from this group")
-    return df
+    last_actor_id = "-"
+    for candidate_view in _candidate_view_options(view_option):
+        run_input = {
+            "startUrls": [{"url": group_url}],
+            "resultsLimit": limit,
+            "viewOption": candidate_view,
+        }
+
+        items, actor_id = _run_actor_with_fallback(client, run_input)
+        last_actor_id = actor_id
+        if items:
+            df = pd.DataFrame(items)
+            print(
+                f"[OK] Scraped {len(df)} posts from this group "
+                f"(actor: {actor_id}, view: {candidate_view})"
+            )
+            return df
+
+        print(f"[SCRAPER] 0 posts with view={candidate_view}; trying next view option...")
+
+    print(
+        "[SCRAPER][WARN] Actor run succeeded but returned 0 posts for all view options "
+        f"(actor: {last_actor_id})."
+    )
+    return pd.DataFrame()
 
 
 def scrape_all_groups(
     urls: list[str] = None,
-    limit: int = config.RESULTS_LIMIT,
-    view_option: str = config.VIEW_OPTION,
+    limit: int = settings.RESULTS_LIMIT,
+    view_option: str = settings.VIEW_OPTION,
 ) -> pd.DataFrame:
     """
     Scrape all groups listed in groups.txt.
@@ -71,15 +137,24 @@ def scrape_all_groups(
 
     all_dfs = []
     for url in urls:
-        df = scrape_group(url, limit, view_option)
-        all_dfs.append(df)
+        try:
+            df = scrape_group(url, limit, view_option)
+            all_dfs.append(df)
+        except RuntimeError as exc:
+            # Keep pipeline alive when an actor becomes unavailable/paid-only.
+            print(f"[SCRAPER][WARN] Failed for {url}: {exc}")
+            continue
+
+    if not all_dfs:
+        print("\n[SCRAPER][WARN] No groups were scraped successfully. Returning empty dataset.")
+        return pd.DataFrame()
 
     combined = pd.concat(all_dfs, ignore_index=True)
     print(f"\n[DONE] Total scraped: {len(combined)} posts from {len(urls)} group(s)")
     return combined
 
 
-def save_raw(df: pd.DataFrame, path: str = config.RAW_CSV) -> None:
+def save_raw(df: pd.DataFrame, path: str = settings.RAW_CSV) -> None:
     """Save the raw scraped DataFrame to CSV."""
     df.to_csv(path, index=False)
     print(f"[SAVE] Saved raw data -> {path}")
@@ -87,7 +162,7 @@ def save_raw(df: pd.DataFrame, path: str = config.RAW_CSV) -> None:
 
 if __name__ == "__main__":
     import os
-    os.makedirs(config.DATA_DIR, exist_ok=True)
+    os.makedirs(settings.DATA_DIR, exist_ok=True)
 
     df = scrape_all_groups()
     save_raw(df)
