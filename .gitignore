@@ -48,4 +48,5 @@ prisma/dev.db-journal
 # --- Local generation files ---
 users_list.md
 src/backend/26.0.1
+src/backend/.venv/
 
