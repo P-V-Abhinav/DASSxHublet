@@ -155,6 +155,9 @@ export class SellerService {
      */
     static async deleteSeller(id: string) {
         const seller = await prisma.seller.findUnique({ where: { id } });
+        if (!seller) {
+            throw new Error('Record to delete does not exist.');
+        }
         const result = await prisma.seller.delete({
             where: { id },
         });
