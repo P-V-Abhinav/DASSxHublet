@@ -79,7 +79,7 @@ export class MatchingService {
                     bhk: buyer.bhk || undefined,
                     budgetMin: buyer.budgetMin || undefined,
                     budgetMax: buyer.budgetMax || undefined,
-                    amenities: JSON.parse(buyer.amenities),
+                    amenities: buyer.amenities && buyer.amenities !== 'null' ? JSON.parse(buyer.amenities) : [],
                 };
 
                 const propertyData: PropertyData = {
@@ -89,7 +89,7 @@ export class MatchingService {
                     area: property.area,
                     bhk: property.bhk,
                     price: property.price,
-                    amenities: JSON.parse(property.amenities),
+                    amenities: property.amenities && property.amenities !== 'null' ? JSON.parse(property.amenities) : [],
                 };
 
                 const matchResult = this.matcher.score(buyerIntent, propertyData);
@@ -258,7 +258,7 @@ export class MatchingService {
                     bhk: buyer.bhk || undefined,
                     budgetMin: buyer.budgetMin || undefined,
                     budgetMax: buyer.budgetMax || undefined,
-                    amenities: JSON.parse(buyer.amenities),
+                    amenities: buyer.amenities && buyer.amenities !== 'null' ? JSON.parse(buyer.amenities) : [],
                 };
 
                 const propertyData: PropertyData = {
@@ -268,7 +268,7 @@ export class MatchingService {
                     area: property.area,
                     bhk: property.bhk,
                     price: property.price,
-                    amenities: JSON.parse(property.amenities),
+                    amenities: property.amenities && property.amenities !== 'null' ? JSON.parse(property.amenities) : [],
                 };
 
                 const matchResult = this.matcher.score(buyerIntent, propertyData);

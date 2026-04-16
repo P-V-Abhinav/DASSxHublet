@@ -92,8 +92,9 @@ export function NotificationBell({ userId, role }: NotificationBellProps) {
         className="nb-icon-btn m3-btn m3-btn-icon" 
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Notifications"
+        style={{ fontSize: '24px', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}
       >
-        <span className="material-symbols-outlined">notifications</span>
+        🔔
         {unreadCount > 0 && <span className="nb-dot"></span>}
       </button>
 
