@@ -5,6 +5,16 @@ import { KeywordIntentParser } from '../parsers/intent-parser';
 import { GeocodeService } from './geocode.service';
 import { NotificationService } from './notification.service';
 
+function safeParseJson(value: any, defaultValue: any = null) {
+    if (value === null || value === undefined || value === '' || value === 'null') return defaultValue;
+    if (typeof value === 'object') return value;
+    try {
+        return safeParseJson(value);
+    } catch (e) {
+        return defaultValue;
+    }
+}
+
 const intentParser = new KeywordIntentParser();
 
 export class MatchingService {
@@ -41,14 +51,14 @@ export class MatchingService {
         });
 
         // Pre-process buyer coordinates
-        const buyerMeta = buyer.metadata ? JSON.parse(buyer.metadata) : {};
+        const buyerMeta = safeParseJson(buyer.metadata, {});
         if (!buyerMeta.localityCoords || buyerMeta.localityCoords.length === 0) {
             console.warn(`Buyer ${buyerId} has no locality coords in metadata — location scoring will be 0`);
         }
 
         // Pre-process properties
         for (const property of properties) {
-            const propMeta = property.metadata ? JSON.parse(property.metadata) : {};
+            const propMeta = safeParseJson(property.metadata, {});
             if (!propMeta.coordinates && !propMeta.geocodeFailed) {
                 console.log(`Geocoding property locality: ${property.locality}`);
                 const coords = await GeocodeService.geocodeAddress(property.locality);
@@ -69,8 +79,8 @@ export class MatchingService {
         const matches = properties
             .map(property => {
                 // Parse JSON strings for SQLite
-                const buyerMeta = buyer.metadata ? JSON.parse(buyer.metadata) : null;
-                const propMeta = property.metadata ? JSON.parse(property.metadata) : null;
+                const buyerMeta = buyer.metadata ? safeParseJson(buyer.metadata) : null;
+                const propMeta = property.metadata ? safeParseJson(property.metadata) : null;
 
                 const buyerIntent: BuyerIntent = {
                     localityCoords: buyerMeta?.localityCoords || undefined,
@@ -79,7 +89,7 @@ export class MatchingService {
                     bhk: buyer.bhk || undefined,
                     budgetMin: buyer.budgetMin || undefined,
                     budgetMax: buyer.budgetMax || undefined,
-                    amenities: buyer.amenities && buyer.amenities !== 'null' ? JSON.parse(buyer.amenities) : [],
+                    amenities: buyer.amenities && buyer.amenities !== 'null' ? safeParseJson(buyer.amenities) : [],
                 };
 
                 const propertyData: PropertyData = {
@@ -89,7 +99,7 @@ export class MatchingService {
                     area: property.area,
                     bhk: property.bhk,
                     price: property.price,
-                    amenities: property.amenities && property.amenities !== 'null' ? JSON.parse(property.amenities) : [],
+                    amenities: property.amenities && property.amenities !== 'null' ? safeParseJson(property.amenities) : [],
                 };
 
                 const matchResult = this.matcher.score(buyerIntent, propertyData);
@@ -138,12 +148,12 @@ export class MatchingService {
 
                     return {
                         ...updated,
-                        property: {
+                        property: updated.property ? {
                             ...updated.property,
-                            amenities: JSON.parse(updated.property.amenities),
-                            metadata: updated.property.metadata ? JSON.parse(updated.property.metadata) : null,
-                        },
-                        metadata: updated.metadata ? JSON.parse(updated.metadata) : null,
+                            amenities: updated.property.amenities && updated.property.amenities !== 'null' ? safeParseJson(updated.property.amenities) : [],
+                            metadata: updated.property.metadata ? safeParseJson(updated.property.metadata) : null,
+                        } : null,
+                        metadata: updated.metadata && updated.metadata !== 'null' ? safeParseJson(updated.metadata) : null,
                     };
                 }
 
@@ -168,12 +178,12 @@ export class MatchingService {
 
                 return {
                     ...created,
-                    property: {
+                    property: created.property ? {
                         ...created.property,
-                        amenities: JSON.parse(created.property.amenities),
-                        metadata: created.property.metadata ? JSON.parse(created.property.metadata) : null,
-                    },
-                    metadata: created.metadata ? JSON.parse(created.metadata) : null,
+                        amenities: created.property.amenities && created.property.amenities !== 'null' ? safeParseJson(created.property.amenities) : [],
+                        metadata: created.property.metadata ? safeParseJson(created.property.metadata) : null,
+                    } : null,
+                    metadata: created.metadata && created.metadata !== 'null' ? safeParseJson(created.metadata) : null,
                 };
             })
         );
@@ -217,7 +227,7 @@ export class MatchingService {
             throw new Error(`Property ${propertyId} not found`);
         }
 
-        const propMeta = property.metadata ? JSON.parse(property.metadata) : {};
+        const propMeta = property.metadata ? safeParseJson(property.metadata) : {};
         if (!propMeta.coordinates && !propMeta.geocodeFailed) {
             console.log(`Geocoding property locality: ${property.locality}`);
             const coords = await GeocodeService.geocodeAddress(property.locality);
@@ -239,7 +249,7 @@ export class MatchingService {
 
         // Pre-process buyers sequentially
         for (const buyer of buyers) {
-            const buyerMeta = buyer.metadata ? JSON.parse(buyer.metadata) : {};
+            const buyerMeta = buyer.metadata ? safeParseJson(buyer.metadata) : {};
             if (!buyerMeta.localityCoords || buyerMeta.localityCoords.length === 0) {
                 console.warn(`Buyer ${buyer.id} has no locality coords — skipping geocode`);
             }
@@ -248,8 +258,8 @@ export class MatchingService {
         // Score each buyer
         const matches = buyers
             .map(buyer => {
-                const buyerMeta = buyer.metadata ? JSON.parse(buyer.metadata) : null;
-                const propMeta = property.metadata ? JSON.parse(property.metadata) : null;
+                const buyerMeta = buyer.metadata ? safeParseJson(buyer.metadata) : null;
+                const propMeta = property.metadata ? safeParseJson(property.metadata) : null;
 
                 const buyerIntent: BuyerIntent = {
                     localityCoords: buyerMeta?.localityCoords || undefined,
@@ -258,7 +268,7 @@ export class MatchingService {
                     bhk: buyer.bhk || undefined,
                     budgetMin: buyer.budgetMin || undefined,
                     budgetMax: buyer.budgetMax || undefined,
-                    amenities: buyer.amenities && buyer.amenities !== 'null' ? JSON.parse(buyer.amenities) : [],
+                    amenities: buyer.amenities && buyer.amenities !== 'null' ? safeParseJson(buyer.amenities) : [],
                 };
 
                 const propertyData: PropertyData = {
@@ -268,7 +278,7 @@ export class MatchingService {
                     area: property.area,
                     bhk: property.bhk,
                     price: property.price,
-                    amenities: property.amenities && property.amenities !== 'null' ? JSON.parse(property.amenities) : [],
+                    amenities: property.amenities && property.amenities !== 'null' ? safeParseJson(property.amenities) : [],
                 };
 
                 const matchResult = this.matcher.score(buyerIntent, propertyData);
@@ -344,14 +354,14 @@ export class MatchingService {
         // Parse JSON properties for SQLite compatibility
         return matches.map(match => ({
             ...match,
-            property: {
+            property: match.property ? {
                 ...match.property,
-                amenities: JSON.parse(match.property.amenities),
+                amenities: match.property.amenities && match.property.amenities !== 'null' ? safeParseJson(match.property.amenities) : [],
                 // No metadata parsing needed for frontend unless used? 
                 // Let's parse just in case if it's not null
-                metadata: match.property.metadata ? JSON.parse(match.property.metadata) : null,
-            },
-            metadata: match.metadata ? JSON.parse(match.metadata) : null,
+                metadata: match.property.metadata ? safeParseJson(match.property.metadata) : null,
+            } : null,
+            metadata: match.metadata && match.metadata !== 'null' ? safeParseJson(match.metadata) : null,
         }));
     }
 
@@ -385,3 +395,4 @@ export class MatchingService {
         });
     }
 }
+
