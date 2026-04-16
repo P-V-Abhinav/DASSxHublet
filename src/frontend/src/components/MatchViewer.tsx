@@ -93,7 +93,7 @@ function MatchViewer() {
         <div style={{ marginTop: 24 }}>
           <h3 className="md-title-medium" style={{ marginBottom: 12 }}>Matched Properties ({matches.length})</h3>
           <div className="m3-grid-cards">
-            {matches.map((match) => (
+            {matches.filter(m => m.property).map((match) => (
               <div key={match.id} className="m3-card m3-card-outlined">
                 <div className="m3-flex-between" style={{ marginBottom: 8 }}>
                   <h4 className="md-title-medium">{match.property.title}</h4>
@@ -137,7 +137,7 @@ function MatchViewer() {
                 </div>
 
                 <div className="md-body-small m3-text-secondary" style={{ marginTop: 8 }}>
-                  Seller: {match.property.seller.name} (Trust Score: {match.property.seller.trustScore})
+                  Seller: {match?.property?.seller?.name || "Unknown"} (Trust Score: {match?.property?.seller?.trustScore || "N/A"})
                 </div>
               </div>
             ))}

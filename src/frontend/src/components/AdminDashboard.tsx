@@ -490,9 +490,9 @@ export const AdminDashboard = ({
                                         </tr></thead>
                                         <tbody>{matches.map(m => (
                                             <tr key={m.id}>
-                                                <td><strong>{m.buyer.name}</strong><br /><span className="md-body-small m3-text-secondary">{m.buyer.email}</span></td>
-                                                <td><strong>{m.property.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{m.property.seller?.email || ''}</span>{m.property.seller?.sellerType && <div style={{ marginTop: 4 }}><span className={getSellerRoleChipClass(m.property.seller.sellerType)}>{m.property.seller.sellerType}</span></div>}</td>
-                                                <td>{m.property.title}<br /><span className="md-body-small m3-text-secondary">{m.property.locality}</span></td>
+                                                <td><strong>{m.buyer?.name || 'Deleted'}</strong><br /><span className="md-body-small m3-text-secondary">{m.buyer?.email || ''}</span></td>
+                                                <td><strong>{m.property?.seller?.name || 'Unknown'}</strong><br /><span className="md-body-small m3-text-secondary">{m.property?.seller?.email || ''}</span>{m.property?.seller?.sellerType && <div style={{ marginTop: 4 }}><span className={getSellerRoleChipClass(m.property?.seller?.sellerType)}>{m.property?.seller?.sellerType}</span></div>}</td>
+                                                <td>{m.property?.title || '(Deleted)'}<br /><span className="md-body-small m3-text-secondary">{m.property?.locality || ''}</span></td>
                                                 <td><strong style={{ color: getScoreColor(m.matchScore) }}>{m.matchScore.toFixed(1)}%</strong></td>
                                                 <td><span className={getScoreClass(m.locationScore)}>{m.locationScore?.toFixed(1) || 'N/A'}%</span></td>
                                                 <td><span className={getScoreClass(m.budgetScore)}>{m.budgetScore?.toFixed(1) || 'N/A'}%</span></td>

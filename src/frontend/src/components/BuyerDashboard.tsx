@@ -126,7 +126,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
         const el = buyerMapRef.current;
         if (!el) return;
 
-        const matchedIds = new Set(matches.map(m => m.property.id));
+        const matchedIds = new Set(matches.filter(m => m.property).map(m => m.property.id));
 
         // Destroy previous instance if data changed
         if (buyerMapInstance.current) {
@@ -343,7 +343,7 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                         )}
 
                         <div className="m3-grid-cards">
-                            {matches.map((match) => (
+                            {matches.filter(m => m.property).map((match) => (
                                 <div key={match.id} className="m3-card m3-card-outlined">
                                     <div className="m3-flex-between" style={{ alignItems: 'start', marginBottom: 12 }}>
                                         <h3 className="md-title-medium" style={{ marginRight: 12 }}>{match.property.title}</h3>
@@ -589,35 +589,36 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                     </div>
 
                                     {/* Seller Info */}
-                                    <div style={{ marginTop: 16 }}>
-                                        <hr className="m3-divider" />
-                                        <strong className="md-label-large">Seller:</strong>
-                                        <p className="md-body-medium" style={{ margin: '4px 0' }}>
-                                            {match.property.seller.name}  {match.property.seller.ratingCount === 0 ? "Not rated" : match.property.seller.rating.toFixed(1)}
-                                        </p>
-                                        <p className="md-body-small" style={{ color: 'var(--md-sys-color-on-surface-variant)', margin: '4px 0' }}>
-                                            {match.property.seller.email}
-                                        </p>
-                                        {match.property.seller.phone && (
-                                            <p className="md-body-small" style={{ color: 'var(--md-sys-color-on-surface-variant)', margin: '4px 0' }}>
-                                                {match.property.seller.phone}
+                                    {match?.property?.seller && (
+                                        <div style={{ marginTop: 16 }}>
+                                            <hr className="m3-divider" />
+                                            <strong className="md-label-large">Seller:</strong>
+                                            <p className="md-body-medium" style={{ margin: '4px 0' }}>
+                                                {match.property.seller.name}  {match.property.seller.ratingCount === 0 ? "Not rated" : match.property.seller.rating.toFixed(1)}
                                             </p>
-                                        )}
+                                            <p className="md-body-small" style={{ color: 'var(--md-sys-color-on-surface-variant)', margin: '4px 0' }}>
+                                                {match.property.seller.email}
+                                            </p>
+                                            {match.property.seller.phone && (
+                                                <p className="md-body-small" style={{ color: 'var(--md-sys-color-on-surface-variant)', margin: '4px 0' }}>
+                                                    {match.property.seller.phone}
+                                                </p>
+                                            )}
 
-                                        <div className="m3-flex-col m3-gap-xs" style={{ marginTop: 10 }}>
-                                            <button
-                                                onClick={() => handleContactAgent(match.property.seller.id)}
-                                                className="m3-btn m3-btn-filled m3-btn-sm"
-                                            >
-                                                Contact Agent / Email Seller
-                                            </button>
-                                            <div className="m3-flex m3-gap-xs" style={{ alignItems: 'center' }}>
-                                                <select
-                                                    onChange={(e) => {
-                                                        const val = Number(e.target.value);
-                                                        if (val) handleRateSeller(match.property.seller.id, val);
-                                                        e.target.value = "";
-                                                    }}
+                                            <div className="m3-flex-col m3-gap-xs" style={{ marginTop: 10 }}>
+                                                <button
+                                                    onClick={() => handleContactAgent(match.property.seller.id)}
+                                                    className="m3-btn m3-btn-filled m3-btn-sm"
+                                                >
+                                                    Contact Agent / Email Seller
+                                                </button>
+                                                <div className="m3-flex m3-gap-xs" style={{ alignItems: 'center' }}>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            const val = Number(e.target.value);
+                                                            if (val) handleRateSeller(match.property.seller.id, val);
+                                                            e.target.value = "";
+                                                        }}
                                                     defaultValue=""
                                                     className="m3-input m3-select m3-input-compact"
                                                     style={{ flex: 1 }}
@@ -627,11 +628,12 @@ export const BuyerDashboard = ({ buyerId, buyerName }: BuyerDashboardProps) => {
                                                     <option value="2">2 Stars</option>
                                                     <option value="3">3 Stars</option>
                                                     <option value="4">4 Stars</option>
-                                                    <option value="5">5 Stars</option>
-                                                </select>
+                                                        <option value="5">5 Stars</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             ))}
                         </div>

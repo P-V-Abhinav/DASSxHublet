@@ -312,7 +312,7 @@ export const SellerDashboard = ({ sellerId, sellerName }: SellerDashboardProps) 
                                 </tr>
                             </thead>
                             <tbody>
-                                {matches.map((match) => (
+                                {matches.filter(m => m.buyer).map((match) => (
                                     <tr key={match.id}>
                                         <td style={{ fontWeight: 500 }}>{match.buyer.name}</td>
                                         <td>{match.buyer.email}</td>
