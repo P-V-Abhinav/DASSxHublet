@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Bell } from 'lucide-react';
 import api from '../api/client';
 import './NotificationBell.css';
 
@@ -92,9 +93,9 @@ export function NotificationBell({ userId, role }: NotificationBellProps) {
         className="nb-icon-btn m3-btn m3-btn-icon" 
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Notifications"
-        style={{ fontSize: '24px', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}
+        style={{ backgroundColor: 'transparent', border: 'none', cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
-        🔔
+        <Bell size={24} color="var(--md-sys-color-on-surface)" />
         {unreadCount > 0 && <span className="nb-dot"></span>}
       </button>
 

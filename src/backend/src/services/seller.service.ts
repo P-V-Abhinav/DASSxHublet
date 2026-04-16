@@ -158,6 +158,19 @@ export class SellerService {
         if (!seller) {
             throw new Error('Record to delete does not exist.');
         }
+
+        // Clean up all related records before deleting seller
+        const properties = await prisma.property.findMany({ where: { sellerId: id } });
+        const propertyIds = properties.map(p => p.id);
+
+        if (propertyIds.length > 0) {
+            await prisma.workflowEvent.deleteMany({ where: { lead: { propertyId: { in: propertyIds } } } });
+            await prisma.lead.deleteMany({ where: { propertyId: { in: propertyIds } } });
+            await prisma.match.deleteMany({ where: { propertyId: { in: propertyIds } } });
+            await prisma.property.deleteMany({ where: { sellerId: id } });
+        }
+        await prisma.notification.deleteMany({ where: { sellerId: id } });
+
         const result = await prisma.seller.delete({
             where: { id },
         });

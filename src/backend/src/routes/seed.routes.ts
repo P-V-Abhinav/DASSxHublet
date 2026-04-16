@@ -87,14 +87,15 @@ router.post('/delete-all-buyers', requireRoles('admin'), async (req: Request, re
         // Get all buyer emails before deleting (for credential log sync)
         const buyers = await prisma.buyer.findMany({ select: { email: true } });
 
-        // Delete dependents first
+        await prisma.workflowEvent.deleteMany({});
         await prisma.lead.deleteMany({});
         await prisma.match.deleteMany({});
+        await prisma.notification.deleteMany({});
         const deleted = await prisma.buyer.deleteMany({});
 
         // Remove all buyer credentials from log
         for (const buyer of buyers) {
-            removeCredentialByEmail(buyer.email);
+            if (buyer.email) removeCredentialByEmail(buyer.email);
         }
 
         res.json({
@@ -115,14 +116,16 @@ router.post('/delete-all-sellers', requireRoles('admin'), async (req: Request, r
         const sellers = await prisma.seller.findMany({ select: { email: true } });
 
         // Delete dependents first: leads → matches → properties → sellers
+        await prisma.workflowEvent.deleteMany({});
         await prisma.lead.deleteMany({});
         await prisma.match.deleteMany({});
+        await prisma.notification.deleteMany({});
         await prisma.property.deleteMany({});
         const deleted = await prisma.seller.deleteMany({});
 
         // Remove all seller credentials from log
         for (const seller of sellers) {
-            removeCredentialByEmail(seller.email);
+            if (seller.email) removeCredentialByEmail(seller.email);
         }
 
         res.json({
