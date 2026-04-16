@@ -5,6 +5,7 @@ import { BuyerDashboard } from './components/BuyerDashboard';
 import { SellerDashboard } from './components/SellerDashboard';
 import { AuthPage } from './components/AuthPage';
 import { AnalyticsDashboard } from './pages/AnalyticsDashboard';
+import { NotificationBell } from './components/NotificationBell';
 
 import { clearAuthSession, getAuthSession } from './api/client';
 
@@ -133,9 +134,12 @@ function BuyerDashboardWrapper() {
                         Logged in as: <strong>{user.name || user.email}</strong>
                     </div>
                 </div>
-                <button onClick={handleLogout} className="m3-btn m3-btn-error-tonal m3-btn-sm" id="buyer-logout">
-                    Logout
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <NotificationBell userId={userId} role="buyer" />
+                    <button onClick={handleLogout} className="m3-btn m3-btn-error-tonal m3-btn-sm" id="buyer-logout">
+                        Logout
+                    </button>
+                </div>
             </header>
             <BuyerDashboard buyerId={userId} buyerName={user.name || 'Buyer'} />
         </div>
@@ -169,9 +173,12 @@ function SellerDashboardWrapper() {
                         Logged in as: <strong>{user.name || user.email}</strong>
                     </div>
                 </div>
-                <button onClick={handleLogout} className="m3-btn m3-btn-error-tonal m3-btn-sm" id="seller-logout">
-                    Logout
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <NotificationBell userId={userId} role="seller" />
+                    <button onClick={handleLogout} className="m3-btn m3-btn-error-tonal m3-btn-sm" id="seller-logout">
+                        Logout
+                    </button>
+                </div>
             </header>
             <SellerDashboard sellerId={userId} sellerName={user.name || 'Seller'} />
         </div>
