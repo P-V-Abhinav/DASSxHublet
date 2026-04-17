@@ -95,10 +95,9 @@ router.post('/demo-sellers', requireRoles('admin'), async (req: Request, res: Re
 
         res.json({
             success: true,
-            message: `Created ${result.created} demo sellers (${result.skipped} already existed). Generated ${result.propertiesCreated} properties.`,
+            message: `Created ${result.created} demo sellers (${result.skipped} already existed).`,
             created: result.created,
             skipped: result.skipped,
-            propertiesCreated: result.propertiesCreated,
             sellers: result.sellers,
         });
 
