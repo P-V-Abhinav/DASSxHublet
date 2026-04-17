@@ -77,6 +77,39 @@ router.post('/delete-all-buyers', requireRoles('admin'), async (req: Request, re
     }
 });
 
+// ── Seed Demo Sellers ───────────────────────────────────────────────────────
+router.post('/demo-sellers', requireRoles('admin'), async (req: Request, res: Response) => {
+    try {
+        const result = await seedDemoSellers(prisma);
+
+        // Log seeded seller credentials
+        logCredentials(
+            result.sellers.map((s) => ({
+                role: 'seller' as const,
+                name: s.name,
+                email: s.email,
+                password: s.password,
+                source: 'seeder' as const,
+            }))
+        );
+
+        res.json({
+            success: true,
+            message: `Created ${result.created} demo sellers (${result.skipped} already existed). Generated ${result.propertiesCreated} properties.`,
+            created: result.created,
+            skipped: result.skipped,
+            propertiesCreated: result.propertiesCreated,
+            sellers: result.sellers,
+        });
+
+        // Fire-and-forget: refresh matches now that sellers/properties exist
+        refreshAllMatches().catch(e => console.error('[seed/demo-sellers] Match refresh error:', e.message));
+    } catch (error: any) {
+        console.error('[seed/demo-sellers] Error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ── Delete All Sellers ──────────────────────────────────────────────────────
 router.post('/delete-all-sellers', requireRoles('admin'), async (req: Request, res: Response) => {
     try {

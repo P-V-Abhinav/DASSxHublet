@@ -123,6 +123,7 @@ export const AdminDashboard = ({
     const [refreshingMatches, setRefreshingMatches] = useState(false);
     const [deletingBuyers, setDeletingBuyers] = useState(false);
     const [deletingSellers, setDeletingSellers] = useState(false);
+    const [seedingSellers, setSeedingSellers] = useState(false);
     const [resettingSellers, setResettingSellers] = useState(false);
     const [credentials, setCredentials] = useState<any[] | null>(null);
     const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -365,6 +366,7 @@ export const AdminDashboard = ({
                                 <div className="m3-flex-between m3-flex-wrap m3-gap-sm" style={{ marginBottom: 16 }}>
                                     <h2 className="md-title-large">All Sellers ({sellers.length})</h2>
                                     <div className="m3-flex m3-gap-xs">
+                                        <button onClick={async () => { if (!window.confirm('Seed demo sellers?')) return; setSeedingSellers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/demo-sellers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setSeedingSellers(false); } }} disabled={seedingSellers} className="m3-btn m3-btn-tonal m3-btn-sm">{seedingSellers ? 'Seeding...' : 'Seed Demo Sellers'}</button>
                                         <button onClick={async () => { if (!window.confirm('Delete ALL sellers?')) return; setDeletingSellers(true); setActionMessage(null); try { const res = await axios.post(`${API_BASE_URL}/admin/seed/delete-all-sellers`); setActionMessage(res.data.success ? `[OK] ${res.data.message}` : `[ERR] ${res.data.error}`); fetchData(); } catch (err: any) { setActionMessage(`[ERR] ${err.response?.data?.error || err.message}`); } finally { setDeletingSellers(false); } }} disabled={deletingSellers} className="m3-btn m3-btn-error m3-btn-sm">{deletingSellers ? 'Deleting...' : 'Delete All Sellers'}</button>
                                     </div>
                                 </div>
